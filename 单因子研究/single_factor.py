@@ -1,8 +1,7 @@
-﻿# 单因子提取器，包含作图和行业分组
+# 单因子提取器，不包含作图和行业分组
 from WindPy import w
 import numpy as np
 import pandas as pd
-import pygal
 import datetime
 
 
@@ -16,59 +15,14 @@ class SingleFactorReasearch():
         self.w = w
         self.w.start()
         self._single_factor_df = self._calculate_factor()
-        sw_class = w.wss(self.code_list, "industry_sw", "industryType=1").Data[0]  # 加入申万行业信息
-        self._single_factor_df['industry'] = sw_class
         # print(self._single_factor_df)
 
     # 具体实现因子计算的部分，返回为DataFrame对象
     def _calculate_factor(self):
-        pass
+        return None
 
     def get_factor(self):
         return self._single_factor_df
-
-    # 去极值因子的计算
-    def winsorize(self, ratio):
-        # ratio为去极值比例，ratio%
-        single_factor_values = self._single_factor_df[self.factor_name].values
-        single_factor_values[single_factor_values < np.percentile(single_factor_values, ratio)] = np.percentile(single_factor_values, ratio)  # 去极小值
-        single_factor_values[single_factor_values > np.percentile(single_factor_values, 100.0-ratio)] = np.percentile(single_factor_values, 100.0-ratio)  # 去极大值
-        single_factor_df_deextreme_value = self._single_factor_df
-        single_factor_df_deextreme_value[self.factor_name] = single_factor_values
-        return single_factor_df_deextreme_value
-
-    # 将因子总结分析
-    def plot(self):
-        single_factor_df = self._single_factor_df.dropna().sort_values(self.factor_name, ascending=False)
-        # 画因子原始分布图
-        line_chart = pygal.Bar()
-        line_chart.title = self.factor_name
-        line_chart.x_labels = single_factor_df.index.values
-        single_factor_values = single_factor_df.values[:, 0]
-        line_chart.add(self.factor_name, single_factor_values)
-        line_chart.render_to_file('output\\' + self.factor_name + '_chart_original.svg')
-
-        single_factor_df = self.winsorize(2.0).dropna().sort_values(self.factor_name, ascending=False)
-        # 画因子去极值分布图
-        line_chart = pygal.Bar()
-        line_chart.title = self.factor_name
-        line_chart.x_labels = single_factor_df.index.values
-        single_factor_values = single_factor_df.values[:, 0]
-        single_factor_values[single_factor_values < np.percentile(single_factor_values, 2.0)] = np.percentile(single_factor_values, 2.0)  # 去极小值
-        single_factor_values[single_factor_values > np.percentile(single_factor_values, 98.0)] = np.percentile(single_factor_values, 98.0)  # 去极大值
-        line_chart.add(self.factor_name, single_factor_values)
-        line_chart.render_to_file('output\\' + self.factor_name + '_chart_winsorize.svg')
-
-        # 统计个行业指标信息
-        single_factor_df[self.factor_name] = list(single_factor_values)  # 引如去极值的因子
-        factor_industry_mean = single_factor_df.groupby('industry').mean()
-        factor_industry_std = single_factor_df.groupby('industry').std()
-        # 行业统计信息画图
-        box_plot = pygal.Box(height=1000, width=1500, legend_box_size=20)
-        box_plot.title = 'industry statitics of ' + self.factor_name
-        for industry, group in single_factor_df.groupby('industry'):
-            box_plot.add(industry, group[self.factor_name].values)
-        box_plot.render_to_file('output\\' + self.factor_name + '_chart_box.svg')
 
 
 # 净利润增长率
@@ -79,9 +33,9 @@ class NetProfitGrowRate(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        profit_ttm_now = np.array(w.wss(self.code_list, "profit_ttm", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
+        profit_ttm_now = np.array(w.wss(self.code_list, "fa_profit_ttm", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
         date_list[0] = str(int(date_list[0])-1)
-        profit_ttm_prev = np.array(w.wss(self.code_list, "profit_ttm", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
+        profit_ttm_prev = np.array(w.wss(self.code_list, "fa_profit_ttm", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
 
         profit_ttm_prev[profit_ttm_prev <= 0.0] = np.nan  # 基期亏损的不考虑此因子，此因子值缺失
         net_profit_grow_rate = (profit_ttm_now - profit_ttm_prev) / profit_ttm_prev
@@ -110,17 +64,15 @@ class ROE(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        profit_ttm = np.array(w.wss(self.code_list, "profit_ttm", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
-        equity_new = np.array(w.wss(self.code_list, "equity_new", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
-        roe_index = profit_ttm / equity_new
-        net_profit_grow_rate = pd.DataFrame(data=roe_index, index=self.code_list, columns=[self.factor_name])
+        roe_ttm = np.array(w.wss(self.code_list, "fa_roe_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
+        net_profit_grow_rate = pd.DataFrame(data=roe_ttm, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
 
 
 # EPS指标
 class EPS(SingleFactorReasearch):
     def __init__(self, date, code_list):
-        factor_name = '每股收益EPS'
+        factor_name = '基本每股收益EPS'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
@@ -151,7 +103,7 @@ class CFPS(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        cfps_index = np.array(w.wss(self.code_list, "cfps_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
+        cfps_index = np.array(w.wss(self.code_list, "fa_cfps_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
         net_profit_grow_rate = pd.DataFrame(data=cfps_index, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
 
@@ -164,7 +116,7 @@ class OCFPS(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        ocfps_index = np.array(w.wss(self.code_list, "ocfps_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
+        ocfps_index = np.array(w.wss(self.code_list, "fa_ocfps_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
         net_profit_grow_rate = pd.DataFrame(data=ocfps_index, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
 
@@ -308,5 +260,7 @@ if __name__ == '__main__':
     w.start()
     code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=000300.SH").Data[1]  # 沪深300动态股票池
     # code_list = ['000001.SZ', '000002.SZ']
-    factor_model = PriceFreeCashFlowPerShare(date, code_list)
-    factor_model.plot()
+    factor_model = NetProfitGrowRate(date, code_list)
+    df = factor_model.get_factor()
+    df.to_csv('temp1.csv')
+    print(df)
