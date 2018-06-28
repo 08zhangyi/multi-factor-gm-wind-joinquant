@@ -6,9 +6,9 @@ from tools import get_trading_date_from_now, get_factor_from_wind
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
 BACKTEST_END_DATE = '2018-06-20'  # 回测结束日期，测试结束日期不运用算法
 INDEX = 'SHSE.000016'  # 股票池代码
-FACTOR_LIST = ['fa_ocftoor_ttm', 'fa_orgr_ttm', 'fa_roaebit_ttm', 'tech_ar']  # 需要获取的因子列表
-FACROT_COEFF_LIST = []  # 需要获取的因子列表的相关参数
+FACTOR_LIST = []  # 需要获取的因子列表，用单因子研究中得模块
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日去下一个最近的交易日
+# 创建历史数据记录的文件夹
 
 
 def init(context):
