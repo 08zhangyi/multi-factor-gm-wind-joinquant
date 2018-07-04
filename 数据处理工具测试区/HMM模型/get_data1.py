@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from WindPy import w
 
-codes = "000300.SH,000001.SH"
+codes = "000001.SH,000300.SH,000016.SH,000905.SH,399006.SZ"
 w.start()
 wind_data = w.wsd(codes, "close", "2013-07-01", "2018-06-29", "Period=W")
 
