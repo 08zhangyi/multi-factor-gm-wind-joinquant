@@ -1,5 +1,6 @@
 from gm.api import *
 import QuantLib as ql
+import pandas as pd
 from tools import get_trading_date_from_now, get_factor_from_wind
 
 # 回测的基本参数的设定
@@ -7,7 +8,7 @@ BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
 BACKTEST_END_DATE = '2018-06-20'  # 回测结束日期，测试结束日期不运用算法
 INDEX = 'SHSE.000016'  # 股票池代码
 FACTOR_LIST = []  # 需要获取的因子列表，用单因子研究中得模块
-TRADING_DATE = '10'  # 每月的调仓日期，非交易日去下一个最近的交易日
+TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 # 创建历史数据记录的文件夹
 
 
@@ -19,7 +20,7 @@ def init(context):
     for temp in history_constituents:
         history_constituents_all = history_constituents_all | temp
     history_constituents_all = list(history_constituents_all)
-    # print(len(history_constituents_all))
+    pd.DataFrame(history_constituents_all).to_csv('data\\设计到的股票代码.csv')  # 存储股票代码以方便调试
     # 根据板块的历史数据组成订阅数据
     subscribe(symbols=history_constituents_all, frequency='1d')
     # 每天10:00:00定时执行algo任务
