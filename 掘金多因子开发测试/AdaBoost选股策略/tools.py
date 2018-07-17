@@ -25,20 +25,8 @@ def list_wind2gm(list_wind):
 
 def get_factor_from_wind(code_list, factor_list, factor_coeff_list, date):
     # 还需加入本地存储机制，本地有的数据可以加快读取
-    w.start()
-    code_list = list_gm2wind(code_list)  # code_list为gm中的格式
-    factors = ','.join(factor_list)
-    factors_coeffs = ','.join(factor_coeff_list)
-    df_list = []
-    for code in code_list:
-        data_from_wind = w.wsd(code, factors, date, date, factors_coeffs)
-        columns = data_from_wind.Fields
-        index = [code]
-        data = [[temp[0] for temp in data_from_wind.Data]]
-        code_df = pd.DataFrame(data=data, index=index, columns=columns)
-        df_list.append(code_df)
-    df = pd.concat(df_list)
-    return df
+    # 用单因子研究中的模块直接读取数据
+    pass
 
 
 if __name__ == '__main__':
