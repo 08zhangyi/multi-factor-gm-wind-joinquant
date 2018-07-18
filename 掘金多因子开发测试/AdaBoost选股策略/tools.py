@@ -23,7 +23,7 @@ def list_wind2gm(list_wind):
     return list_gm
 
 
-def get_factor_from_wind(code_list, factor_list, factor_coeff_list, date):
+def get_factor_from_wind(code_list, factor_list, date):
     # 还需加入本地存储机制，本地有的数据可以加快读取
     # 用单因子研究中的模块直接读取数据
     pass
