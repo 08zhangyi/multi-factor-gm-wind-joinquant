@@ -29,5 +29,10 @@ def get_factor_from_wind(code_list, factor_list, date):
     pass
 
 
+def get_return_from_wind(code_list, date_start, date_end):
+    # 从wind上获持仓收益率数据
+    pass
+
+
 if __name__ == '__main__':
     print(get_trading_date_from_now('2018-06-17', 0))

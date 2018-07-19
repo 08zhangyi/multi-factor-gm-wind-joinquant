@@ -2,7 +2,7 @@ from gm.api import *
 import QuantLib as ql
 import pandas as pd
 import copy
-from tools import get_trading_date_from_now, get_factor_from_wind
+from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
@@ -49,9 +49,13 @@ def algo(context):
     else:  # 调仓日执行算法
         code_list = list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys())
         I = trading_date_list.index(date_now)
-        trading_dates = trading_date_list[I-HISTORY_LENGTH:I]
-        for date in trading_dates:
-            get_factor_from_wind(code_list, FACTOR_LIST, date)
+        trading_dates = trading_date_list[I-HISTORY_LENGTH:I+1]
+        for i in range(len(trading_dates)-1):
+            date_start = get_trading_date_from_now(trading_dates[i], -1, ql.Days)  # 计算因子值的日子，买入前一日的因子值
+            date_end = get_trading_date_from_now(trading_dates[i+1], -1, ql.Days)  # 计算收益率到期的日子-收盘
+
+            get_factor_from_wind(code_list, FACTOR_LIST, date_start)  # 获取因子
+            get_return_from_wind(code_list, date_start, date_end)
 
 
 def on_backtest_finished(context, indicator):
