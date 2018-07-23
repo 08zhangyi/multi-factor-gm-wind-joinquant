@@ -38,7 +38,7 @@ def init(context):
     for temp in history_constituents:
         history_constituents_all = history_constituents_all | temp
     history_constituents_all = list(history_constituents_all)
-    pd.DataFrame(history_constituents_all).to_csv('data\\设计到的股票代码.csv')  # 存储股票代码以方便调试
+    pd.DataFrame(history_constituents_all).to_csv('data\\涉及到的股票代码.csv')  # 存储股票代码以方便调试
     # 根据板块的历史数据组成订阅数据
     subscribe(symbols=history_constituents_all, frequency='1d')
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
@@ -63,6 +63,11 @@ def algo(context):
             return_df = get_return_from_wind(code_list, date_start, date_end)
             data_dfs.append(pd.concat([factors_df, return_df], axis=1))
         data_df = pd.concat(data_dfs, axis=0)  # 获取的最终训练数据拼接，return为目标
+        # 根据data_df训练模型
+        # model.fit(data_df)
+        # 根据factor_date_previous选取股票
+        factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous)
+        # model.predict(factor_date_previous)
 
 
 def on_backtest_finished(context, indicator):
