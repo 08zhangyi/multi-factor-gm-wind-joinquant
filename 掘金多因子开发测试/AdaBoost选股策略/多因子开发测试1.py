@@ -3,16 +3,20 @@ import QuantLib as ql
 import pandas as pd
 import copy
 from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind
+# 引入因子类路径
+import sys
+sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
+from single_factor import RSI, PE
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
 BACKTEST_END_DATE = '2018-06-20'  # 回测结束日期，测试结束日期不运用算法
 INDEX = 'SHSE.000016'  # 股票池代码
-FACTOR_LIST = []  # 需要获取的因子列表，用单因子研究中得模块
+FACTOR_LIST = [RSI, PE]  # 需要获取的因子列表，用单因子研究中得模块
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 3  # 取得的历史样本的周期数
-# 创建历史数据记录的文件夹
 
+# 根据回测阶段选取好调仓日期
 trading_date_list = []  # 记录调仓日期的列表
 i = 0
 while True:
@@ -50,12 +54,17 @@ def algo(context):
         code_list = list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys())
         I = trading_date_list.index(date_now)
         trading_dates = trading_date_list[I-HISTORY_LENGTH:I+1]
+        data_dfs = []
         for i in range(len(trading_dates)-1):
             date_start = get_trading_date_from_now(trading_dates[i], -1, ql.Days)  # 计算因子值的日子，买入前一日的因子值
             date_end = get_trading_date_from_now(trading_dates[i+1], -1, ql.Days)  # 计算收益率到期的日子-收盘
 
-            get_factor_from_wind(code_list, FACTOR_LIST, date_start)  # 获取因子
-            return_df = get_return_from_wind(code_list, trading_dates[i], date_end)
+            factors_df = get_factor_from_wind(code_list, FACTOR_LIST, date_start)  # 获取因子
+            return_df = get_return_from_wind(code_list, date_start, date_end)
+            data_dfs.append(pd.concat([factors_df, return_df], axis=1))
+        data_df = pd.concat(data_dfs, axis=0)
+        print(len(data_df))
+        print(data_df)
 
 
 def on_backtest_finished(context, indicator):
