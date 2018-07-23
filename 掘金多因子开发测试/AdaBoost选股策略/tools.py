@@ -2,6 +2,7 @@
 import QuantLib as ql
 import pandas as pd
 from WindPy import w
+import os
 
 
 def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
@@ -26,24 +27,41 @@ def list_wind2gm(list_wind):
 def get_factor_from_wind(code_list, factor_list, date):
     # 还需加入本地存储机制，本地有的数据可以加快读取
     # 用单因子研究\single_factor.py中的因子类直接获取数据
-    code_list = list_gm2wind(code_list)
-    factors_dfs = []
-    for factor in factor_list:
-        factor_df = factor(date, code_list).get_factor()
-        factors_dfs.append(factor_df)
-    factors_df = pd.concat(factors_dfs, axis=1)
+    file_path = 'data_cache\\factor_' + date + '.csv'
+    if os.path.exists(file_path):
+        factors_df = pd.read_csv(file_path, index_col=0)
+    else:
+        code_list = list_gm2wind(code_list)
+        factors_dfs = []
+        for factor in factor_list:
+            factor_df = factor(date, code_list).get_factor()
+            factors_dfs.append(factor_df)
+        factors_df = pd.concat(factors_dfs, axis=1)
+        factors_df.to_csv(file_path, encoding='utf-8')
     return factors_df
 
 
 def get_return_from_wind(code_list, date_start, date_end):
     # 还需加入本地存储机制，本地有的数据可以加快读取
     # 从wind上获待选股票收益率数据，为百分比数据，如：3代表3%
-    w.start()
-    code_list = list_gm2wind(code_list)
-    date_start = get_trading_date_from_now(date_start, 1, ql.Days)
-    return_data = w.wss(code_list, "pct_chg_per", "startDate="+date_start+";endDate="+date_end).Data[0]
-    return_df = pd.DataFrame(data=return_data, index=code_list, columns=['return'])
+    file_path = 'data_cache\\return_' + date_start + '_' + date_end + '.csv'
+    if os.path.exists(file_path):
+        return_df = pd.read_csv(file_path, index_col=0)
+    else:
+        w.start()
+        code_list = list_gm2wind(code_list)
+        date_start = get_trading_date_from_now(date_start, 1, ql.Days)
+        return_data = w.wss(code_list, "pct_chg_per", "startDate="+date_start+";endDate="+date_end).Data[0]
+        return_df = pd.DataFrame(data=return_data, index=code_list, columns=['return'])
+        return_df.to_csv(file_path, encoding='utf-8')
     return return_df
+
+
+def delete_data_cache():
+    # 删除data_cache中的数据缓存
+    for i in os.listdir('data_cache'):
+        path_file = os.path.join('data_cache', i)
+        os.remove(path_file)
 
 
 if __name__ == '__main__':

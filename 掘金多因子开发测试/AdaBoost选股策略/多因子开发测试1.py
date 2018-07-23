@@ -1,8 +1,8 @@
 from gm.api import *
 import QuantLib as ql
 import pandas as pd
-import copy
-from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind
+import os
+from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache
 # 引入因子类路径
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
@@ -62,12 +62,12 @@ def algo(context):
             factors_df = get_factor_from_wind(code_list, FACTOR_LIST, date_start)  # 获取因子
             return_df = get_return_from_wind(code_list, date_start, date_end)
             data_dfs.append(pd.concat([factors_df, return_df], axis=1))
-        data_df = pd.concat(data_dfs, axis=0)
-        print(len(data_df))
-        print(data_df)
+        data_df = pd.concat(data_dfs, axis=0)  # 获取的最终训练数据拼接，return为目标
 
 
 def on_backtest_finished(context, indicator):
+    delete_data_cache()  # 删除缓存中的数据，可手动选取是否删除
+    # 输出回测指标
     print(indicator)
 
 
