@@ -25,10 +25,9 @@ def list_wind2gm(list_wind):
 
 
 def get_factor_from_wind(code_list, factor_list, date):
-    # 还需加入本地存储机制，本地有的数据可以加快读取
     # 用单因子研究\single_factor.py中的因子类直接获取数据
     file_path = 'data_cache\\factor_' + date + '.csv'
-    if os.path.exists(file_path):
+    if os.path.exists(file_path):  # 使用缓存中数据减少数据交互，加快读取速度
         factors_df = pd.read_csv(file_path, index_col=0)
     else:
         code_list = list_gm2wind(code_list)
@@ -42,10 +41,9 @@ def get_factor_from_wind(code_list, factor_list, date):
 
 
 def get_return_from_wind(code_list, date_start, date_end):
-    # 还需加入本地存储机制，本地有的数据可以加快读取
     # 从wind上获待选股票收益率数据，为百分比数据，如：3代表3%
     file_path = 'data_cache\\return_' + date_start + '_' + date_end + '.csv'
-    if os.path.exists(file_path):
+    if os.path.exists(file_path):  # 使用缓存中数据减少数据交互，加快读取速度
         return_df = pd.read_csv(file_path, index_col=0)
     else:
         w.start()
