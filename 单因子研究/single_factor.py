@@ -262,5 +262,5 @@ if __name__ == '__main__':
     # code_list = ['000001.SZ', '000002.SZ']
     factor_model = NetProfitGrowRate(date, code_list)
     df = factor_model.get_factor()
-    df.to_csv('temp1.csv')
+    # df.to_csv('temp1.csv')
     print(df)

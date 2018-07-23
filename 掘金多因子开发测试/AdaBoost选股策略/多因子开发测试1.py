@@ -55,7 +55,7 @@ def algo(context):
             date_end = get_trading_date_from_now(trading_dates[i+1], -1, ql.Days)  # 计算收益率到期的日子-收盘
 
             get_factor_from_wind(code_list, FACTOR_LIST, date_start)  # 获取因子
-            get_return_from_wind(code_list, date_start, date_end)
+            return_df = get_return_from_wind(code_list, trading_dates[i], date_end)
 
 
 def on_backtest_finished(context, indicator):

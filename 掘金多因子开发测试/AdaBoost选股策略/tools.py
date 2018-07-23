@@ -30,8 +30,12 @@ def get_factor_from_wind(code_list, factor_list, date):
 
 
 def get_return_from_wind(code_list, date_start, date_end):
-    # 从wind上获持仓收益率数据
-    pass
+    # 从wind上获待选股票收益率数据，为百分比数据，如：3代表3%
+    w.start()
+    code_list = list_gm2wind(code_list)
+    return_data = w.wss(code_list, "pct_chg_per", "startDate="+date_start+";endDate="+date_end).Data[0]
+    return_df = pd.DataFrame(data=return_data, index=code_list, columns=['return'])
+    return return_df
 
 
 if __name__ == '__main__':
