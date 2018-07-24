@@ -3,6 +3,7 @@ import QuantLib as ql
 import pandas as pd
 from WindPy import w
 import os
+import numpy as np
 
 
 def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
@@ -60,6 +61,13 @@ def delete_data_cache():
     for i in os.listdir('data_cache'):
         path_file = os.path.join('data_cache', i)
         os.remove(path_file)
+
+
+def sort_data(df):
+    # 用排序值对数据进行标准化
+    value = np.argsort(np.argsort(df.values, axis=0), axis=0) / len(df)
+    df = pd.DataFrame(data=value, columns=df.columns, index=df.index)
+    return df
 
 
 if __name__ == '__main__':

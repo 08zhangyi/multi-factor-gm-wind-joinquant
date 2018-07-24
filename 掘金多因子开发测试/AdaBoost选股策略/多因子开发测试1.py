@@ -2,7 +2,9 @@ from gm.api import *
 import QuantLib as ql
 import pandas as pd
 import os
-from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache
+# 引入工具函数和学习器
+from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data
+from learning_model import OrdinaryLinearRegression
 # 引入因子类路径
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
@@ -61,13 +63,16 @@ def algo(context):
 
             factors_df = get_factor_from_wind(code_list, FACTOR_LIST, date_start)  # 获取因子
             return_df = get_return_from_wind(code_list, date_start, date_end)
-            data_dfs.append(pd.concat([factors_df, return_df], axis=1))
-        data_df = pd.concat(data_dfs, axis=0)  # 获取的最终训练数据拼接，return为目标
+            factors_df_and_return_df = pd.concat([factors_df, return_df], axis=1).dropna()  # 去掉因子或者回报有空缺值的样本
+            factors_df_and_return_df = sort_data(factors_df_and_return_df)  # 使用排序数据作为输入
+            data_dfs.append(factors_df_and_return_df)
+        factors_return_df = pd.concat(data_dfs, axis=0)  # 获取的最终训练数据拼接，return为目标
         # 根据data_df训练模型
-        # model.fit(data_df)
+        model = OrdinaryLinearRegression()
+        model.fit(factors_return_df)
         # 根据factor_date_previous选取股票
-        factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous)
-        # model.predict(factor_date_previous)
+        factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous).dropna()
+        sorted_codes = model.predict(factor_date_previous_df)  # 获取预测收益率从小到大排序的股票列表
 
 
 def on_backtest_finished(context, indicator):
