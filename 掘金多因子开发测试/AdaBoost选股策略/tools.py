@@ -65,7 +65,7 @@ def delete_data_cache():
 
 def sort_data(df):
     # 用排序值对数据进行标准化
-    value = np.argsort(np.argsort(df.values, axis=0), axis=0) / len(df)
+    value = np.argsort(np.argsort(df.values, axis=0), axis=0) / (len(df)-1)
     df = pd.DataFrame(data=value, columns=df.columns, index=df.index)
     return df
 
