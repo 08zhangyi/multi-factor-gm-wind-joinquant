@@ -3,7 +3,7 @@ import QuantLib as ql
 import pandas as pd
 import os
 # 引入工具函数和学习器
-from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data
+from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2gm
 from learning_model import OrdinaryLinearRegression
 # 引入因子类路径
 import sys
@@ -12,11 +12,12 @@ from single_factor import RSI, PE
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
-BACKTEST_END_DATE = '2018-06-20'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2018-07-23'  # 回测结束日期，测试结束日期不运用算法
 INDEX = 'SHSE.000016'  # 股票池代码
 FACTOR_LIST = [RSI, PE]  # 需要获取的因子列表，用单因子研究中得模块
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 3  # 取得的历史样本的周期数
+STOCK_NUMBER = 10  # 选股数量
 
 # 根据回测阶段选取好调仓日期
 trading_date_list = []  # 记录调仓日期的列表
@@ -53,6 +54,7 @@ def algo(context):
     if date_now not in trading_date_list:  # 非调仓日
         pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
+        print(date_now+'日回测程序执行中...')
         code_list = list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys())
         I = trading_date_list.index(date_now)
         trading_dates = trading_date_list[I-HISTORY_LENGTH:I+1]
@@ -73,6 +75,13 @@ def algo(context):
         # 根据factor_date_previous选取股票
         factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous).dropna()
         sorted_codes = model.predict(factor_date_previous_df)  # 获取预测收益率从小到大排序的股票列表
+        sorted_codes = list_wind2gm(sorted_codes)
+        print(sorted_codes)
+        print(len(sorted_codes))
+        # 根据股票列表下单
+        stock_codes = sorted_codes[-STOCK_NUMBER:]
+        for stock_code in stock_codes:  # 平均持仓持股
+            order_target_percent(stock_code, percent=1./STOCK_NUMBER, position_side=PositionSide_Long, order_type=OrderType_Market)
 
 
 def on_backtest_finished(context, indicator):
@@ -82,9 +91,13 @@ def on_backtest_finished(context, indicator):
 
 
 if __name__ == '__main__':
-    run(strategy_id='efed2881-7511-11e8-8fe1-305a3a77b8c5',
+    run(strategy_id='4d2f6b1c-8f0a-11e8-af59-305a3a77b8c5',
         filename='多因子开发测试1.py',
         mode=MODE_BACKTEST,
         token='d7b08e7e21dd0315a510926e5a53ade8c01f9aaa',
+        backtest_initial_cash=10000000,
+        backtest_adjust=ADJUST_PREV,
+        backtest_commission_ratio=0.0001,
+        backtest_slippage_ratio=0.0001,
         backtest_start_time=BACKTEST_START_DATE+' 09:00:00',
         backtest_end_time=BACKTEST_END_DATE+' 15:00:00')
