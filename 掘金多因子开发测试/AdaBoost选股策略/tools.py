@@ -25,6 +25,12 @@ def list_wind2gm(list_wind):
     return list_gm
 
 
+def list_wind2jq(list_wind):
+    wind2jq_dict = {'SH': 'XSHG', 'SZ': 'XSHE', 'CFE': 'CCFX', 'SHF': 'XSGE', 'DCE': 'XDCE', 'CZC': 'XZCE', 'INE': 'XINE'}
+    list_jq = [temp.split('.')[0] + '.' + wind2jq_dict[temp.split('.')[1]] for temp in list_wind]
+    return list_jq
+
+
 def get_factor_from_wind(code_list, factor_list, date):
     # 用单因子研究\single_factor.py中的因子类直接获取数据
     file_path = 'data_cache\\factor_' + date + '.csv'
@@ -65,7 +71,7 @@ def delete_data_cache():
 
 def sort_data(df):
     # 用排序值对数据进行标准化
-    value = np.argsort(np.argsort(df.values, axis=0), axis=0) / (len(df)-1)
+    value = np.argsort(np.argsort(df.values, axis=0), axis=0) / (len(df)-1)  # 转化为0-1的排序值
     df = pd.DataFrame(data=value, columns=df.columns, index=df.index)
     return df
 

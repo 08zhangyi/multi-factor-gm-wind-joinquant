@@ -1,9 +1,10 @@
 from gm.api import *
 import QuantLib as ql
 import pandas as pd
-import os
+from WindPy import w
+import json
 # 引入工具函数和学习器
-from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2gm
+from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq
 from learning_model import OrdinaryLinearRegression
 # 引入因子类路径
 import sys
@@ -18,6 +19,10 @@ FACTOR_LIST = [RSI, PE]  # 需要获取的因子列表，用单因子研究中�
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 3  # 取得的历史样本的周期数
 STOCK_NUMBER = 10  # 选股数量
+
+# 用于记录调仓信息的字典
+stock_dict = {}
+w.start()
 
 # 根据回测阶段选取好调仓日期
 trading_date_list = []  # 记录调仓日期的列表
@@ -75,19 +80,24 @@ def algo(context):
         # 根据factor_date_previous选取股票
         factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous).dropna()
         sorted_codes = model.predict(factor_date_previous_df)  # 获取预测收益率从小到大排序的股票列表
-        sorted_codes = list_wind2gm(sorted_codes)
-        print(sorted_codes)
-        print(len(sorted_codes))
+        sorted_codes = list_wind2jq(sorted_codes)
         # 根据股票列表下单
         stock_codes = sorted_codes[-STOCK_NUMBER:]
+        stock_now = []
         for stock_code in stock_codes:  # 平均持仓持股
-            order_target_percent(stock_code, percent=1./STOCK_NUMBER, position_side=PositionSide_Long, order_type=OrderType_Market)
+            # order_target_percent(stock_code, percent=1./STOCK_NUMBER, position_side=PositionSide_Long, order_type=OrderType_Market)
+            stock_now.append([stock_code, 1./STOCK_NUMBER])
+        stock_dict[date_now] = stock_now
 
 
 def on_backtest_finished(context, indicator):
     delete_data_cache()  # 删除缓存中的数据，可手动选取是否删除
     # 输出回测指标
     print(indicator)
+    stock_json = json.dumps(stock_dict)
+    stock_file = open('data\\stock_json.json', 'w')
+    stock_file.write(stock_json)
+    stock_file.close()
 
 
 if __name__ == '__main__':

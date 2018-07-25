@@ -4,7 +4,8 @@ from sklearn.ensemble import AdaBoostRegressor
 from sklearn import linear_model
 
 
-class BaseLearner(object):
+# 针对sklearn的学你模型包装的学习器基类
+class BaseLearnerForSKLearn(object):
     def __init__(self):
         self.regr = None
 
@@ -21,13 +22,13 @@ class BaseLearner(object):
         return sorted_codes
 
 
-class OrdinaryLinearRegression(BaseLearner):
+class OrdinaryLinearRegression(BaseLearnerForSKLearn):
     def __init__(self):
         super().__init__()
         self.regr = linear_model.LinearRegression()
 
 
-class AdaBoost_DecisionTree_Regresor(BaseLearner):
+class AdaBoost_DecisionTree_Regresor(BaseLearnerForSKLearn):
     def __init__(self, max_depth=4, n_estimators=20, random_state=np.random.RandomState(1024)):
         super().__init__()
         self.regr = AdaBoostRegressor(DecisionTreeRegressor(max_depth=max_depth), n_estimators=n_estimators, random_state=random_state)
