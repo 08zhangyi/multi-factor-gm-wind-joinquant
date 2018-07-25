@@ -48,7 +48,7 @@ def init(context):
     history_constituents_all = list(history_constituents_all)
     pd.DataFrame(history_constituents_all).to_csv('data\\涉及到的股票代码.csv')  # 存储股票代码以方便调试
     # 根据板块的历史数据组成订阅数据
-    subscribe(symbols=history_constituents_all, frequency='1d')
+    # subscribe(symbols=history_constituents_all, frequency='1d')
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 
@@ -83,10 +83,9 @@ def algo(context):
         sorted_codes = list_wind2jq(sorted_codes)
         # 根据股票列表下单
         stock_codes = sorted_codes[-STOCK_NUMBER:]
-        stock_now = []
+        stock_now = {}
         for stock_code in stock_codes:  # 平均持仓持股
-            # order_target_percent(stock_code, percent=1./STOCK_NUMBER, position_side=PositionSide_Long, order_type=OrderType_Market)
-            stock_now.append([stock_code, 1./STOCK_NUMBER])
+            stock_now[stock_code] = 1./STOCK_NUMBER
         stock_dict[date_now] = stock_now
 
 
