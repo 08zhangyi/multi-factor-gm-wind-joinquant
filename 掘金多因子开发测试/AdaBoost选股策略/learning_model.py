@@ -5,8 +5,20 @@ from sklearn import linear_model
 
 
 # 针对sklearn的学你模型包装的学习器基类
-class BaseLearnerForSKLearn(object):
+class BaseLearner(object):
     def __init__(self):
+        pass
+
+    def fit(self, factors_return_df):
+        return None
+
+    def predict(self, factors_df):
+        return None
+
+
+class BaseLearnerForSKLearnRegressor(BaseLearner):
+    def __init__(self):
+        super().__init__()
         self.regr = None
 
     def fit(self, factors_return_df):
@@ -22,13 +34,13 @@ class BaseLearnerForSKLearn(object):
         return sorted_codes
 
 
-class OrdinaryLinearRegression(BaseLearnerForSKLearn):
+class OrdinaryLinearRegression(BaseLearnerForSKLearnRegressor):
     def __init__(self):
         super().__init__()
         self.regr = linear_model.LinearRegression()
 
 
-class AdaBoost_DecisionTree_Regresor(BaseLearnerForSKLearn):
+class AdaBoost_DecisionTree_Regresor(BaseLearnerForSKLearnRegressor):
     def __init__(self, max_depth=4, n_estimators=20, random_state=np.random.RandomState(1024)):
         super().__init__()
         self.regr = AdaBoostRegressor(DecisionTreeRegressor(max_depth=max_depth), n_estimators=n_estimators, random_state=random_state)
