@@ -33,7 +33,7 @@ h = matrix(h)
 A = matrix(A)
 b = matrix(b)
 
-sol=solvers.qp(Q, p, G, h, A, b)
+sol = solvers.qp(Q, p, G, h, A, b)
 x_sol = np.array(sol['x']).transpose()[0]
 for x in x_sol:
     print(x)
