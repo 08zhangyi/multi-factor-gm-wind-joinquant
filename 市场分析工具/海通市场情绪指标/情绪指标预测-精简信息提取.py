@@ -24,6 +24,7 @@ plot_number = len(statistics_dict)
 i = 0
 plt.figure(figsize=(8, 32))
 for key in statistics_dict.keys():
+    print(key, '----------------------------')
     time_series_ori = df[loc_dict[key]].values[N_history:0:-1]
     time_series = list(np.diff(time_series_ori, statistics_dict[key][0]))
 
@@ -39,5 +40,6 @@ for key in statistics_dict.keys():
     plt.plot(range(len(time_series_ori)), time_series_ori, 'b')
     plt.plot(range(len(time_series_ori), len(time_series_ori) + 5), predict, 'r')
     plt.title(key)
+    print('--------------------------------------')
 
 plt.show()  # 输出预测图
