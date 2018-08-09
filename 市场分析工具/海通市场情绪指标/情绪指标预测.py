@@ -18,7 +18,7 @@ df = pd.read_excel('data\\海通策略指标.xlsx')
 # 数据准备
 key = '信用利差（%，左轴）'
 time_series_ori = df[loc_dict[key]].values[N_history:0:-1]
-time_series = np.diff(time_series_ori, 0)
+time_series = np.diff(time_series_ori, 1)
 time_series = list(time_series)
 
 # 时序图绘制
