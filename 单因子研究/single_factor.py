@@ -43,6 +43,114 @@ class NetProfitGrowRate(SingleFactorReasearch):
         return net_profit_grow_rate
 
 
+# 5日移动均线
+class MA5(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '5日移动均线'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=5;priceAdj=F;cycle=D").Data[0])
+        MA5 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
+        return MA5
+
+
+# 10日移动均线
+class MA10(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '10日移动均线'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=10;priceAdj=F;cycle=D").Data[0])
+        MA10 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
+        return MA10
+
+
+# 20日移动均线
+class MA20(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '20日移动均线'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=20;priceAdj=F;cycle=D").Data[0])
+        MA20 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
+        return MA20
+
+
+# 60日移动均线
+class MA60(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '60日移动均线'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=60;priceAdj=F;cycle=D").Data[0])
+        MA60 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
+        return MA60
+
+
+# 120日移动均线
+class MA120(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '120日移动均线'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=120;priceAdj=F;cycle=D").Data[0])
+        MA120 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
+        return MA120
+
+
+# N日移动均线
+class MA_N(SingleFactorReasearch):
+    def __init__(self, date, code_list, N):
+        self.N = N  # N日均线的长度
+        factor_name = 'N日移动均线'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N="+str(self.N)+";priceAdj=F;cycle=D").Data[0])
+        MA_N = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
+        return MA_N
+
+
+# N日移动均线相对价格比例
+class MA_N_rel(SingleFactorReasearch):
+    def __init__(self, date, code_list, N):
+        self.N = N  # N日均线的长度
+        factor_name = 'N日移动均线'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N="+str(self.N)+";priceAdj=F;cycle=D").Data[0])
+        close_data = np.array(w.wss(self.code_list,  "close", "tradeDate="+"".join(date_list)+"priceAdj=F;cycle=D").Data[0])
+        MA_data = MA_data / close_data
+        MA_N_rel = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
+        return MA_N_rel
+
+
+# 对数市值  # 算法：np.log(个股当日股价*当日总股本)
+class LCAP(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '对数市值'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        log_Cap = np.log(w.wss(self.code_list, "mkt_cap_ard", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        LCAP = pd.DataFrame(data=log_Cap, index=self.code_list, columns=[self.factor_name])
+        return LCAP
+
+
 # RSI指标
 class RSI(SingleFactorReasearch):
     def __init__(self, date, code_list):
