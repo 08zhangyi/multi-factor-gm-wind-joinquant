@@ -51,7 +51,7 @@ class MA5(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=5;priceAdj=F;cycle=D").Data[0])
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=5;priceAdj=T;cycle=D").Data[0])
         MA5 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
         return MA5
 
@@ -64,7 +64,7 @@ class MA10(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=10;priceAdj=F;cycle=D").Data[0])
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=10;priceAdj=T;cycle=D").Data[0])
         MA10 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
         return MA10
 
@@ -77,7 +77,7 @@ class MA20(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=20;priceAdj=F;cycle=D").Data[0])
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=20;priceAdj=T;cycle=D").Data[0])
         MA20 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
         return MA20
 
@@ -90,7 +90,7 @@ class MA60(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=60;priceAdj=F;cycle=D").Data[0])
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=60;priceAdj=T;cycle=D").Data[0])
         MA60 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
         return MA60
 
@@ -103,7 +103,7 @@ class MA120(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=120;priceAdj=F;cycle=D").Data[0])
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N=120;priceAdj=T;cycle=D").Data[0])
         MA120 = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
         return MA120
 
@@ -112,12 +112,12 @@ class MA120(SingleFactorReasearch):
 class MA_N(SingleFactorReasearch):
     def __init__(self, date, code_list, N):
         self.N = N  # N日均线的长度
-        factor_name = 'N日移动均线'
+        factor_name = str(N) + '日移动均线'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
         date_list = self.date
-        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N="+str(self.N)+";priceAdj=F;cycle=D").Data[0])
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N="+str(self.N)+";priceAdj=T;cycle=D").Data[0])
         MA_N = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
         return MA_N
 
@@ -126,29 +126,148 @@ class MA_N(SingleFactorReasearch):
 class MA_N_rel(SingleFactorReasearch):
     def __init__(self, date, code_list, N):
         self.N = N  # N日均线的长度
-        factor_name = 'N日移动均线'
+        factor_name = str(N) + '日移动均线相对价格比例'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
         date_list = self.date
-        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N="+str(self.N)+";priceAdj=F;cycle=D").Data[0])
-        close_data = np.array(w.wss(self.code_list,  "close", "tradeDate="+"".join(date_list)+"priceAdj=F;cycle=D").Data[0])
+        MA_data = np.array(w.wss(self.code_list,  "MA", "tradeDate="+"".join(date_list)+";MA_N="+str(self.N)+";priceAdj=T;cycle=D").Data[0])
+        close_data = np.array(w.wss(self.code_list,  "close", "tradeDate="+"".join(date_list)+";priceAdj=T;cycle=D").Data[0])
         MA_data = MA_data / close_data
         MA_N_rel = pd.DataFrame(data=MA_data, index=self.code_list, columns=[self.factor_name])
         return MA_N_rel
 
 
+# 5日平均换手率
+class VOL5(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '5日平均换手率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = str(w.tdaysoffset(-5, "".join(date_list), "").Data[0][0])  # 区间数据
+        vol_data = np.array(w.wss(self.code_list, "avg_turn_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
+        vol_data = vol_data / 100.0
+        VOL5 = pd.DataFrame(data=vol_data, index=self.code_list, columns=[self.factor_name])
+        return VOL5
+
+
+# 10日平均换手率
+class VOL10(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '10日平均换手率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = str(w.tdaysoffset(-10, "".join(date_list), "").Data[0][0])  # 区间数据
+        vol_data = np.array(w.wss(self.code_list, "avg_turn_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
+        vol_data = vol_data / 100.0
+        VOL10 = pd.DataFrame(data=vol_data, index=self.code_list, columns=[self.factor_name])
+        return VOL10
+
+
+# 20日平均换手率
+class VOL20(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '20日平均换手率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = str(w.tdaysoffset(-20, "".join(date_list), "").Data[0][0])  # 区间数据
+        vol_data = np.array(w.wss(self.code_list, "avg_turn_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
+        vol_data = vol_data / 100.0
+        VOL20 = pd.DataFrame(data=vol_data, index=self.code_list, columns=[self.factor_name])
+        return VOL20
+
+
+# 60日平均换手率
+class VOL60(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '60日平均换手率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = str(w.tdaysoffset(-60, "".join(date_list), "").Data[0][0])  # 区间数据
+        vol_data = np.array(w.wss(self.code_list, "avg_turn_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
+        vol_data = vol_data / 100.0
+        VOL60 = pd.DataFrame(data=vol_data, index=self.code_list, columns=[self.factor_name])
+        return VOL60
+
+
+# 120日平均换手率
+class VOL120(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '120日平均换手率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = str(w.tdaysoffset(-120, "".join(date_list), "").Data[0][0])  # 区间数据
+        vol_data = np.array(w.wss(self.code_list, "avg_turn_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
+        vol_data = vol_data / 100.0
+        VOL120 = pd.DataFrame(data=vol_data, index=self.code_list, columns=[self.factor_name])
+        return VOL120
+
+
+# 240日平均换手率
+class VOL240(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '240日平均换手率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = str(w.tdaysoffset(-240, "".join(date_list), "").Data[0][0])  # 区间数据
+        vol_data = np.array(w.wss(self.code_list, "avg_turn_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
+        vol_data = vol_data / 100.0
+        VOL240 = pd.DataFrame(data=vol_data, index=self.code_list, columns=[self.factor_name])
+        return VOL240
+
+
+# N日平均换手率
+class VOL_N(SingleFactorReasearch):
+    def __init__(self, date, code_list, N):
+        self.N = N
+        factor_name = str(N) + '日平均换手率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = str(w.tdaysoffset(-self.N, "".join(date_list), "").Data[0][0])  # 区间数据
+        vol_data = np.array(w.wss(self.code_list, "avg_turn_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
+        vol_data = vol_data / 100.0
+        VOL240 = pd.DataFrame(data=vol_data, index=self.code_list, columns=[self.factor_name])
+        return VOL240
+
+
 # 对数市值  # 算法：np.log(个股当日股价*当日总股本)
-class LCAP(SingleFactorReasearch):
+class LCap(SingleFactorReasearch):
     def __init__(self, date, code_list):
         factor_name = '对数市值'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
         date_list = self.date
-        log_Cap = np.log(w.wss(self.code_list, "mkt_cap_ard", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
-        LCAP = pd.DataFrame(data=log_Cap, index=self.code_list, columns=[self.factor_name])
-        return LCAP
+        log_Cap = np.log(w.wss(self.code_list, "val_lnmv", "tradeDate=" + "".join(date_list)).Data[0])
+        LCap = pd.DataFrame(data=log_Cap, index=self.code_list, columns=[self.factor_name])
+        return LCap
+
+
+# 对数流通市值
+class LFloatCap(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '对数市值'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        log_Circulation_Cap = np.log(w.wss(self.code_list, "val_lnfloatmv", "tradeDate=" + "".join(date_list)).Data[0])
+        LFloatCap = pd.DataFrame(data=log_Circulation_Cap, index=self.code_list, columns=[self.factor_name])
+        return LFloatCap
 
 
 # RSI指标
@@ -162,6 +281,54 @@ class RSI(SingleFactorReasearch):
         rsi_index = w.wss(self.code_list, "RSI", "industryType=1;tradeDate="+''.join(date_list)+";RSI_N=6;priceAdj=T;cycle=D").Data[0]
         net_profit_grow_rate = pd.DataFrame(data=rsi_index, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
+
+
+# 成交量比率  # VolumeRatio = N日内上升日成交额总和/N日内下降日成交额总和, 万得默认N=26
+class VR(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '成交量比率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        vr_data = np.array(w.wss(self.code_list, "tech_vr", "tradeDate=" + "".join(date_list)).Data[0])
+        VR = pd.DataFrame(data=vr_data, index=self.code_list, columns=[self.factor_name])
+        return VR
+
+
+# 20日资金流量  # 用20日的收盘价、最高价及最低价的均值乘以20日成交量即可得到该交易日的资金流量
+class MoneyFlow20(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '20日资金流量'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = str(w.tdaysoffset(-20, "".join(date_list), "").Data[0][0])  # 区间数据
+        price_data = np.array(w.wss(self.code_list, "high_per,low_per,close_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list) + ";priceAdj=T").Data)
+        avg_price = np.sum(price_data, axis=0) / 3.0
+        volume = np.array(w.wss(self.code_list, "vol_per", "unit=1;startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
+        result = avg_price * volume
+        MoneyFlow20 = pd.DataFrame(data=result, index=self.code_list, columns=[self.factor_name])
+        return MoneyFlow20
+
+
+# N日资金流量  # 用N日的收盘价、最高价及最低价的均值乘以20日成交量即可得到该交易日的资金流量
+class MoneyFlow_N(SingleFactorReasearch):
+    def __init__(self, date, code_list, N):
+        self.N = N
+        factor_name = str(N) + '日资金流量'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = str(w.tdaysoffset(-self.N, "".join(date_list), "").Data[0][0])  # 区间数据
+        price_data = np.array(w.wss(self.code_list, "high_per,low_per,close_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list) + ";priceAdj=T").Data)
+        avg_price = np.sum(price_data, axis=0) / 3.0
+        volume = np.array(w.wss(self.code_list, "vol_per", "unit=1;startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
+        result = avg_price * volume
+        MoneyFlow20 = pd.DataFrame(data=result, index=self.code_list, columns=[self.factor_name])
+        return MoneyFlow20
 
 
 # ROE指标
@@ -364,11 +531,11 @@ class StockPledgeRatio(SingleFactorReasearch):
 
 
 if __name__ == '__main__':
-    date = '2018-06-19'
+    date = '2017-05-09'
     w.start()
-    code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=000300.SH").Data[1]  # 沪深300动态股票池
-    # code_list = ['000001.SZ', '000002.SZ']
-    factor_model = NetProfitGrowRate(date, code_list)
+    # code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=000300.SH").Data[1]  # 沪深300动态股票池
+    code_list = ['000001.SZ', '000002.SZ']
+    factor_model = MoneyFlow20(date, code_list)
     df = factor_model.get_factor()
     # df.to_csv('temp1.csv')
     print(df)
