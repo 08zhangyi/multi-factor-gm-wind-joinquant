@@ -9,14 +9,14 @@ from tools import get_trading_date_from_now, list_gm2wind, list_wind2jq
 # 引入因子类路径
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
-from single_factor import PE
+from single_factor import RSI
 
 # 俺们但一字分组测试盈亏效果的代码
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2013-08-01'  # 回测开始日期
 BACKTEST_END_DATE = '2018-08-14'  # 回测结束日期，测试结束日期不运用算法
 INDEX = 'SHSE.000300'  # 股票池代码
-FACTOR = PE  # 需要获取的因子列表，用单因子研究中得模块
+FACTOR = RSI  # 需要获取的因子列表，用单因子研究中得模块
 FACTOR_COEFF = {}  # 因子获取的具体参数
 QUANTILE = [0.8, 1.0]  # 因子分组的分位数
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
@@ -40,16 +40,6 @@ BACKTEST_START_DATE = trading_date_list[0]  # 调整回测起始日为第一次�
 
 
 def init(context):
-    # 按照回测的将股票池的历史股票组成提出并合并
-    history_constituents = get_history_constituents(INDEX, start_date=BACKTEST_START_DATE, end_date=BACKTEST_END_DATE)
-    history_constituents = [set(temp['constituents'].keys()) for temp in history_constituents]
-    history_constituents_all = set()
-    for temp in history_constituents:
-        history_constituents_all = history_constituents_all | temp
-    history_constituents_all = list(history_constituents_all)
-    pd.DataFrame(history_constituents_all).to_csv('data\\涉及到的股票代码.csv')  # 存储股票代码以方便调试
-    # 根据板块的历史数据组成订阅数据
-    # subscribe(symbols=history_constituents_all, frequency='1d')
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 

@@ -375,13 +375,14 @@ class LFloatCap(SingleFactorReasearch):
 
 # RSI指标
 class RSI(SingleFactorReasearch):
-    def __init__(self, date, code_list):
+    def __init__(self, date, code_list, N=6):
         factor_name = '相对强度指标RSI'
+        self.N = N
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
         date_list = self.date
-        rsi_index = w.wss(self.code_list, "RSI", "industryType=1;tradeDate="+''.join(date_list)+";RSI_N=6;priceAdj=T;cycle=D").Data[0]
+        rsi_index = w.wss(self.code_list, "RSI", "industryType=1;tradeDate="+''.join(date_list)+";RSI_N="+str(self.N)+";priceAdj=T;cycle=D").Data[0]
         net_profit_grow_rate = pd.DataFrame(data=rsi_index, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
 
