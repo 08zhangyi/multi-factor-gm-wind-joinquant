@@ -3,12 +3,12 @@ import QuantLib as ql
 from WindPy import w
 import json
 import sys
-# 引入因子类
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from single_factor import PE
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_gm2wind, list_wind2jq
+from 仓位配置 import market_capital_transfer
 
 # 俺们但一字分组测试盈亏效果的代码
 # 回测的基本参数的设定
@@ -18,8 +18,9 @@ INDEX = 'SHSE.000300'  # 股票池代码，可以用掘金代码，也可以用W
 INDEX = '801770.SI'
 FACTOR = PE  # 需要获取的因子列表，用单因子研究中得模块
 FACTOR_COEFF = {}  # 因子获取的具体参数
-QUANTILE = [0.0, 0.2]  # 因子分组的分位数
+QUANTILE = [0.8, 1.0]  # 因子分组的分位数
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
+TRANSFER_FUNCTION = market_capital_transfer  # 调仓函数的设置
 
 # 用于记录调仓信息的字典
 stock_dict = {}
@@ -59,10 +60,10 @@ def algo(context):
         df = factor.get_factor().dropna()
         quantiles = df.quantile(QUANTILE).values  # 取对应的分位数值
         stock_codes = list(df[(df[factor.factor_name] >= quantiles[0][0]) & (df[factor.factor_name] < quantiles[1][0])].index.values)
-        stock_codes = list_wind2jq(stock_codes)
-        stock_now = {}
-        for stock_code in stock_codes:
-            stock_now[stock_code] = 1.0 / len(stock_codes)
+        stock_now = TRANSFER_FUNCTION(stock_codes, date_previous)
+        # stock_now = {}
+        # for stock_code in stock_codes:
+        #     stock_now[stock_code] = 1.0 / len(stock_codes)
         stock_dict[date_now] = stock_now
 
 
