@@ -4,12 +4,13 @@ import pandas as pd
 from WindPy import w
 import json
 import numpy as np
-# 引入工具函数和学习器
-from tools import get_trading_date_from_now, list_gm2wind, list_wind2jq
-# 引入因子类路径
 import sys
+# 引入因子类
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
+sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from single_factor import RSI
+# 引入工具函数和学习器
+from utils import get_trading_date_from_now, list_gm2wind, list_wind2jq
 
 # 俺们但一字分组测试盈亏效果的代码
 # 回测的基本参数的设定

@@ -3,13 +3,14 @@ import QuantLib as ql
 import pandas as pd
 from WindPy import w
 import json
-# 引入工具函数和学习器
-from tools import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq
 from learning_model import OrdinaryLinearRegression
-# 引入因子类路径
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
+sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
+# 引入因子类
 from single_factor import RSI, PE
+# 引入工具函数和学习器
+from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
