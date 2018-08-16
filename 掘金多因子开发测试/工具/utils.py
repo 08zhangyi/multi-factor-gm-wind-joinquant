@@ -37,7 +37,6 @@ def get_factor_from_wind(code_list, factor_list, date):
     if os.path.exists(file_path):  # 使用缓存中数据减少数据交互，加快读取速度
         factors_df = pd.read_csv(file_path, index_col=0)
     else:
-        # code_list = list_gm2wind(code_list)
         factors_dfs = []
         for factor in factor_list:
             factor_df = factor(date, code_list).get_factor()
@@ -54,7 +53,6 @@ def get_return_from_wind(code_list, date_start, date_end):
         return_df = pd.read_csv(file_path, index_col=0)
     else:
         w.start()
-        # code_list = list_gm2wind(code_list)
         date_start = get_trading_date_from_now(date_start, 1, ql.Days)
         return_data = w.wss(code_list, "pct_chg_per", "startDate="+date_start+";endDate="+date_end).Data[0]
         return_df = pd.DataFrame(data=return_data, index=code_list, columns=['return'])
