@@ -1,25 +1,24 @@
 from gm.api import *
 import QuantLib as ql
-import pandas as pd
 from WindPy import w
 import json
-import numpy as np
 import sys
 # 引入因子类
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
-from single_factor import RSI
+from single_factor import PE
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_gm2wind, list_wind2jq
 
 # 俺们但一字分组测试盈亏效果的代码
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2013-08-01'  # 回测开始日期
+BACKTEST_START_DATE = '2014-08-01'  # 回测开始日期
 BACKTEST_END_DATE = '2018-08-14'  # 回测结束日期，测试结束日期不运用算法
-INDEX = 'SHSE.000300'  # 股票池代码
-FACTOR = RSI  # 需要获取的因子列表，用单因子研究中得模块
+INDEX = 'SHSE.000300'  # 股票池代码，可以用掘金代码，也可以用Wind代码
+INDEX = '801770.SI'
+FACTOR = PE  # 需要获取的因子列表，用单因子研究中得模块
 FACTOR_COEFF = {}  # 因子获取的具体参数
-QUANTILE = [0.8, 1.0]  # 因子分组的分位数
+QUANTILE = [0.0, 0.2]  # 因子分组的分位数
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
 # 用于记录调仓信息的字典
@@ -52,7 +51,10 @@ def algo(context):
         pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
         print(date_now+'日回测程序执行中...')
-        code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
+        try:
+            code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
+        except IndexError:
+            code_list = w.wset("sectorconstituent", "date="+date_previous+";windcode="+INDEX).Data[1]
         factor = FACTOR(date_previous, code_list, **FACTOR_COEFF)  # 读取单因子的代码
         df = factor.get_factor().dropna()
         quantiles = df.quantile(QUANTILE).values  # 取对应的分位数值
@@ -75,7 +77,7 @@ def on_backtest_finished(context, indicator):
 
 if __name__ == '__main__':
     run(strategy_id='4d2f6b1c-8f0a-11e8-af59-305a3a77b8c5',
-        filename='single_factor_backtest_group.py',
+        filename='单因子研究_等权_月调仓.py',
         mode=MODE_BACKTEST,
         token='d7b08e7e21dd0315a510926e5a53ade8c01f9aaa',
         backtest_initial_cash=10000000,

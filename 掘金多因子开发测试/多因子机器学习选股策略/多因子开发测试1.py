@@ -10,12 +10,12 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 # 引入因子类
 from single_factor import RSI, PE
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq
+from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq, list_gm2wind
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
 BACKTEST_END_DATE = '2018-07-23'  # 回测结束日期，测试结束日期不运用算法
-INDEX = 'SHSE.000016'  # 股票池代码
+INDEX = 'SHSE.000016'  # 股票池代码，可以用掘金代码，也可以用Wind代码
 FACTOR_LIST = [RSI, PE]  # 需要获取的因子列表，用单因子研究中得模块
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 3  # 取得的历史样本的周期数
@@ -61,7 +61,10 @@ def algo(context):
         pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
         print(date_now+'日回测程序执行中...')
-        code_list = list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys())
+        try:
+            code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
+        except IndexError:
+            code_list = w.wset("sectorconstituent", "date="+date_previous+";windcode="+INDEX).Data[1]
         I = trading_date_list.index(date_now)
         trading_dates = trading_date_list[I-HISTORY_LENGTH:I+1]
         data_dfs = []
