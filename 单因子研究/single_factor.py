@@ -750,7 +750,7 @@ if __name__ == '__main__':
     w.start()
     # code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=000300.SH").Data[1]  # 沪深300动态股票池
     code_list = ['000001.SZ', '000002.SZ']
-    factor_model = ForecastEarning(date, code_list)
+    factor_model = MA_N(date, code_list, 3)
     df = factor_model.get_factor()
     # df.to_csv('temp1.csv')
     print(df)
