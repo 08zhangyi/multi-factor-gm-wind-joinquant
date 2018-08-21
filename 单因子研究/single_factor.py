@@ -43,6 +43,20 @@ class NetProfitGrowRate(SingleFactorReasearch):
         return net_profit_grow_rate
 
 
+# 净利润增长率
+class NetProfitGrowRateV2(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '净利润增长率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        npgr = np.array(w.wss(self.code_list,  "fa_npgr_ttm", "tradeDate="+"".join(date_list)).Data[0])
+        NPGR = pd.DataFrame(data=npgr, index=self.code_list, columns=[self.factor_name])
+        return NPGR
+
+
+
 # 5日移动均线
 class MA5(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -555,6 +569,19 @@ class GrossIncomeRatio(SingleFactorReasearch):
         return GrossIncomeRatio
 
 
+# 资产负债率
+class DebetToAsset(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '资产负债率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        debet_to_asset = np.array(w.wss(self.code_list, "fa_debttoasset", "tradeDate=" + "".join(date_list)).Data[0])/100.0
+        DebetToAsset = pd.DataFrame(data=debet_to_asset, index=self.code_list, columns=[self.factor_name])
+        return DebetToAsset
+
+
 # 经营活动现金流与企业价值比
 class CFO2EV(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -609,6 +636,19 @@ class OCFPS(SingleFactorReasearch):
         ocfps_index = np.array(w.wss(self.code_list, "fa_ocfps_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
         net_profit_grow_rate = pd.DataFrame(data=ocfps_index, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
+
+
+# 市值/企业自由现金流
+class MarketValueToFreeCashFlow(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '市值/企业自由现金流'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        val_mvtofcff = np.array(w.wss(self.code_list, "val_mvtofcff", "tradeDate=" + ''.join(date_list)).Data[0])
+        MarketValueToFreeCashFlow = pd.DataFrame(data=val_mvtofcff, index=self.code_list, columns=[self.factor_name])
+        return MarketValueToFreeCashFlow
 
 
 # LogEV(含货币资金)指标

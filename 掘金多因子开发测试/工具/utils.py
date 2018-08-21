@@ -46,6 +46,21 @@ def get_factor_from_wind(code_list, factor_list, date):
     return factors_df
 
 
+def get_factor_from_wind_v2(code_list, factor_list, date):
+    # 用单因子研究\single_factor.py中的因子类直接获取数据
+    # 无缓存版本
+    file_path = 'data_cache\\factor_' + date + '.csv'
+    if os.path.exists(file_path):  # 使用缓存中数据减少数据交互，加快读取速度
+        factors_df = pd.read_csv(file_path, index_col=0)
+    else:
+        factors_dfs = []
+        for factor in factor_list:
+            factor_df = factor(date, code_list).get_factor()
+            factors_dfs.append(factor_df)
+        factors_df = pd.concat(factors_dfs, axis=1)
+    return factors_df
+
+
 def get_return_from_wind(code_list, date_start, date_end):
     # 从wind上获待选股票收益率数据，为百分比数据，如：3代表3%
     file_path = 'data_cache\\return_' + date_start + '_' + date_end + '.csv'

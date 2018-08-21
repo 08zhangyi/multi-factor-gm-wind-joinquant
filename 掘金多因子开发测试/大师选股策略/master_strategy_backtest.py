@@ -4,20 +4,17 @@ import pandas as pd
 from WindPy import w
 import json
 import sys
-sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
-# 引入因子类
-from single_factor import RSI, PE
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq, list_gm2wind
+from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
+from master_strategy import 彼得_林奇基层调查选股策略说明
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
 BACKTEST_END_DATE = '2018-07-23'  # 回测结束日期，测试结束日期不运用算法
-INDEX = 'SHSE.000016'  # 股票池代码，可以用掘金代码，也可以用Wind代码
-FACTOR_LIST = [RSI, PE]  # 需要获取的因子列表，用单因子研究中得模块
+INDEX = 'SHSE.000300'  # 股票池代码，可以用掘金代码，也可以用Wind代码
+STRATEGY = 彼得_林奇基层调查选股策略说明
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
-HISTORY_LENGTH = 3  # 取得的历史样本的周期数
 STOCK_NUMBER = 10  # 选股数量
 
 # 用于记录调仓信息的字典
@@ -35,7 +32,6 @@ while True:
     i += 1
     if date_now == BACKTEST_END_DATE:
         break
-BACKTEST_START_DATE = trading_date_list[HISTORY_LENGTH]  # 调整回测起始日为第一次调仓的日子
 
 
 def init(context):
@@ -56,12 +52,19 @@ def algo(context):
             code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
         except IndexError:
             code_list = w.wset("sectorconstituent", "date="+date_previous+";windcode="+INDEX).Data[1]
-        get_factor_from_wind(code_list, FACTOR_LIST, date_previous)
+        strategy = STRATEGY(code_list, date_previous)
+        select_code_list = list_wind2jq(strategy.select_code())
+        if len(select_code_list) > 0:  # 有可选股票时选取合适的股票
+            stock_now = {}
+            for code in select_code_list:
+                stock_now[code] = 1.0 / len(select_code_list)
+            stock_dict[date_now] = stock_now
+        else:
+            stock_dict[date_now] = {}
         # 待开发选股策略
 
 
 def on_backtest_finished(context, indicator):
-    delete_data_cache()  # 删除缓存中的数据，可手动选取是否删除
     # 输出回测指标
     print(indicator)
     stock_json = json.dumps(stock_dict)
@@ -72,7 +75,7 @@ def on_backtest_finished(context, indicator):
 
 if __name__ == '__main__':
     run(strategy_id='4d2f6b1c-8f0a-11e8-af59-305a3a77b8c5',
-        filename='多因子开发测试1.py',
+        filename='master_strategy_backtest.py',
         mode=MODE_BACKTEST,
         token='d7b08e7e21dd0315a510926e5a53ade8c01f9aaa',
         backtest_initial_cash=10000000,
