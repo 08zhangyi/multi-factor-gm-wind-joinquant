@@ -50,7 +50,7 @@ def get_factor_from_wind_v2(code_list, factor_list, date):
     # 用单因子研究\single_factor.py中的因子类直接获取数据
     # 无缓存版本
     file_path = 'data_cache\\factor_' + date + '.csv'
-    if os.path.exists(file_path):  # 使用缓存中数据减少数据交互，加快读取速度
+    if os.path.exists(file_path):
         factors_df = pd.read_csv(file_path, index_col=0)
     else:
         factors_dfs = []

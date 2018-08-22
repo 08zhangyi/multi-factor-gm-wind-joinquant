@@ -56,6 +56,18 @@ class NetProfitGrowRateV2(SingleFactorReasearch):
         return NPGR
 
 
+# 存货周转率
+class InventoryTurnRatio(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '存货周转率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        invturn = np.array(w.wss(self.code_list,  "fa_invturn_ttm", "tradeDate="+"".join(date_list)).Data[0])
+        InvTurn = pd.DataFrame(data=invturn, index=self.code_list, columns=[self.factor_name])
+        return InvTurn
+
 
 # 5日移动均线
 class MA5(SingleFactorReasearch):

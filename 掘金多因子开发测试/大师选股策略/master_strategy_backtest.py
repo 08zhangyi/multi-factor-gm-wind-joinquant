@@ -12,7 +12,7 @@ from master_strategy import 彼得_林奇基层调查选股策略说明
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
 BACKTEST_END_DATE = '2018-07-23'  # 回测结束日期，测试结束日期不运用算法
-INDEX = 'SHSE.000300'  # 股票池代码，可以用掘金代码，也可以用Wind代码
+INDEX = 'SHSE.000985'  # 股票池代码，可以用掘金代码，也可以用Wind代码
 STRATEGY = 彼得_林奇基层调查选股策略说明
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 STOCK_NUMBER = 10  # 选股数量
