@@ -12,6 +12,15 @@ class MasterStratery(object):
         self.code_list = code_list  # 选股的股票代码
         self.date = date  # 选股的日期
 
+    def _get_data(self):
+        df = None  # 实现具体选股用到的数据
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        code_list = None  # 根据选股用到的数据具体选股
+        return code_list
+
 
 class 彼得_林奇基层调查选股策略说明(MasterStratery):
     '''选股条件：
@@ -19,30 +28,63 @@ class 彼得_林奇基层调查选股策略说明(MasterStratery):
 2.公司每股净现金大于 0；
 3.当前股价与每股自由现金流量比小于10；
 4.公司的存货成长率小于其营收增长率；
-5.（长期盈余成长率+股息率）/市盈率大于等于 2；
-    '''
-    def __init__(self,  code_list, date):
-        super().__init__(code_list, date)
+5.（长期盈余成长率+股息率）/市盈率大于等于 2；'''
+    def _get_data(self):
         from single_factor import DebetToAsset, CFPS, MarketValueToFreeCashFlow, NetProfitGrowRateV2, DividendYield, PE, InventoryTurnRatio
-        self.factor_list = [DebetToAsset, CFPS, MarketValueToFreeCashFlow, NetProfitGrowRateV2, DividendYield, PE]
-        self.factor_InvTurn_now = [InventoryTurnRatio]
-        self.factor_InvTurn_one_year = [InventoryTurnRatio]
-        self.date_one_year = get_trading_date_from_now(self.date, -1, ql.Years)
-
-    def select_code(self):
-        df = get_factor_from_wind_v2(self.code_list, self.factor_list, self.date)
+        factor_list = [DebetToAsset, CFPS, MarketValueToFreeCashFlow, NetProfitGrowRateV2, DividendYield, PE]
+        factor_InvTurn_now = [InventoryTurnRatio]
+        factor_InvTurn_one_year = [InventoryTurnRatio]
+        date_one_year = get_trading_date_from_now(self.date, -1, ql.Years)
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
         # 存货增长率与营收增长率的比较判断数据，使用存货周转率判断
-        df_invturn_now = get_factor_from_wind_v2(self.code_list, self.factor_InvTurn_now, self.date)
+        df_invturn_now = get_factor_from_wind_v2(self.code_list, factor_InvTurn_now, self.date)
         df_invturn_now.rename(columns={'存货周转率': '存货周转率_今年'}, inplace=True)
-        df_invturn_one_year = get_factor_from_wind_v2(self.code_list, self.factor_InvTurn_one_year, self.date_one_year)
+        df_invturn_one_year = get_factor_from_wind_v2(self.code_list, factor_InvTurn_one_year, date_one_year)
         df_invturn_one_year.rename(columns={'存货周转率': '存货周转率_去年'}, inplace=True)
         df = pd.concat([df, df_invturn_now, df_invturn_one_year], axis=1)
         df = df.dropna()
+        return df
+
+    def select_code(self):
+        df = self._get_data()
         df = df[df['资产负债率'] < 0.25]
         df = df[df['每股现金流CFPS'] > 0.0]
         df = df[df['市值/企业自由现金流'] < 10.0]
         df = df[((df['净利润增长率'] + df['股息率指标'])/df['市盈率PE']) >= 2.0]
         df = df[df['存货周转率_今年'] > df['存货周转率_去年']]
         code_list = list(df.index.values)
-        print(code_list)
+        return code_list
+
+
+class 史蒂夫路佛价值选股法(MasterStratery):
+    '''选股条件：
+1.市净率低于全市场平均值。
+2.以五年平均盈余计算的PE 低于全市场平均值。
+3.股息收益率不低于全市场平均值。
+4.股价现金流量比低于全市场平均值。
+5.长期借款占总资本比率低于50%'''
+    def _get_data(self):
+        from single_factor import PB, PE, DividendYield, PriceFreeCashFlowPerShare, LongTermLiabilityToWorkCapital
+        factor_list = [PB, DividendYield, PriceFreeCashFlowPerShare, LongTermLiabilityToWorkCapital]
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        # 五年PE值获取
+        df_PE = []
+        for i in range(5):
+            date_temp = get_trading_date_from_now(self.date, -i, ql.Years)
+            df_temp = get_factor_from_wind_v2(self.code_list, [PE], date_temp)
+            df_temp.rename(columns={'市盈率PE': '市盈率_'+str(i)}, inplace=True)
+            df_PE.append(df_temp)
+        df = pd.concat([df]+df_PE, axis=1)
+        df = df.dropna()
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        PE_median = (df['市盈率_0'] + df['市盈率_1'] + df['市盈率_2'] + df['市盈率_3'] + df['市盈率_4']).median()
+        df = df[(df['市盈率_0'] + df['市盈率_1'] + df['市盈率_2'] + df['市盈率_3'] + df['市盈率_4']) < PE_median]
+        df = df[df['PB市净率指标'] < df['PB市净率指标'].median()]
+        df = df[df['股息率指标'] >= df['股息率指标'].median()]
+        df = df[df['股价_每股企业自由现金流'] < df['股价_每股企业自由现金流'].median()]
+        df = df[df['长期负债/营运资金'] < 0.5]
+        code_list = list(df.index.values)
         return code_list

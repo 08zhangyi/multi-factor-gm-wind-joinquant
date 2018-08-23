@@ -1,21 +1,18 @@
 from gm.api import *
 import QuantLib as ql
-import pandas as pd
 from WindPy import w
 import json
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
-from master_strategy import 彼得_林奇基层调查选股策略说明
+from master_strategy import 史蒂夫路佛价值选股法 as STRATEGY
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
 BACKTEST_END_DATE = '2018-07-23'  # 回测结束日期，测试结束日期不运用算法
-INDEX = 'SHSE.000985'  # 股票池代码，可以用掘金代码，也可以用Wind代码
-STRATEGY = 彼得_林奇基层调查选股策略说明
+INDEX = '000905.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
-STOCK_NUMBER = 10  # 选股数量
 
 # 用于记录调仓信息的字典
 stock_dict = {}

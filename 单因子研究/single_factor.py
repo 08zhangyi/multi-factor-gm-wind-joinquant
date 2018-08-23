@@ -756,6 +756,19 @@ class InterestBearingDebtInvestmentCapital(SingleFactorReasearch):
         return fa_interestdebttocapital_index
 
 
+# 长期负债/营运资金
+class LongTermLiabilityToWorkCapital(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '长期负债/营运资金'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        fa_uncurdebttoworkcap = np.array(w.wss(self.code_list, "fa_uncurdebttoworkcap", "tradeDate=" + ''.join(date_list)).Data[0])
+        fa_uncurdebttoworkcap = pd.DataFrame(data=fa_uncurdebttoworkcap, index=self.code_list, columns=[self.factor_name])
+        return fa_uncurdebttoworkcap
+
+
 # 股权质押比例（三年统计）
 class StockPledgeRatio(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -802,7 +815,7 @@ if __name__ == '__main__':
     w.start()
     # code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=000300.SH").Data[1]  # 沪深300动态股票池
     code_list = ['000001.SZ', '000002.SZ']
-    factor_model = MA_N(date, code_list, 3)
+    factor_model = PB(date, code_list)
     df = factor_model.get_factor()
     # df.to_csv('temp1.csv')
     print(df)
