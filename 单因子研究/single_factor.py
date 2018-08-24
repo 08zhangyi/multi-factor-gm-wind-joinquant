@@ -658,7 +658,7 @@ class ForecastEarningGrowth_FY1_3M(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        Forecast_data = np.array(w.wss(self.code_list, "west_netprofit_fy1_3m","tradeDate=" + "".join(date_list)).Data[0])/100.0
+        Forecast_data = np.array(w.wss(self.code_list, "west_netprofit_fy1_3m","tradeDate=" + "".join(date_list)).Data[0])
         ForecastEarningGrowth = pd.DataFrame(data=Forecast_data, index=self.code_list, columns=[self.factor_name])
         return ForecastEarningGrowth
 

@@ -6,12 +6,12 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
-from master_strategy import 麦克贝利222选股法则 as STRATEGY
+from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
 BACKTEST_END_DATE = '2018-07-23'  # 回测结束日期，测试结束日期不运用算法
-INDEX = '000985.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
+INDEX = '000300.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
 # 用于记录调仓信息的字典
@@ -49,7 +49,7 @@ def algo(context):
             code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
         except IndexError:
             code_list = w.wset("sectorconstituent", "date="+date_previous+";windcode="+INDEX).Data[1]
-        strategy = STRATEGY(code_list, date_previous)
+        strategy = STRATEGY(code_list, date_previous, 0.9)
         select_code_list = list_wind2jq(strategy.select_code())
         if len(select_code_list) > 0:  # 有可选股票时选取合适的股票
             stock_now = {}

@@ -97,8 +97,7 @@ class 霍华罗斯曼审慎致富投资法(MasterStratery):
 3.近四季股东权益报酬率≧市场平均值。
 4.近五年自由现金流量均为正值。
 5.近四季营收成长率介于6%至30%。
-6.近四季盈余成长率介于8%至50%
-    '''
+6.近四季盈余成长率介于8%至50%'''
     def _get_data(self):
         from single_factor import LCap, CurrentRatio, ROE, FreeCashFlowPerShare, OperationRevenueGrowth, NetProfitGrowRateV2
         factor_list = [LCap, CurrentRatio, ROE, OperationRevenueGrowth, NetProfitGrowRateV2]
@@ -130,8 +129,7 @@ class 麦克贝利222选股法则(MasterStratery):
     '''选股条件：
 1.股票预期市盈率低于市场平均预期市盈率的“2”分之一（股票需要具备较低的估值）；
 2.公司预期盈利成长率大于市场平均预估盈利成长率的“2”分之一（公司的未来具备较高的盈利成长能力）；
-3.股票的市净率小于“2"（青睐重资产行业）；
-    '''
+3.股票的市净率小于“2"（青睐重资产行业）；'''
     def _get_data(self):
         from single_factor import EstimatePEFY1, EstimateNetProfitGrowRateFY16M, PB
         factor_list = [EstimatePEFY1, EstimateNetProfitGrowRateFY16M, PB]
@@ -144,4 +142,54 @@ class 麦克贝利222选股法则(MasterStratery):
         df = df[df['一致预测净利润增长率（6个月数据计算）'] > df['一致预测净利润增长率（6个月数据计算）'].median()*0.5]
         df = df[df['PB市净率指标'] < 2.0]
         code_list = list(df.index.values)
+        return code_list
+
+
+class 本杰明格雷厄姆成长股内在价值投资法(MasterStratery):
+    '''选股条件：
+1.Value = EPS *（8.5 + 2 * ExpectedReturn） 8.5为盈利增长等于0的公司的市盈率
+注：ExpectedReturn=0.05'''
+    def __init__(self, code_list, date, N):
+        super().__init__(code_list, date)
+        from single_factor import DilutedEPS, ForecastEarningGrowth_FY1_3M
+        self.factor_list = [DilutedEPS, ForecastEarningGrowth_FY1_3M]
+        self.N = N
+
+    def _get_data(self):
+        from single_factor import DilutedEPS, ForecastEarningGrowth_FY1_3M
+        factor_list = [DilutedEPS, ForecastEarningGrowth_FY1_3M]
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        eps = df['稀释每股收益']
+        forcast = df['三个月个月盈利变化率（一年）预测'] / 100.0
+        value = eps * (8.5 + 2 * forcast)
+        share_code = value[value > value.quantile(self.N)]
+        code_list = list(share_code.index.values)
+        return code_list
+
+
+class 本杰明格雷厄姆成长股内在价值投资法v2(MasterStratery):
+    '''选股条件：
+1.Value = EPS *（8.5 + 2 * ExpectedReturn） 8.5为盈利增长等于0的公司的市盈率
+注：ExpectedReturn=5.0'''
+    def __init__(self, code_list, date, N):
+        super().__init__(code_list, date)
+        self.N = N
+
+    def _get_data(self):
+        from single_factor import DilutedEPS, EstimateNetProfitGrowRateFY16M
+        factor_list = [DilutedEPS, EstimateNetProfitGrowRateFY16M]
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        eps = df['稀释每股收益']
+        forcast = df['一致预测净利润增长率（6个月数据计算）']
+        value = eps * (8.5 + 2 * forcast)
+        share_code = value[value > value.quantile(self.N)]
+        code_list = list(share_code.index.values)
         return code_list
