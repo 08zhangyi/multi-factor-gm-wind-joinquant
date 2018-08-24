@@ -22,7 +22,7 @@ class MasterStratery(object):
         return code_list
 
 
-class 彼得_林奇基层调查选股策略说明(MasterStratery):
+class 彼得林奇基层调查选股策略说明(MasterStratery):
     '''选股条件：
 1.公司的资产负债率小于等于 25%;
 2.公司每股净现金大于 0；
