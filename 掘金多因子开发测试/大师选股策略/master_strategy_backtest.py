@@ -6,7 +6,7 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
-from master_strategy import 霍华罗斯曼审慎致富投资法 as STRATEGY
+from master_strategy import 麦克贝利222选股法则 as STRATEGY
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期

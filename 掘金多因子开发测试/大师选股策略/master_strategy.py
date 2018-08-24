@@ -124,3 +124,24 @@ class 霍华罗斯曼审慎致富投资法(MasterStratery):
         df = df[(df['每股企业自由现金流指标_0'] > 0.0) & (df['每股企业自由现金流指标_1'] > 0.0) & (df['每股企业自由现金流指标_2'] > 0.0) & (df['每股企业自由现金流指标_3'] > 0.0) & (df['每股企业自由现金流指标_4'] > 0.0)]
         code_list = list(df.index.values)
         return code_list
+
+
+class 麦克贝利222选股法则(MasterStratery):
+    '''选股条件：
+1.股票预期市盈率低于市场平均预期市盈率的“2”分之一（股票需要具备较低的估值）；
+2.公司预期盈利成长率大于市场平均预估盈利成长率的“2”分之一（公司的未来具备较高的盈利成长能力）；
+3.股票的市净率小于“2"（青睐重资产行业）；
+    '''
+    def _get_data(self):
+        from single_factor import EstimatePEFY1, EstimateNetProfitGrowRateFY16M, PB
+        factor_list = [EstimatePEFY1, EstimateNetProfitGrowRateFY16M, PB]
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        df = df[df['预测PE（FY1）'] < df['预测PE（FY1）'].median()*0.5]
+        df = df[df['一致预测净利润增长率（6个月数据计算）'] > df['一致预测净利润增长率（6个月数据计算）'].median()*0.5]
+        df = df[df['PB市净率指标'] < 2.0]
+        code_list = list(df.index.values)
+        return code_list

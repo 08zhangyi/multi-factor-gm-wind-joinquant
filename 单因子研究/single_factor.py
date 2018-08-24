@@ -56,6 +56,19 @@ class NetProfitGrowRateV2(SingleFactorReasearch):
         return NPGR
 
 
+# 一致预测净利润增长率（6个月数据计算）
+class EstimateNetProfitGrowRateFY16M(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '一致预测净利润增长率（6个月数据计算）'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        west_netprofit_fy1_6m = np.array(w.wss(self.code_list,  "west_netprofit_fy1_6m", "tradeDate="+"".join(date_list)).Data[0])
+        west_netprofit_fy1_6m = pd.DataFrame(data=west_netprofit_fy1_6m, index=self.code_list, columns=[self.factor_name])
+        return west_netprofit_fy1_6m
+
+
 # 存货周转率
 class InventoryTurnRatio(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -714,6 +727,19 @@ class PE(SingleFactorReasearch):
         pe_index = np.array(w.wss(self.code_list, "pe_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
         net_profit_grow_rate = pd.DataFrame(data=pe_index, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
+
+
+# 预测PE（FY1）
+class EstimatePEFY1(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '预测PE（FY1）'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        estpe_FY1 = np.array(w.wss(self.code_list, "estpe_FY1", "tradeDate=" + ''.join(date_list)).Data[0])
+        estpe_FY1 = pd.DataFrame(data=estpe_FY1, index=self.code_list, columns=[self.factor_name])
+        return estpe_FY1
 
 
 # PB指标
