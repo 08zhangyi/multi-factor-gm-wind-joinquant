@@ -88,3 +88,39 @@ class 史蒂夫路佛价值选股法(MasterStratery):
         df = df[df['长期负债/营运资金'] < 0.5]
         code_list = list(df.index.values)
         return code_list
+
+
+class 霍华罗斯曼审慎致富投资法(MasterStratery):
+    '''选股条件：
+1.总市值≧市场平均值*1.0。
+2.最近一季流动比率≧市场平均值。
+3.近四季股东权益报酬率≧市场平均值。
+4.近五年自由现金流量均为正值。
+5.近四季营收成长率介于6%至30%。
+6.近四季盈余成长率介于8%至50%
+    '''
+    def _get_data(self):
+        from single_factor import LCap, CurrentRatio, ROE, FreeCashFlowPerShare, OperationRevenueGrowth, NetProfitGrowRateV2
+        factor_list = [LCap, CurrentRatio, ROE, OperationRevenueGrowth, NetProfitGrowRateV2]
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        # 五年自由现金流量
+        df_PE = []
+        for i in range(5):
+            date_temp = get_trading_date_from_now(self.date, -i, ql.Years)
+            df_temp = get_factor_from_wind_v2(self.code_list, [FreeCashFlowPerShare], date_temp)
+            df_temp.rename(columns={'每股企业自由现金流指标': '每股企业自由现金流指标_' + str(i)}, inplace=True)
+            df_PE.append(df_temp)
+        df = pd.concat([df] + df_PE, axis=1)
+        df = df.dropna()
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        df = df[df['对数市值'] >= df['对数市值'].median()]
+        df = df[df['流动比率'] >= df['流动比率'].median()]
+        df = df[df['权益回报率ROE'] >= df['权益回报率ROE'].median()]
+        df = df[(df['营业收入增长率'] >= 0.06) & (df['营业收入增长率'] <= 0.3)]
+        df = df[(df['净利润增长率'] >= 0.08) & (df['营业收入增长率'] <= 0.5)]
+        df = df[(df['每股企业自由现金流指标_0'] > 0.0) & (df['每股企业自由现金流指标_1'] > 0.0) & (df['每股企业自由现金流指标_2'] > 0.0) & (df['每股企业自由现金流指标_3'] > 0.0) & (df['每股企业自由现金流指标_4'] > 0.0)]
+        code_list = list(df.index.values)
+        return code_list

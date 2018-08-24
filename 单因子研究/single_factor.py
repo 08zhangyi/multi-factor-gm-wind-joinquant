@@ -568,6 +568,19 @@ class ORPS(SingleFactorReasearch):
         return net_profit_grow_rate
 
 
+# 营业收入增长率
+class OperationRevenueGrowth(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '营业收入增长率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        fa_orgr_ttm = np.array(w.wss(self.code_list, "fa_orgr_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
+        fa_orgr_ttm = pd.DataFrame(data=fa_orgr_ttm, index=self.code_list, columns=[self.factor_name])
+        return fa_orgr_ttm
+
+
 # 销售毛利率
 class GrossIncomeRatio(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -592,6 +605,19 @@ class DebetToAsset(SingleFactorReasearch):
         debet_to_asset = np.array(w.wss(self.code_list, "fa_debttoasset", "tradeDate=" + "".join(date_list)).Data[0])/100.0
         DebetToAsset = pd.DataFrame(data=debet_to_asset, index=self.code_list, columns=[self.factor_name])
         return DebetToAsset
+
+
+# 流动比例
+class CurrentRatio(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '流动比率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        fa_current = np.array(w.wss(self.code_list, "fa_current", "tradeDate=" + "".join(date_list)).Data[0])/100.0
+        fa_current = pd.DataFrame(data=fa_current, index=self.code_list, columns=[self.factor_name])
+        return fa_current
 
 
 # 经营活动现金流与企业价值比
