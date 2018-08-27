@@ -127,13 +127,14 @@ class 霍华罗斯曼审慎致富投资法(MasterStratery):
 
 class 麦克贝利222选股法则(MasterStratery):
     '''选股条件：
-1.股票预期市盈率低于市场平均预期市盈率的“2”分之一（股票需要具备较低的估值）；
-2.公司预期盈利成长率大于市场平均预估盈利成长率的“2”分之一（公司的未来具备较高的盈利成长能力）；
-3.股票的市净率小于“2"（青睐重资产行业）；'''
+1.股票预期市盈率低于市场平均预期市盈率的“2”分之一（股票需要具备较低的估值）
+2.公司预期盈利成长率大于市场平均预估盈利成长率的“2”分之一（公司的未来具备较高的盈利成长能力）
+3.股票的市净率小于“2"（青睐重资产行业）'''
     def _get_data(self):
         from single_factor import EstimatePEFY1, EstimateNetProfitGrowRateFY16M, PB
         factor_list = [EstimatePEFY1, EstimateNetProfitGrowRateFY16M, PB]
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = df.dropna()
         return df
 
     def select_code(self):
@@ -159,6 +160,7 @@ class 本杰明格雷厄姆成长股内在价值投资法(MasterStratery):
         from single_factor import DilutedEPS, ForecastEarningGrowth_FY1_3M
         factor_list = [DilutedEPS, ForecastEarningGrowth_FY1_3M]
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = df.dropna()
         return df
 
     def select_code(self):
@@ -183,6 +185,7 @@ class 本杰明格雷厄姆成长股内在价值投资法v2(MasterStratery):
         from single_factor import DilutedEPS, EstimateNetProfitGrowRateFY16M
         factor_list = [DilutedEPS, EstimateNetProfitGrowRateFY16M]
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = df.dropna()
         return df
 
     def select_code(self):
