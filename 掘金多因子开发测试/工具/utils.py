@@ -4,6 +4,8 @@ import pandas as pd
 from WindPy import w
 import os
 import numpy as np
+import jqdatasdk
+from sqlalchemy.orm.query import Query
 
 
 def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
@@ -89,5 +91,23 @@ def sort_data(df):
     return df
 
 
+def get_JQFactor_local(date, code_list, factor):
+    file_path = 'D:\\JQData_Factor_Data\\'
+    code_list = list_wind2jq(code_list)
+    df = pd.read_csv(file_path+date+'.csv', index_col=0)
+    ds = df.transpose()[factor]
+    results = list(ds[code_list].values)
+    return results
+
+
+def get_JQData(date, code_list, factor):
+    jqdatasdk.auth('13816324330', 'ccaipc')
+    code_list = list_wind2jq(code_list)
+    query = Query(jqdatasdk.valuation.pe_ratio).filter(jqdatasdk.valuation.code.in_(code_list))
+    df = jqdatasdk.get_fundamentals(query, date=date)
+    results = list(df.values.reshape(-1))
+    return results
+
+
 if __name__ == '__main__':
-    print(get_trading_date_from_now('2018-06-17', 0))
+    print(get_JQData('2018-05-03', ['000002.SZ', '000036.SZ'], 'pe_ratio'))

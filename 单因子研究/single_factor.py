@@ -3,6 +3,9 @@ from WindPy import w
 import numpy as np
 import pandas as pd
 import datetime
+import sys
+sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
+from utils import get_JQFactor_local
 
 
 class SingleFactorReasearch():
