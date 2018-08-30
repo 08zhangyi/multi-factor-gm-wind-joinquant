@@ -110,4 +110,5 @@ def get_JQData(date, code_list, factor):
 
 
 if __name__ == '__main__':
-    print(get_JQData('2018-05-03', ['000002.SZ', '000036.SZ'], jqdatasdk.valuation.pe_ratio))
+    # print(get_JQData('2018-05-03', ['000002.SZ', '000036.SZ'], jqdatasdk.valuation.pe_ratio))
+    print(get_JQFactor_local('2018-05-03', ['000002.SZ', '000036.SZ'], 'long_debt_to_working_capital_ratio'))
