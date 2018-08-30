@@ -103,7 +103,7 @@ def get_JQFactor_local(date, code_list, factor):
 def get_JQData(date, code_list, factor):
     jqdatasdk.auth('13816324330', 'ccaipc')
     code_list = list_wind2jq(code_list)
-    query = Query(jqdatasdk.valuation.pe_ratio).filter(jqdatasdk.valuation.code.in_(code_list))
+    query = Query(factor).filter(jqdatasdk.valuation.code.in_(code_list))
     df = jqdatasdk.get_fundamentals(query, date=date)
     results = list(df.values.reshape(-1))
     return results
