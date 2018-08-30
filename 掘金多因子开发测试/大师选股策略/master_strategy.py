@@ -196,13 +196,3 @@ class 本杰明格雷厄姆成长股内在价值投资法v2(MasterStratery):
         share_code = value[value > value.quantile(self.N)]
         code_list = list(share_code.index.values)
         return code_list
-
-class  本杰明格雷厄姆企业主投资法(MasterStratery):
-    '''选股条件
----1．股票的市盈率低于市场平均水平
----2．股票的市净率小于 1.2
----3．企业的流动资产至少是流动负债的 1.5 倍 (流动比率MRQ）
-4．企业的总借款不超过净流动资产的 1.1 倍
-5．最近五年净利润大于 0
-6．最近一期现金股利大于 0
-7．盈利（TTM）大于三年前的盈利'''
