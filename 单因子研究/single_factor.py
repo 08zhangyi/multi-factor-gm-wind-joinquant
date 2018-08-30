@@ -3,6 +3,7 @@ from WindPy import w
 import numpy as np
 import pandas as pd
 import datetime
+import jqdatasdk
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import get_JQFactor_local, get_JQData
@@ -59,6 +60,19 @@ class NetProfitGrowRateV2(SingleFactorReasearch):
         return NPGR
 
 
+# 净利润增长率
+class NetProfitGrowRate_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '净利润增长率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        net_profit_grow_rate = np.array(get_JQFactor_local(date, self.code_list, 'net_profit_growth_rate'))
+        net_profit_grow_rate = pd.DataFrame(data=net_profit_grow_rate, index=self.code_list, columns=[self.factor_name])
+        return net_profit_grow_rate
+
+
 # 一致预测净利润增长率（6个月数据计算）
 class EstimateNetProfitGrowRateFY16M(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -83,6 +97,19 @@ class InventoryTurnRatio(SingleFactorReasearch):
         invturn = np.array(w.wss(self.code_list,  "fa_invturn_ttm", "tradeDate="+"".join(date_list)).Data[0])
         InvTurn = pd.DataFrame(data=invturn, index=self.code_list, columns=[self.factor_name])
         return InvTurn
+
+
+# 存货周转率
+class InventoryTurnRatio_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '存货周转率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        invturn = np.array(get_JQFactor_local(date, self.code_list, 'inventory_turnover_rate'))
+        invturn = pd.DataFrame(data=invturn, index=self.code_list, columns=[self.factor_name])
+        return invturn
 
 
 # 5日移动均线
@@ -267,7 +294,7 @@ class VOL240(SingleFactorReasearch):
         vol_data = np.array(w.wss(self.code_list, "avg_turn_per", "startDate=" + "".join(startDate) + ";endDate=" + "".join(date_list)).Data[0])
         vol_data = vol_data / 100.0
         VOL240 = pd.DataFrame(data=vol_data, index=self.code_list, columns=[self.factor_name])
-        return
+        return VOL240
 
 
 # Aroon指标
@@ -297,6 +324,20 @@ class MTM(SingleFactorReasearch):
         MTM_data = np.array(w.wss(self.code_list, "MTM", "tradeDate=" + "".join(date_list) + ";MTM_interDay="+str(self.MTM_interDay)+";MTM_N="+str(self.MTM_N)+";MTM_IO=1;priceAdj=T;cycle=D").Data[0])
         MTM = pd.DataFrame(data=MTM_data, index=self.code_list, columns=[self.factor_name])
         return MTM
+
+
+# RSI指标
+class RSI(SingleFactorReasearch):
+    def __init__(self, date, code_list, N=6):
+        factor_name = '相对强度指标RSI'
+        self.N = N
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        rsi_index = w.wss(self.code_list, "RSI", "industryType=1;tradeDate="+''.join(date_list)+";RSI_N="+str(self.N)+";priceAdj=T;cycle=D").Data[0]
+        net_profit_grow_rate = pd.DataFrame(data=rsi_index, index=self.code_list, columns=[self.factor_name])
+        return net_profit_grow_rate
 
 
 # BETA
@@ -402,10 +443,23 @@ class LCap(SingleFactorReasearch):
         return LCap
 
 
+# 对数市值  # 算法：np.log(个股当日股价*当日总股本)
+class LCap_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '对数市值'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        log_Cap = np.log(get_JQData(date, self.code_list, jqdatasdk.valuation.market_cap))
+        LCap = pd.DataFrame(data=log_Cap, index=self.code_list, columns=[self.factor_name])
+        return LCap
+
+
 # 对数流通市值
 class LFloatCap(SingleFactorReasearch):
     def __init__(self, date, code_list):
-        factor_name = '对数市值'
+        factor_name = '对数流通市值'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
@@ -415,18 +469,17 @@ class LFloatCap(SingleFactorReasearch):
         return LFloatCap
 
 
-# RSI指标
-class RSI(SingleFactorReasearch):
-    def __init__(self, date, code_list, N=6):
-        factor_name = '相对强度指标RSI'
-        self.N = N
+# 对数流通市值  # 算法：np.log(个股当日股价*当日总股本)
+class LFloatCap_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '对数流通市值'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
-        date_list = self.date
-        rsi_index = w.wss(self.code_list, "RSI", "industryType=1;tradeDate="+''.join(date_list)+";RSI_N="+str(self.N)+";priceAdj=T;cycle=D").Data[0]
-        net_profit_grow_rate = pd.DataFrame(data=rsi_index, index=self.code_list, columns=[self.factor_name])
-        return net_profit_grow_rate
+        date = '-'.join(self.date)
+        log_Cap = np.log(get_JQData(date, self.code_list, jqdatasdk.valuation.circulating_market_cap))
+        LCap = pd.DataFrame(data=log_Cap, index=self.code_list, columns=[self.factor_name])
+        return LCap
 
 
 # 成交量比率  # VolumeRatio = N日内上升日成交额总和/N日内下降日成交额总和, 万得默认N=26
@@ -490,6 +543,19 @@ class ROE(SingleFactorReasearch):
         return net_profit_grow_rate
 
 
+# ROE指标
+class ROE_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '权益回报率ROE'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        roe_ttm = np.array(get_JQFactor_local(date, self.code_list, 'roe_ttm'))
+        net_profit_grow_rate = pd.DataFrame(data=roe_ttm, index=self.code_list, columns=[self.factor_name])
+        return net_profit_grow_rate
+
+
 # 基本每股收益EPS
 class BasicEPS(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -499,6 +565,19 @@ class BasicEPS(SingleFactorReasearch):
     def _calculate_factor(self):
         date_list = self.date
         eps_index = np.array(w.wss(self.code_list, "fa_eps_basic", "tradeDate=" + ''.join(date_list)).Data[0])
+        net_profit_grow_rate = pd.DataFrame(data=eps_index, index=self.code_list, columns=[self.factor_name])
+        return net_profit_grow_rate
+
+
+# 基本每股收益EPS
+class BasicEPS_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '基本每股收益EPS'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        eps_index = np.array(get_JQFactor_local(date, self.code_list, 'eps_ttm'))
         net_profit_grow_rate = pd.DataFrame(data=eps_index, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
 
@@ -529,6 +608,19 @@ class ROA(SingleFactorReasearch):
         return ROA
 
 
+# ROA
+class ROA_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = 'ROA'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        roa_data = np.array(get_JQFactor_local(date, self.code_list, 'roa_ttm'))
+        ROA = pd.DataFrame(data=roa_data, index=self.code_list, columns=[self.factor_name])
+        return ROA
+
+
 # EquityToAsset
 class EquityToAsset(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -543,7 +635,20 @@ class EquityToAsset(SingleFactorReasearch):
         return EquityToAsset
 
 
-# FixAssetRatio
+# EquityToAsset
+class EquityToAsset_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = 'EquityToAsset'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        data = np.array(get_JQFactor_local(date, self.code_list, 'equity_to_asset_ratio'))
+        EquityToAsset = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return EquityToAsset
+
+
+# 固定资产比率
 class FixAssetRatio(SingleFactorReasearch):
     def __init__(self, date, code_list):
         factor_name = '固定资产比率'
@@ -554,6 +659,19 @@ class FixAssetRatio(SingleFactorReasearch):
         fixed_asset = np.array(w.wss(self.code_list, "fa_fixassets", "tradeDate="+"".join(date_list)).Data[0])
         total_asset = np.array(w.wss(self.code_list, "fa_totassets", "tradeDate="+"".join(date_list)).Data[0])
         data = fixed_asset/total_asset
+        FixAssetRatio = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return FixAssetRatio
+
+
+# 固定资产比率
+class FixAssetRatio(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '固定资产比率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        data = np.array(get_JQFactor_local(date, self.code_list, 'fixed_asset_ratio'))
         FixAssetRatio = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
         return FixAssetRatio
 
@@ -584,6 +702,19 @@ class ORPS(SingleFactorReasearch):
         return net_profit_grow_rate
 
 
+# ORPS指标
+class ORPS_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '每股营业收入ORPS'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        orps_index = np.array(get_JQFactor_local(date, self.code_list, 'operating_revenue_per_share_ttm'))
+        net_profit_grow_rate = pd.DataFrame(data=orps_index, index=self.code_list, columns=[self.factor_name])
+        return net_profit_grow_rate
+
+
 # 营业收入增长率
 class OperationRevenueGrowth(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -593,6 +724,19 @@ class OperationRevenueGrowth(SingleFactorReasearch):
     def _calculate_factor(self):
         date_list = self.date
         fa_orgr_ttm = np.array(w.wss(self.code_list, "fa_orgr_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
+        fa_orgr_ttm = pd.DataFrame(data=fa_orgr_ttm, index=self.code_list, columns=[self.factor_name])
+        return fa_orgr_ttm
+
+
+# 营业收入增长率
+class OperationRevenueGrowth_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '营业收入增长率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        fa_orgr_ttm = np.array(get_JQFactor_local(date, self.code_list, 'operating_revenue_growth_rate'))
         fa_orgr_ttm = pd.DataFrame(data=fa_orgr_ttm, index=self.code_list, columns=[self.factor_name])
         return fa_orgr_ttm
 
@@ -610,6 +754,19 @@ class GrossIncomeRatio(SingleFactorReasearch):
         return GrossIncomeRatio
 
 
+# 销售毛利率
+class GrossIncomeRatio_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '销售毛利率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        grossprofit_data = np.array(get_JQFactor_local(date, self.code_list, 'gross_income_ratio'))
+        GrossIncomeRatio = pd.DataFrame(data=grossprofit_data, index=self.code_list, columns=[self.factor_name])
+        return GrossIncomeRatio
+
+
 # 资产负债率
 class DebetToAsset(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -623,6 +780,19 @@ class DebetToAsset(SingleFactorReasearch):
         return DebetToAsset
 
 
+# 资产负债率
+class DebetToAsset_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '资产负债率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        debet_to_asset = np.array(get_JQFactor_local(date, self.code_list, 'debt_to_asset_ratio'))
+        DebetToAsset = pd.DataFrame(data=debet_to_asset, index=self.code_list, columns=[self.factor_name])
+        return DebetToAsset
+
+
 # 流动比例
 class CurrentRatio(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -632,6 +802,19 @@ class CurrentRatio(SingleFactorReasearch):
     def _calculate_factor(self):
         date_list = self.date
         fa_current = np.array(w.wss(self.code_list, "fa_current", "tradeDate=" + "".join(date_list)).Data[0])/100.0
+        fa_current = pd.DataFrame(data=fa_current, index=self.code_list, columns=[self.factor_name])
+        return fa_current
+
+
+# 流动比例
+class CurrentRatio_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '流动比率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        fa_current = np.array(get_JQFactor_local(date, self.code_list, 'current_ratio'))
         fa_current = pd.DataFrame(data=fa_current, index=self.code_list, columns=[self.factor_name])
         return fa_current
 
@@ -650,6 +833,19 @@ class CFO2EV(SingleFactorReasearch):
         CFO2EV_data = OpCash/(Rev/Rev_Ev)
         GrossIncomeRatio = pd.DataFrame(data=CFO2EV_data, index=self.code_list, columns=[self.factor_name])
         return GrossIncomeRatio
+
+
+# 经营活动现金流与企业价值比
+class CFO2EV_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '经营活动现金流与企业价值比'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        CFO2EV_data = np.array(get_JQFactor_local(date, self.code_list, 'cfo_to_ev'))
+        CFO2EV_data = pd.DataFrame(data=CFO2EV_data, index=self.code_list, columns=[self.factor_name])
+        return CFO2EV_data
 
 
 # 未来预期盈利增长
@@ -675,6 +871,19 @@ class CFPS(SingleFactorReasearch):
     def _calculate_factor(self):
         date_list = self.date
         cfps_index = np.array(w.wss(self.code_list, "fa_cfps_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
+        net_profit_grow_rate = pd.DataFrame(data=cfps_index, index=self.code_list, columns=[self.factor_name])
+        return net_profit_grow_rate
+
+
+# CFPS指标，每股现金流量
+class CFPS_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '每股现金流CFPS'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        cfps_index = np.array(get_JQFactor_local(date, self.code_list, 'cashflow_per_share_ttm'))
         net_profit_grow_rate = pd.DataFrame(data=cfps_index, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
 
@@ -732,6 +941,19 @@ class PE(SingleFactorReasearch):
         return net_profit_grow_rate
 
 
+# PE指标
+class PE_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '市盈率PE'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        pe_index = np.array(get_JQData(date, self.code_list, jqdatasdk.valuation.pe_ratio))
+        net_profit_grow_rate = pd.DataFrame(data=pe_index, index=self.code_list, columns=[self.factor_name])
+        return net_profit_grow_rate
+
+
 # 预测PE（FY1）
 class EstimatePEFY1(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -755,6 +977,19 @@ class PB(SingleFactorReasearch):
         date_list = self.date
         pb_index = np.array(w.wss(self.code_list, "pb_lf", "tradeDate=" + ''.join(date_list)).Data[0])
         net_profit_grow_rate = pd.DataFrame(data=pb_index, index=self.code_list, columns=[self.factor_name])
+        return net_profit_grow_rate
+
+
+# PB指标
+class PB_JQ(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = 'PB市净率指标'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date = '-'.join(self.date)
+        pe_index = np.array(get_JQData(date, self.code_list, jqdatasdk.valuation.pb_ratio))
+        net_profit_grow_rate = pd.DataFrame(data=pe_index, index=self.code_list, columns=[self.factor_name])
         return net_profit_grow_rate
 
 
@@ -883,7 +1118,7 @@ if __name__ == '__main__':
     w.start()
     # code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=000300.SH").Data[1]  # 沪深300动态股票池
     code_list = ['000001.SZ', '000002.SZ']
-    factor_model = SW1Industry(date, code_list)
+    factor_model = LCap_JQ(date, code_list)
     df = factor_model.get_factor()
     # df.to_csv('temp1.csv')
     print(df)
