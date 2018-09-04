@@ -6,7 +6,7 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
-from 择时模型 import LLT_V2
+from 择时模型 import LLT_base
 from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
 
 w.start()
@@ -20,7 +20,7 @@ TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近
 # 择时模型的配置
 LLT_HISTORY = 100  # 计算LLT使用的历史时期
 LLT_INDEX = '000001.SH'  # 计算LLT择时的指数
-select_time_model = LLT_V2(BACKTEST_START_DATE, BACKTEST_END_DATE, LLT_INDEX, LLT_HISTORY)
+select_time_model = LLT_base(BACKTEST_START_DATE, BACKTEST_END_DATE, LLT_INDEX, LLT_HISTORY)
 
 # 用于记录调仓信息的字典
 stock_dict = {}
