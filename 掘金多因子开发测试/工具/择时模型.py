@@ -6,7 +6,10 @@ from utils import get_trading_date_from_now
 
 
 class LLT_base(object):
+    # LLT择时基本版模型
+    # 根据LLT曲线的趋势就行择时操作
     def __init__(self, backtest_start_date, backtest_end_date, index_code, llt_cal_history, llt_threshold=0.0, llt_d=69):
+        w.start()
         llt_start_date = get_trading_date_from_now(backtest_start_date, -llt_cal_history, ql.Days)
         data = w.wsd(index_code, "close", llt_start_date, backtest_end_date, "")
         self.llt_times = [t.strftime('%Y-%m-%d') for t in data.Times]
@@ -31,4 +34,17 @@ class LLT_base(object):
             LLT_value = (a - (a ** 2 / 4)) * price_list[t] + (a ** 2 / 2) * price_list[t - 1] - (a - (3 * a ** 2 / 4)) * \
                         price_list[t - 2] + 2 * (1 - a) * LLT_list[-1] - (1 - a) ** 2 * LLT_list[-2]
             LLT_list.append(LLT_value)
-        return 1 if ((LLT_list[-1] - LLT_list[-2]) / price_list[-1]) > self.llt_threshold else -1
+        return 1 if (((LLT_list[-1] - LLT_list[-2]) / price_list[-1]) > self.llt_threshold) else -1
+
+
+class LLT_V2(LLT_base):
+    # LLT择时的改进版
+    # 根据指数价格和LLT的上下位置择时
+    def _LLT(self, price_list):
+        a = 2 / (self.llt_d + 1)  # LLT的参数
+        LLT_list = [price_list[0], price_list[1]]  # 记录LLT值列表的初始化序列
+        for t in range(2, len(price_list)):
+            LLT_value = (a - (a ** 2 / 4)) * price_list[t] + (a ** 2 / 2) * price_list[t - 1] - (a - (3 * a ** 2 / 4)) * \
+                        price_list[t - 2] + 2 * (1 - a) * LLT_list[-1] - (1 - a) ** 2 * LLT_list[-2]
+            LLT_list.append(LLT_value)
+        return 1 if (((LLT_list[-1] - price_list[-1]) / price_list[-1]) < self.llt_threshold) and (((LLT_list[-1] - LLT_list[-2]) / price_list[-1]) > self.llt_threshold) else -1
