@@ -12,7 +12,7 @@ from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2010-03-10'  # 回测开始日期
+BACKTEST_START_DATE = '2010-05-10'  # 回测开始日期
 BACKTEST_END_DATE = '2018-08-23'  # 回测结束日期，测试结束日期不运用算法
 INDEX = '000300.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
@@ -22,8 +22,7 @@ LLT_HISTORY = 100  # 计算LLT使用的历史时期
 LLT_INDEX = '000001.SH'  # 计算LLT择时的指数
 select_time_model = LLT_base(BACKTEST_START_DATE, BACKTEST_END_DATE, LLT_INDEX, LLT_HISTORY)
 
-# 用于记录调仓信息的字典
-stock_dict = {}
+stock_dict = {}  # 用于记录调仓信息的字典
 position_target = {}  # 无目标持仓
 position_now = False  # 无持仓
 
@@ -52,7 +51,7 @@ def algo(context):
     date_now = context.now.strftime('%Y-%m-%d')
     date_previous = get_trading_date_from_now(date_now, -1, ql.Days)  # 前一个交易日，用于获取因子数据的日期
     select_time_value = select_time_model[date_now]  # 择时信号计算
-    print(date_now + ('日回测程序执行中...，LLT值：%.4f' % select_time_value))
+    print(date_now + ('日回测程序执行中...，择时值：%.2f' % select_time_value))
 
     if date_now not in trading_date_list:  # 非调仓日
         pass

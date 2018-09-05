@@ -6,6 +6,7 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
+from 择时模型 import LLT_base
 from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
 
 w.start()
@@ -16,8 +17,13 @@ BACKTEST_END_DATE = '2018-08-23'  # 回测结束日期，测试结束日期不�
 INDEX = '000300.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
-# 用于记录调仓信息的字典
-stock_dict = {}
+# 择时模型的配置
+LLT_HISTORY = 100  # 计算LLT使用的历史时期
+LLT_INDEX = '000001.SH'  # 计算LLT择时的指数
+select_time_model = LLT_base(BACKTEST_START_DATE, BACKTEST_END_DATE, LLT_INDEX, LLT_HISTORY)
+
+stock_dict = {}  # 用于记录调仓信息的字典
+select_time_dict = {}  # 用于记录择时信息的字典
 
 # 根据回测阶段选取好调仓日期
 trading_date_list = []  # 记录调仓日期的列表
@@ -42,14 +48,19 @@ def init(context):
 def algo(context):
     date_now = context.now.strftime('%Y-%m-%d')
     date_previous = get_trading_date_from_now(date_now, -1, ql.Days)  # 前一个交易日，用于获取因子数据的日期
+    select_time_value = select_time_model[date_now]  # 择时信号计算
+    select_time_dict[date_now] = select_time_value
+    print(date_now + ('日回测程序执行中...，择时值：%.2f' % select_time_value))
+
     if date_now not in trading_date_list:  # 非调仓日
-        pass  # 预留非调仓日的微调空间
+        pass
     else:  # 调仓日执行算法
-        print(date_now+'日回测程序执行中...')
         try:
-            code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
+            code_list = list_gm2wind(list(
+                get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0][
+                    'constituents'].keys()))
         except IndexError:
-            code_list = w.wset("sectorconstituent", "date="+date_previous+";windcode="+INDEX).Data[1]
+            code_list = w.wset("sectorconstituent", "date=" + date_previous + ";windcode=" + INDEX).Data[1]
         strategy = STRATEGY(code_list, date_previous, 0.9)
         select_code_list = list_wind2jq(strategy.select_code())
         if len(select_code_list) > 0:  # 有可选股票时选取合适的股票
@@ -59,7 +70,6 @@ def algo(context):
             stock_dict[date_now] = stock_now
         else:
             stock_dict[date_now] = {}
-        # 待开发选股策略
 
 
 def on_backtest_finished(context, indicator):
@@ -69,11 +79,15 @@ def on_backtest_finished(context, indicator):
     stock_file = open('data\\stock_json.json', 'w')
     stock_file.write(stock_json)
     stock_file.close()
+    select_time_file = open('data\\select_time_json.json', 'w')
+    select_time_json = json.dumps(select_time_dict)
+    select_time_file.write(select_time_json)
+    select_time_file.close()
 
 
 if __name__ == '__main__':
     run(strategy_id='4d2f6b1c-8f0a-11e8-af59-305a3a77b8c5',
-        filename='master_strategy_backtest.py',
+        filename='master_strategy_backtest_select_time_hedging.py',
         mode=MODE_BACKTEST,
         token='d7b08e7e21dd0315a510926e5a53ade8c01f9aaa',
         backtest_initial_cash=10000000,
