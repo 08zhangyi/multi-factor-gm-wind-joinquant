@@ -20,17 +20,6 @@ class SelectTimeIndexBacktest(object):
         return_list = np.concatenate(([0], return_list))
         self.return_list = list(np.exp(return_list))  # 根据择时信号计算的累计收益率
 
-    def _get_signale(self, date_now):
-        # 获取某一日的择时信号
-        pass
-
-    def _get_data(self):
-        # 获取择时时间、信号、指数序列
-        date_list = []
-        index_list = []
-        signal_list = []
-        return date_list, index_list, signal_list
-
     def get_return(self):
         data = np.array([self.index_list, self.return_list, self.signal_list]).transpose()
         df = pd.DataFrame(data, index=self.date_list, columns=['指数累积收益', '择时累积收益', '择时信号'])
@@ -45,15 +34,32 @@ class SelectTimeIndexBacktest(object):
         line_chart.add('择时累积收益', self.return_list)
         line_chart.render_to_file('图片\\纯多择时收益图.svg')
 
+    def _get_signal(self, date_now):
+        '''
+        获取某一日的择时信号，需要具体实现
+        :param date_now: 计算date_now当天收盘后的择时指标
+        :return : 择时信号返回值，1为看多，-1为看空，0为不确定
+        '''
+        pass
+
+    def _get_data(self):
+        '''
+        获取择时时间、信号、指数序列，需要具体实现
+        :return date_list: 日期列表
+        :return index_list: 指数值列表
+        :return signal_list: 择时信号列表
+        '''
+        date_list = []
+        index_list = []
+        signal_list = []
+        return date_list, index_list, signal_list
+
 
 class LLT_base(SelectTimeIndexBacktest):
     # LLT择时基本版模型
     # 计算index_code的收盘指数的择时信号，并做回测
     def __init__(self, backtest_start_date, backtest_end_date, index_code, llt_d, llt_cal_history=100, llt_threshold=0.0):
         '''
-        :param backtest_start_date:
-        :param backtest_end_date:
-        :param index_code:
         :param llt_d: 上证综指适合参数39
         :param llt_cal_history:
         :param llt_threshold:
@@ -70,11 +76,7 @@ class LLT_base(SelectTimeIndexBacktest):
         super().__init__(backtest_start_date, backtest_end_date, index_code)
 
     def _get_signal(self, date_now):
-        '''
-        :param date_now: 计算date_now前一天收盘后的择时指标
-        :return llt_value: 择时信号返回值，1为看多，-1为看空，0为不确定
-        '''
-        llt_index = self.llt_times.index(date_now)
+        llt_index = self.llt_times.index(date_now) + 1
         price_list = self.llt_data[llt_index - self.llt_cal_history:llt_index]
         llt_value = self._LLT(price_list)
         return llt_value
@@ -97,5 +99,5 @@ class LLT_base(SelectTimeIndexBacktest):
 
 
 if __name__ == '__main__':
-    model = LLT_base('2018-03-12', '2018-08-23', '000001.SH', llt_d=39)
+    model = LLT_base('2018-03-12', '2018-09-05', '000001.SH', llt_d=39)
     model.plot_return()
