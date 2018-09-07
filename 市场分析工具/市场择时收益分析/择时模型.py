@@ -26,13 +26,13 @@ class SelectTimeIndexBacktest(object):
         print(df)
         return df
 
-    def plot_return(self):
+    def plot_return(self, infor=''):
         line_chart = pygal.Line()
         line_chart.title = '指数'+self.index_code+'的择时收益表现'
         line_chart.x_labels = self.date_list
         line_chart.add('指数累积收益', self.index_list)
         line_chart.add('择时累积收益', self.return_list)
-        line_chart.render_to_file('图片\\纯多择时收益图.svg')
+        line_chart.render_to_file('图片\\纯多择时收益图_'+infor+'.svg')
 
     def _get_signal(self, date_now):
         '''
@@ -99,5 +99,5 @@ class LLT_base(SelectTimeIndexBacktest):
 
 
 if __name__ == '__main__':
-    model = LLT_base('2018-03-12', '2018-09-05', '000001.SH', llt_d=39)
-    model.plot_return()
+    model = LLT_base('2016-02-02', '2018-09-06', '000001.SH', llt_d=9)
+    model.plot_return('9')
