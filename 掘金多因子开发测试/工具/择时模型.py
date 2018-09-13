@@ -7,7 +7,7 @@ from utils import get_trading_date_from_now
 
 class LLT_base(object):
     # LLT择时基本版模型
-    # 根据LLT曲线的趋势就行择时操作
+    # 根据LLT曲线的趋势进行择时操作
     def __init__(self, backtest_start_date, backtest_end_date, index_code, llt_cal_history=100, llt_threshold=0.0, llt_d=39):
         w.start()
         llt_start_date = get_trading_date_from_now(backtest_start_date, -llt_cal_history, ql.Days)

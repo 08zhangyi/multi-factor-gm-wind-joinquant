@@ -7,6 +7,14 @@ import numpy as np
 import jqdatasdk
 from sqlalchemy.orm.query import Query
 
+# 申万1级行业列表
+SW1_INDEX = [['801010.SI', '农林牧渔'], ['801020.SI', '采掘'], ['801030.SI', '化工'], ['801040.SI', '钢铁'], ['801050.SI', '有色金属'],
+             ['801080.SI', '电子'], ['801110.SI', '家用电器'], ['801120.SI', '食品饮料'], ['801130.SI', '纺织服装'], ['801140.SI', '轻工制造'],
+             ['801150.SI', '医药生物'], ['801160.SI', '公用事业'], ['801170.SI', '交通运输'], ['801180.SI', '房地产'], ['801200.SI', '商业贸易'],
+             ['801210.SI', '休闲服务'], ['801230.SI', '综合'], ['801710.SI', '建筑材料'], ['801720.SI', '建筑装饰'], ['801730.SI', '电气设备'],
+             ['801740.SI', '国防军工'], ['801750.SI', '计算机'], ['801760.SI', '传媒'], ['801770.SI', '通信'], ['801780.SI', '银行'],
+             ['801790.SI', '非银金融'], ['801880.SI', '汽车'], ['801890.SI', '机械设备']]
+
 
 def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
     calculation_date = ql.Date(int(date_now.split('-')[2]), int(date_now.split('-')[1]), int(date_now.split('-')[0]))
@@ -109,6 +117,14 @@ def get_JQData(date, code_list, factor):
     return results
 
 
+def get_SW1_industry(date, code_list):
+    w.start()
+    sw1_industry = w.wss(code_list, "indexcode_sw", "tradeDate=" + date + ";industryType=1").Data[0]
+    sw1_result = {}
+    for i, code in enumerate(code_list):
+        sw1_result[code] = sw1_industry[i]
+    return sw1_result
+
+
 if __name__ == '__main__':
-    # print(get_JQData('2018-05-03', ['000002.SZ', '000036.SZ'], jqdatasdk.valuation.pe_ratio))
-    print(get_JQFactor_local('2018-05-03', ['000002.SZ', '000036.SZ'], 'long_debt_to_working_capital_ratio'))
+    print(get_SW1_industry('2018-09-11', ['000002.SZ', '000036.SZ']))
