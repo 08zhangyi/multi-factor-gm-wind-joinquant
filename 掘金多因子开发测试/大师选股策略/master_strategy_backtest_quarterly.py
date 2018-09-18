@@ -11,30 +11,14 @@ from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2018-06-05'  # 回测开始日期
-BACKTEST_END_DATE = '2018-08-23'  # 回测结束日期，测试结束日期不运用算法
-INDEX = '000300.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
-TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
-
-# LLT择时指数参数
-def LLT(price_list, d=69):  # LLT计算函数
-    a = 2 / (d + 1)  # LLT的参数
-    LLT_list = [price_list[0], price_list[1]]  # 记录LLT值列表的初始化序列
-    for t in range(2, len(price_list)):
-        LLT_value = (a - (a ** 2 / 4)) * price_list[t] + (a ** 2 / 2) * price_list[t - 1] - (a - (3 * a ** 2 / 4)) * price_list[t - 2] + 2 * (1 - a) * LLT_list[-1] - (1 - a) ** 2 * LLT_list[-2]
-        LLT_list.append(LLT_value)
-    return LLT_list[-1] - LLT_list[-2]  # LLT趋势值
-LLT_HISTORY = 100  # 计算LLT使用的历史时期
-LLT_INDEX = '000300.SH'  # 计算LLT择时的指数
-LLT_START_DATE = get_trading_date_from_now(BACKTEST_START_DATE, -LLT_HISTORY, ql.Days)
-data = w.wsd(LLT_INDEX, "close", LLT_START_DATE, BACKTEST_END_DATE, "")
-LLT_TIMES = data.Times
-LLT_DATA = data.Data[0]
+BACKTEST_START_DATE = '2010-08-10'  # 回测开始日期
+BACKTEST_END_DATE = '2018-09-04'  # 回测结束日期，测试结束日期不运用算法
+INDEX = '399006.SZ'  # 股票池代码，可以用掘金代码，也可以用Wind代码
+TRADING_DATE = '20'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
+QUARTERS = ['1', '4', '7', '10']  # 每季度的调仓月份，一共四个
 
 # 用于记录调仓信息的字典
 stock_dict = {}
-position_target = None
-position_now = None
 
 # 根据回测阶段选取好调仓日期
 trading_date_list = []  # 记录调仓日期的列表
@@ -42,7 +26,7 @@ i = 0
 while True:
     date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
     date_trading = get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
-    if date_now == date_trading:
+    if date_now == date_trading and str(int(date_now.split('-')[1])) in QUARTERS:
         trading_date_list.append(date_now)
     i += 1
     if date_now == BACKTEST_END_DATE:
@@ -59,14 +43,8 @@ def init(context):
 def algo(context):
     date_now = context.now.strftime('%Y-%m-%d')
     date_previous = get_trading_date_from_now(date_now, -1, ql.Days)  # 前一个交易日，用于获取因子数据的日期
-    # 计算当日的LLT指标
-    llt_index = LLT_TIMES.index(context.now)
-    price_list = LLT_DATA[llt_index-100:llt_index]
-    llt_value = LLT(price_list)
-    print(context.now, llt_value)
-
     if date_now not in trading_date_list:  # 非调仓日
-        pass
+        pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
         print(date_now+'日回测程序执行中...')
         try:
@@ -96,7 +74,7 @@ def on_backtest_finished(context, indicator):
 
 if __name__ == '__main__':
     run(strategy_id='4d2f6b1c-8f0a-11e8-af59-305a3a77b8c5',
-        filename='master_strategy_backtest.py',
+        filename='master_strategy_backtest_quarterly.py',
         mode=MODE_BACKTEST,
         token='d7b08e7e21dd0315a510926e5a53ade8c01f9aaa',
         backtest_initial_cash=10000000,
