@@ -234,3 +234,7 @@ class 戴维斯双击v1(MasterStrategy):
 
         code_list = list(df.index.values)
         return code_list
+
+
+a = 123
+b = 234
