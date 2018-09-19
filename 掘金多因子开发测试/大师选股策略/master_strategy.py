@@ -196,3 +196,41 @@ class 本杰明格雷厄姆成长股内在价值投资法v2(MasterStrategy):
         share_code = value[value > value.quantile(self.N)]
         code_list = list(share_code.index.values)
         return code_list
+
+
+class 戴维斯双击v1(MasterStrategy):
+    '''选股条件：
+1.净利润ttm增速>0%，三个月前净利润ttm>300万*4
+2.三个月前净利润ttm增速>0%
+3.(净利润ttm增速-三个月前净利润ttm增速)>0%（加速增长）
+4.三个月前营业收入ttm>0
+5.按照第3条排名取最高的前25个股票'''
+    def __init__(self, code_list, date, N=25):
+        super().__init__(code_list, date)
+        self.N = N  # N为选股的个数，默认为25个
+
+    def _get_data(self):
+        from single_factor import NetProfitGrowRateV2, NetProfit, Revenue
+        factor_list = [NetProfitGrowRateV2, NetProfit]
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        date_temp = get_trading_date_from_now(self.date, -3, ql.Months)
+        df_temp = get_factor_from_wind_v2(self.code_list, [NetProfitGrowRateV2, Revenue], date_temp)
+        df_temp.rename(columns={'净利润增长率': '净利润增长率_3个月前'}, inplace=True)
+        df_temp_1 = df['净利润增长率'] - df_temp['净利润增长率_3个月前']
+        df = pd.concat([df, df_temp, df_temp_1], axis=1)
+        df.rename(columns={0: '差值'}, inplace=True)
+        df = df.dropna()
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        df = df[df['净利润'] > 12000000.0]
+        df = df[df['净利润增长率'] > 0.0]
+        df = df[df['净利润增长率_3个月前'] > 0.0]
+        df = df[df['营业收入'] > 0.0]
+        df = df[df['差值'] > 0.0]
+        df = df.sort_values(by='差值', axis=0, ascending=False)
+        df = df.head(self.N)
+
+        code_list = list(df.index.values)
+        return code_list

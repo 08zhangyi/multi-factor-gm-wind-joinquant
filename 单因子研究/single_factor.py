@@ -1059,6 +1059,32 @@ class LongTermLiabilityToWorkCapital(SingleFactorReasearch):
         return fa_uncurdebttoworkcap
 
 
+# 净利润ttm 前推12个月的数据
+class NetProfit(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '净利润'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        profit_data = np.array(w.wss(self.code_list, "profit_ttm", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        netprofit = pd.DataFrame(data=profit_data, index=self.code_list, columns=[self.factor_name])
+        return netprofit
+
+
+# 营业收入ttm 前推12个月的数据
+class Revenue(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '营业收入'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        revenue_data = np.array(w.wss(self.code_list, "or_ttm", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        revenue = pd.DataFrame(data=revenue_data, index=self.code_list, columns=[self.factor_name])
+        return revenue
+
+
 # 股权质押比例（三年统计）
 class StockPledgeRatio(SingleFactorReasearch):
     def __init__(self, date, code_list):
