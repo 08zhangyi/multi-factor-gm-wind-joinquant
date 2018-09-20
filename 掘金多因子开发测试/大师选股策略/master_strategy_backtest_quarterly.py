@@ -6,7 +6,8 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
-from master_strategy import 戴维斯双击v1 as STRATEGY
+from master_strategy import 戴维斯双击v4 as STRATEGY
+from 持仓配置 import 指数权重 as WEIGHTS
 
 w.start()
 
@@ -54,9 +55,7 @@ def algo(context):
         strategy = STRATEGY(code_list, date_previous)
         select_code_list = list_wind2jq(strategy.select_code())
         if len(select_code_list) > 0:  # 有可选股票时选取合适的股票
-            stock_now = {}
-            for code in select_code_list:
-                stock_now[code] = 1.0 / len(select_code_list)
+            stock_now = WEIGHTS(select_code_list, date_previous, INDEX).get_weights()
             stock_dict[date_now] = stock_now
         else:
             stock_dict[date_now] = {}

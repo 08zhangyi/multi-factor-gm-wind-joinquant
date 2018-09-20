@@ -8,6 +8,7 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, get_SW1_industry
 from 行业轮动SW1 import LLT_base
 from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
+from 持仓配置 import 等权持仓 as WEIGHTS
 
 w.start()
 
@@ -71,9 +72,7 @@ def algo(context):
             stock_dict[date_now] = {}
         else:
             candidate_selected_stock = list_wind2jq(candidate_selected_stock)
-            stock_now = {}
-            for code in candidate_selected_stock:
-                stock_now[code] = 1.0 / len(candidate_selected_stock)
+            stock_now = WEIGHTS(candidate_selected_stock, date_previous).get_weights()
             stock_dict[date_now] = stock_now
 
 

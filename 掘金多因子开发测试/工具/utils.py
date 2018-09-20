@@ -41,6 +41,12 @@ def list_wind2jq(list_wind):
     return list_jq
 
 
+def list_jq2wind(list_jq):
+    jq2wind_dict = {'XSHG': 'SH', 'XSHE': 'SZ', 'CCFX': 'CFE', 'XSGE': 'SHF', 'XDCE': 'DCE', 'XZCE': 'CZC', 'XINE': 'INE'}
+    list_wind = [temp.split('.')[0] + '.' + jq2wind_dict[temp.split('.')[1]] for temp in list_jq]
+    return list_wind
+
+
 def get_factor_from_wind(code_list, factor_list, date):
     # 用单因子研究\single_factor.py中的因子类直接获取数据
     file_path = 'data_cache\\factor_' + date + '.csv'
