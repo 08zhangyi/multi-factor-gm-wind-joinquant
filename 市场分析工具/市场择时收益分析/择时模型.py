@@ -5,6 +5,7 @@ import pandas as pd
 import pygal
 import sys
 from sklearn import linear_model
+from sklearn.metrics import r2_score
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import get_trading_date_from_now
 
@@ -149,7 +150,7 @@ class RSRS_base(SelectTimeIndexBacktest):
         high_price_list = np.array(high_price_list)
         low_price_list = np.array(low_price_list).reshape(-1, 1)
         reg = linear_model.LinearRegression()
-        reg.fit(low_price_list, high_price_list)
+        reg.fit(low_price_list, high_price_list)  # low为自变量，high为因变量
         RSRS_value = reg.coef_[0]
         return RSRS_value
 
@@ -217,8 +218,86 @@ class RSRS_standardization(SelectTimeIndexBacktest):
         return RSRS_value
 
 
+class RSRS_standardization_V1(RSRS_standardization):
+    # 用R方修正标准分的版本
+    def _get_data(self):
+        start_date_index = self.RSRS_times.index(self.backtest_start_date)
+        date_list = self.RSRS_times[start_date_index:]
+        index_list = self.RSRS_data[start_date_index:]
+        # signal_list需要增加M日
+        start_date_cal_index = self.RSRS_times.index(self.RSRS_cal_start_date)
+        date_cal_list = self.RSRS_times[start_date_cal_index:]
+        signal_cal_list = [self._get_signal(date) for date in date_cal_list]
+        signal_cal_list_value = [t[0] for t in signal_cal_list]
+        signal_cal_list_R2 = [t[0] for t in signal_cal_list]
+        signal_list = []
+        # 对signal_list进行后续处理以形成持仓信号
+        for i in range(len(date_list)):
+            signal_cal_temp = np.array(signal_cal_list_value[i+1:i+self.M+1])
+            signal = (signal_cal_temp[-1] - np.mean(signal_cal_temp)) / np.std(signal_cal_temp)  # 计算标准化值
+            signal = signal * signal_cal_list_R2[i+self.M]
+            if i == 0:
+                if signal > self.S1:
+                    signal = 1
+                else:
+                    signal = -1
+            else:
+                if signal > self.S1:
+                    signal = 1
+                elif signal > self.S2:
+                    signal = signal_list[-1]
+                else:
+                    signal = -1
+            signal_list.append(signal)
+        return date_list, index_list, signal_list
+
+    def _RSRS(self, high_price_list, low_price_list):
+        high_price_list = np.array(high_price_list)
+        low_price_list = np.array(low_price_list).reshape(-1, 1)
+        reg = linear_model.LinearRegression()
+        reg.fit(low_price_list, high_price_list)
+        RSRS_value = reg.coef_[0]
+        high_price_list_predict = reg.predict(low_price_list)
+        R2 = r2_score(high_price_list, high_price_list_predict)
+        return (RSRS_value, R2)
+
+
+class RSRS_standardization_V2(RSRS_standardization_V1):
+    # 用斜率修正R方修正后的标准分的版本，不推荐使用
+    def _get_data(self):
+        start_date_index = self.RSRS_times.index(self.backtest_start_date)
+        date_list = self.RSRS_times[start_date_index:]
+        index_list = self.RSRS_data[start_date_index:]
+        # signal_list需要增加M日
+        start_date_cal_index = self.RSRS_times.index(self.RSRS_cal_start_date)
+        date_cal_list = self.RSRS_times[start_date_cal_index:]
+        signal_cal_list = [self._get_signal(date) for date in date_cal_list]
+        signal_cal_list_value = [t[0] for t in signal_cal_list]
+        signal_cal_list_R2 = [t[0] for t in signal_cal_list]
+        signal_list = []
+        # 对signal_list进行后续处理以形成持仓信号
+        for i in range(len(date_list)):
+            signal_cal_temp = np.array(signal_cal_list_value[i+1:i+self.M+1])
+            signal = (signal_cal_temp[-1] - np.mean(signal_cal_temp)) / np.std(signal_cal_temp)  # 计算标准化值
+            signal = signal * signal_cal_list_R2[i+self.M] * signal_cal_list_value[i+self.N]
+            if i == 0:
+                if signal > self.S1:
+                    signal = 1
+                else:
+                    signal = -1
+            else:
+                if signal > self.S1:
+                    signal = 1
+                elif signal > self.S2:
+                    signal = signal_list[-1]
+                else:
+                    signal = -1
+            signal_list.append(signal)
+        return date_list, index_list, signal_list
+
+
 if __name__ == '__main__':
     N = 18
     M = 600
-    model = RSRS_standardization('2016-02-02', '2018-10-08', '000300.SH', N=N, M=M)
+    model = RSRS_standardization('2016-02-02', '2018-10-09', '801780.SI', N=N, M=M)
     model.plot_return(str(N)+'_'+str(M))
