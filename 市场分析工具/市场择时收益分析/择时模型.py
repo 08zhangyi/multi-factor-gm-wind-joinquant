@@ -3,9 +3,9 @@ import QuantLib as ql
 import numpy as np
 import pandas as pd
 import pygal
-import sys
 from sklearn import linear_model
 from sklearn.metrics import r2_score
+import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import get_trading_date_from_now
 
@@ -143,7 +143,6 @@ class RSRS_base(SelectTimeIndexBacktest):
                     signal_list[i] = signal_list[i-1]
                 else:  # 小于S2平仓
                     signal_list[i] = -1
-        print(signal_list)
         return date_list, index_list, signal_list
 
     def _RSRS(self, high_price_list, low_price_list):
@@ -299,5 +298,5 @@ class RSRS_standardization_V2(RSRS_standardization_V1):
 if __name__ == '__main__':
     N = 18
     M = 600
-    model = RSRS_standardization('2016-02-02', '2018-10-09', '801780.SI', N=N, M=M)
+    model = RSRS_base('2016-02-02', '2018-10-09', '000300.SH', N=N)
     model.plot_return(str(N)+'_'+str(M))
