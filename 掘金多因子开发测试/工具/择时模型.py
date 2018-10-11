@@ -64,8 +64,8 @@ class RSRS_base(object):
         return signal
 
     def _RSRS(self, high_price_list, low_price_list):
-        high_price_list = np.array(high_price_list)
-        low_price_list = np.array(low_price_list).reshape(-1, 1)
+        high_price_list = np.nan_to_num(np.array(high_price_list))  # 去除nan并替换为0.0，可以使得交易日内也可计算当日的择时信号与持仓
+        low_price_list = np.nan_to_num(np.array(low_price_list).reshape(-1, 1))
         reg = linear_model.LinearRegression()
         reg.fit(low_price_list, high_price_list)  # low为自变量，high为因变量
         RSRS_value = reg.coef_[0]
@@ -160,8 +160,8 @@ class RSRS_standardization(object):
         return date_list, index_list, signal_list
 
     def _RSRS(self, high_price_list, low_price_list):
-        high_price_list = np.array(high_price_list)
-        low_price_list = np.array(low_price_list).reshape(-1, 1)
+        high_price_list = np.nan_to_num(np.array(high_price_list))  # 去除nan并替换为0.0，可以使得交易日内也可计算当日的择时信号与持仓
+        low_price_list = np.nan_to_num(np.array(low_price_list).reshape(-1, 1))
         reg = linear_model.LinearRegression()
         reg.fit(low_price_list, high_price_list)
         RSRS_value = reg.coef_[0]
