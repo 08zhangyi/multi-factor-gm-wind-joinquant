@@ -142,7 +142,7 @@ class RSRS_standardization(object):
         signal_list = []
         # 对signal_list进行后续处理以形成持仓信号
         for i in range(len(date_list)):
-            signal_cal_temp = np.array(signal_cal_list[i+1:i+self.M+1])
+            signal_cal_temp = np.array(signal_cal_list[i:i+self.M])
             signal = (signal_cal_temp[-1] - np.mean(signal_cal_temp)) / np.std(signal_cal_temp)  # 计算标准化值
             if i == 0:
                 if signal > self.S1:
@@ -170,6 +170,6 @@ class RSRS_standardization(object):
 
 if __name__ == '__main__':
     N = 18
-    M = 600
+    M = 5
     model = RSRS_standardization('2016-02-02', '2018-10-09', '801780.SI', N=N, M=M)
     print(model['2018-10-08'])
