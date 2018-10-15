@@ -29,12 +29,14 @@ class SelectTimeIndexBacktest(object):
         return df
 
     def plot_return(self, infor=''):
+        if infor != '':
+            infor = '_' + infor
         line_chart = pygal.Line()
         line_chart.title = '指数'+self.index_code+'的择时收益表现'
         line_chart.x_labels = self.date_list
         line_chart.add('指数累积收益', self.index_list)
         line_chart.add('择时累积收益', self.return_list)
-        line_chart.render_to_file('图片\\纯多择时收益图_'+infor+'.svg')
+        line_chart.render_to_file('图片\\纯多择时收益图'+infor+'.svg')
 
     def _get_signal(self, date_now):
         '''
