@@ -13,7 +13,7 @@ from 持仓配置 import 等权持仓 as WEIGHTS
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2018-01-02'  # 回测开始日期
+BACKTEST_START_DATE = '2016-02-02'  # 回测开始日期
 BACKTEST_END_DATE = '2018-10-15'  # 回测结束日期，测试结束日期不运用算法
 INDEX = '000300.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日

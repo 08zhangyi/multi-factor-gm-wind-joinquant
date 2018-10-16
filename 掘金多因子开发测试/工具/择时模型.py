@@ -168,8 +168,78 @@ class RSRS_standardization(object):
         return RSRS_value
 
 
+class RSRS_standardization_V1(object):
+    # RSRS择时写法改进后的模型，此写法确实更加的科学有效
+    def __init__(self, backtest_start_date, backtest_end_date, index_code, N, M, S1=0.7, S2=-0.7):
+        w.start()
+        RSRS_start_date = get_trading_date_from_now(backtest_start_date, -N-M-1, ql.Days)
+        data = w.wsd(index_code, "high,low,close", RSRS_start_date, backtest_end_date, "")
+        self.RSRS_times = [t.strftime('%Y-%m-%d') for t in data.Times]
+        self.RSRS_data_high = data.Data[0]
+        self.RSRS_data_low = data.Data[1]
+        self.RSRS_data = data.Data[2]
+        self.backtest_start_date = backtest_start_date
+        self.RSRS_cal_start_date = get_trading_date_from_now(backtest_start_date, -M-1, ql.Days)
+        # 整理计算用的不同的时间序列
+        self.RSRS_raw_cal_times = self.RSRS_times[self.RSRS_times.index(self.RSRS_cal_start_date):]
+        self.RSRS_stand_cal_times = self.RSRS_times[self.RSRS_times.index(self.backtest_start_date)-1:]
+        self.N = N  # 计算RSRS指标采样的历史周期长短
+        self.M = M  # 标准化序列的历史周期长短
+        self.S1 = S1
+        self.S2 = S2
+        self.date_list, _, self.signal_list = self._get_data()
+
+    def __getitem__(self, date_now):
+        date_previous = get_trading_date_from_now(date_now, -1, ql.Days)
+        index = self.RSRS_stand_cal_times.index(date_previous)
+        return self.signal_list[index]
+
+    def _get_raw_data(self, date_now):
+        index = self.RSRS_times.index(date_now)
+        high_price_list = self.RSRS_data_high[index - self.N + 1:index + 1]  # 包含date_now的数据
+        low_price_list = self.RSRS_data_low[index - self.N + 1:index + 1]
+        return self._RSRS(high_price_list, low_price_list)
+
+    def _get_std_data(self, date_now, RSRS_raw_data):
+        index = self.RSRS_raw_cal_times.index(date_now)
+        signal_list = np.array(RSRS_raw_data[index - self.M + 1:index + 1])  # 包含date_now的数据
+        signal = (signal_list[-1] - np.mean(signal_list)) / np.std(signal_list)
+        return signal
+
+    def _get_data(self):
+        date_list = self.RSRS_stand_cal_times
+        index_list = self.RSRS_data[self.RSRS_times.index(self.backtest_start_date):]
+        RSRS_raw_data = [self._get_raw_data(date) for date in self.RSRS_raw_cal_times]
+        RSRS_stand_data = [self._get_std_data(date, RSRS_raw_data) for date in self.RSRS_stand_cal_times]
+        signal_list = []
+        for i in range(len(date_list)):  # 根据计算的结果得出择时信号
+            signal = RSRS_stand_data[i]
+            if i == 0:
+                if signal > self.S1:
+                    signal = 1
+                else:
+                    signal = -1
+            else:
+                if signal > self.S1:
+                    signal = 1
+                elif signal > self.S2:
+                    signal = signal_list[-1]
+                else:
+                    signal = -1
+            signal_list.append(signal)
+        return date_list, index_list, signal_list
+
+    def _RSRS(self, high_price_list, low_price_list):
+        high_price_list = np.nan_to_num(np.array(high_price_list))  # 去除nan并替换为0.0，可以使得交易日内也可计算当日的择时信号与持仓
+        low_price_list = np.nan_to_num(np.array(low_price_list).reshape(-1, 1))
+        reg = linear_model.LinearRegression()
+        reg.fit(low_price_list, high_price_list)
+        RSRS_value = reg.coef_[0]
+        return RSRS_value
+
+
 if __name__ == '__main__':
     N = 18
     M = 5
-    model = RSRS_standardization('2016-02-02', '2018-10-09', '801780.SI', N=N, M=M)
+    model = RSRS_standardization_V1('2016-02-02', '2018-10-16', '801780.SI', N=N, M=M)
     print(model['2018-10-08'])

@@ -161,7 +161,7 @@ class RSRS_standardization(SelectTimeIndexBacktest):
     # 计算index_code的收盘指数的择时信号，并做回测
     def __init__(self, backtest_start_date, backtest_end_date, index_code, N, M, S1=0.7, S2=-0.7):
         w.start()
-        RSRS_start_date = get_trading_date_from_now(backtest_start_date, -N-M, ql.Days)
+        RSRS_start_date = get_trading_date_from_now(backtest_start_date, -N - M, ql.Days)
         data = w.wsd(index_code, "high,low,close", RSRS_start_date, backtest_end_date, "")
         self.RSRS_times = [t.strftime('%Y-%m-%d') for t in data.Times]
         self.RSRS_data_high = data.Data[0]
@@ -169,6 +169,9 @@ class RSRS_standardization(SelectTimeIndexBacktest):
         self.RSRS_data = data.Data[2]
         self.backtest_start_date = backtest_start_date
         self.RSRS_cal_start_date = get_trading_date_from_now(backtest_start_date, -M, ql.Days)
+        # 整理计算用的不同的时间序列
+        self.RSRS_raw_cal_times = self.RSRS_times[self.RSRS_times.index(self.RSRS_cal_start_date):]
+        self.RSRS_stand_cal_times = self.RSRS_times[self.RSRS_times.index(self.backtest_start_date):]
         self.N = N  # 计算RSRS指标采样的历史周期长短
         self.M = M  # 标准化序列的历史周期长短
         self.S1 = S1
@@ -176,25 +179,29 @@ class RSRS_standardization(SelectTimeIndexBacktest):
         super().__init__(backtest_start_date, backtest_end_date, index_code)
 
     def _get_signal(self, date_now):
-        RSRS_index = self.RSRS_times.index(date_now) + 1
-        high_price_list = self.RSRS_data_high[RSRS_index - self.N:RSRS_index]
-        low_price_list = self.RSRS_data_low[RSRS_index - self.N:RSRS_index]
-        RSRS_value = self._RSRS(high_price_list, low_price_list)
-        return RSRS_value
+        index = self.RSRS_stand_cal_times.index(date_now)
+        return self.signal_list[index]
+
+    def _get_raw_data(self, date_now):
+        index = self.RSRS_times.index(date_now)
+        high_price_list = self.RSRS_data_high[index-self.N+1:index+1]  # 包含date_now的数据
+        low_price_list = self.RSRS_data_low[index-self.N+1:index+1]
+        return self._RSRS(high_price_list, low_price_list)
+
+    def _get_std_data(self, date_now, RSRS_raw_data):
+        index = self.RSRS_raw_cal_times.index(date_now)
+        signal_list = np.array(RSRS_raw_data[index-self.M+1:index+1])  # 包含date_now的数据
+        signal = (signal_list[-1] - np.mean(signal_list)) / np.std(signal_list)
+        return signal
 
     def _get_data(self):
-        start_date_index = self.RSRS_times.index(self.backtest_start_date)
-        date_list = self.RSRS_times[start_date_index:]
-        index_list = self.RSRS_data[start_date_index:]
-        # signal_list需要增加M日
-        start_date_cal_index = self.RSRS_times.index(self.RSRS_cal_start_date)
-        date_cal_list = self.RSRS_times[start_date_cal_index:]
-        signal_cal_list = [self._get_signal(date) for date in date_cal_list]
+        date_list = self.RSRS_stand_cal_times
+        index_list = self.RSRS_data[self.RSRS_times.index(self.backtest_start_date):]
+        RSRS_raw_data = [self._get_raw_data(date) for date in self.RSRS_raw_cal_times]
+        RSRS_stand_data = [self._get_std_data(date, RSRS_raw_data) for date in self.RSRS_stand_cal_times]
         signal_list = []
-        # 对signal_list进行后续处理以形成持仓信号
-        for i in range(len(date_list)):
-            signal_cal_temp = np.array(signal_cal_list[i:i+self.M])
-            signal = (signal_cal_temp[-1] - np.mean(signal_cal_temp)) / np.std(signal_cal_temp)  # 计算标准化值
+        for i in range(len(date_list)):  # 根据计算的结果得出择时信号
+            signal = RSRS_stand_data[i]
             if i == 0:
                 if signal > self.S1:
                     signal = 1
@@ -217,84 +224,6 @@ class RSRS_standardization(SelectTimeIndexBacktest):
         reg.fit(low_price_list, high_price_list)
         RSRS_value = reg.coef_[0]
         return RSRS_value
-
-
-class RSRS_standardization_V1(RSRS_standardization):
-    # 用R方修正标准分的版本
-    def _get_data(self):
-        start_date_index = self.RSRS_times.index(self.backtest_start_date)
-        date_list = self.RSRS_times[start_date_index:]
-        index_list = self.RSRS_data[start_date_index:]
-        # signal_list需要增加M日
-        start_date_cal_index = self.RSRS_times.index(self.RSRS_cal_start_date)
-        date_cal_list = self.RSRS_times[start_date_cal_index:]
-        signal_cal_list = [self._get_signal(date) for date in date_cal_list]
-        signal_cal_list_value = [t[0] for t in signal_cal_list]
-        signal_cal_list_R2 = [t[0] for t in signal_cal_list]
-        signal_list = []
-        # 对signal_list进行后续处理以形成持仓信号
-        for i in range(len(date_list)):
-            signal_cal_temp = np.array(signal_cal_list_value[i:i+self.M])
-            signal = (signal_cal_temp[-1] - np.mean(signal_cal_temp)) / np.std(signal_cal_temp)  # 计算标准化值
-            signal = signal * signal_cal_list_R2[i+self.M]
-            if i == 0:
-                if signal > self.S1:
-                    signal = 1
-                else:
-                    signal = -1
-            else:
-                if signal > self.S1:
-                    signal = 1
-                elif signal > self.S2:
-                    signal = signal_list[-1]
-                else:
-                    signal = -1
-            signal_list.append(signal)
-        return date_list, index_list, signal_list
-
-    def _RSRS(self, high_price_list, low_price_list):
-        high_price_list = np.array(high_price_list)
-        low_price_list = np.array(low_price_list).reshape(-1, 1)
-        reg = linear_model.LinearRegression()
-        reg.fit(low_price_list, high_price_list)
-        RSRS_value = reg.coef_[0]
-        high_price_list_predict = reg.predict(low_price_list)
-        R2 = r2_score(high_price_list, high_price_list_predict)
-        return (RSRS_value, R2)
-
-
-class RSRS_standardization_V2(RSRS_standardization_V1):
-    # 用斜率修正R方修正后的标准分的版本，不推荐使用
-    def _get_data(self):
-        start_date_index = self.RSRS_times.index(self.backtest_start_date)
-        date_list = self.RSRS_times[start_date_index:]
-        index_list = self.RSRS_data[start_date_index:]
-        # signal_list需要增加M日
-        start_date_cal_index = self.RSRS_times.index(self.RSRS_cal_start_date)
-        date_cal_list = self.RSRS_times[start_date_cal_index:]
-        signal_cal_list = [self._get_signal(date) for date in date_cal_list]
-        signal_cal_list_value = [t[0] for t in signal_cal_list]
-        signal_cal_list_R2 = [t[0] for t in signal_cal_list]
-        signal_list = []
-        # 对signal_list进行后续处理以形成持仓信号
-        for i in range(len(date_list)):
-            signal_cal_temp = np.array(signal_cal_list_value[i:i+self.M])
-            signal = (signal_cal_temp[-1] - np.mean(signal_cal_temp)) / np.std(signal_cal_temp)  # 计算标准化值
-            signal = signal * signal_cal_list_R2[i+self.M] * signal_cal_list_value[i+self.N]
-            if i == 0:
-                if signal > self.S1:
-                    signal = 1
-                else:
-                    signal = -1
-            else:
-                if signal > self.S1:
-                    signal = 1
-                elif signal > self.S2:
-                    signal = signal_list[-1]
-                else:
-                    signal = -1
-            signal_list.append(signal)
-        return date_list, index_list, signal_list
 
 
 if __name__ == '__main__':
