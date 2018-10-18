@@ -21,7 +21,7 @@ TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近
 # 择时模型的配置
 RSRS_N = 18
 RSRS_M = 600
-RSRS_INDEX = '000300.SH'  # 计算LLT择时的指数
+RSRS_INDEX = '000300.SH'  # 计算择时的指数
 select_time_model = RSRS_standardization(BACKTEST_START_DATE, BACKTEST_END_DATE, RSRS_INDEX, RSRS_N, RSRS_M)
 
 stock_dict = {}  # 用于记录调仓信息的字典

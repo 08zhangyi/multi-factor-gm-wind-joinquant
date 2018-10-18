@@ -22,6 +22,11 @@ class MasterStrategy(object):
         return code_list
 
 
+class AllCode(MasterStrategy):
+    def select_code(self):
+        return self.code_list
+
+
 class 彼得林奇基层调查选股策略说明(MasterStrategy):
     '''选股条件：
 1.公司的资产负债率小于等于 25%;

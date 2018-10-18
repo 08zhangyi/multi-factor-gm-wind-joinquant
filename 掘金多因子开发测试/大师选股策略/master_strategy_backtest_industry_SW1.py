@@ -5,22 +5,21 @@ import json
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, get_SW1_industry
-from 行业轮动SW1 import LLT_base
-from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
+from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, get_SW1_industry, SW1_INDEX
+from 行业轮动SW1 import RSRS_standardization
+from master_strategy import AllCode as STRATEGY
 from 持仓配置 import 等权持仓 as WEIGHTS
 
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2016-05-04'  # 回测开始日期
-BACKTEST_END_DATE = '2018-09-12'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_START_DATE = '2016-02-02'  # 回测开始日期
+BACKTEST_END_DATE = '2018-10-17'  # 回测结束日期，测试结束日期不运用算法
 INDEX = '000300.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
 # 行业轮动模型配置
-LLT_HISTORY = 100  # 计算LLT使用的历史时期
-industry_wheel_movement = LLT_base(BACKTEST_START_DATE, BACKTEST_END_DATE, LLT_HISTORY)
+industry_wheel_movement = RSRS_standardization(BACKTEST_START_DATE, BACKTEST_END_DATE, [70]*len(SW1_INDEX), [300]*len(SW1_INDEX))
 
 # 用于记录调仓信息的字典
 stock_dict = {}
@@ -59,11 +58,12 @@ def algo(context):
             code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
         except IndexError:
             code_list = w.wset("sectorconstituent", "date="+date_previous+";windcode="+INDEX).Data[1]
-        strategy = STRATEGY(code_list, date_previous, 0.9)
+        strategy = STRATEGY(code_list, date_previous)
         candidate_stock = strategy.select_code()  # 调仓日定期调节候选的股票池更新，非调仓日使用旧股票池
     sw1_industry = get_SW1_industry(date_now, candidate_stock)
     industry_wm_result = industry_wheel_movement[date_now]
-    candidate_selected_stock = [stock for stock in candidate_stock if industry_wm_result[sw1_industry[stock]] == 1]  # 根据行业择时信号选择候选股票
+    candidate_selected_stock = [stock for stock in candidate_stock if sw1_industry[stock] is not None and industry_wm_result[sw1_industry[stock]] == 1]  # 忽略无行业信息的股票并根据行业择时信号选择候选股票
+
     if candidate_selected_stock == selected_stock:  # 候选股状态与之前一样，不用任何操作
         pass
     else:

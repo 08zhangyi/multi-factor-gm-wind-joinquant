@@ -133,4 +133,4 @@ def get_SW1_industry(date, code_list):
 
 
 if __name__ == '__main__':
-    print(get_SW1_industry('2018-09-11', ['000002.SZ', '000036.SZ']))
+    print(get_SW1_industry('2016-12-29', ['600649.SH']))
