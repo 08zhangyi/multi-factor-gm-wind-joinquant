@@ -15,7 +15,7 @@ w.start()
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2016-02-02'  # 回测开始日期
 BACKTEST_END_DATE = '2018-10-17'  # 回测结束日期，测试结束日期不运用算法
-INDEX = '000300.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
+INDEX = ['399006.SZ']  # 股票池代码，用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
 # 行业轮动模型配置
@@ -54,10 +54,12 @@ def algo(context):
     if date_now not in trading_date_list:  # 非调仓日
         pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
-        try:
-            code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
-        except IndexError:
-            code_list = w.wset("sectorconstituent", "date="+date_previous+";windcode="+INDEX).Data[1]
+        # 根据指数获取股票候选池的代码
+        all_code_set = set()
+        for index in INDEX:
+            code_set = set(w.wset("sectorconstituent", "date=" + date_previous + ";windcode=" + index).Data[1])
+            all_code_set = all_code_set | code_set
+        code_list = list(all_code_set)  # 股票候选池
         strategy = STRATEGY(code_list, date_previous)
         candidate_stock = strategy.select_code()  # 调仓日定期调节候选的股票池更新，非调仓日使用旧股票池
     sw1_industry = get_SW1_industry(date_now, candidate_stock)

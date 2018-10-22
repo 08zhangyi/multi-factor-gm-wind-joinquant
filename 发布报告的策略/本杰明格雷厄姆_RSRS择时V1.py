@@ -16,7 +16,7 @@ w.start()
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2018-10-10'  # 回测开始日期
 BACKTEST_END_DATE = '2018-10-22'  # 回测结束日期，测试结束日期不运用算法
-INDEX = '000300.SH'  # 股票池代码，可以用掘金代码，也可以用Wind代码
+INDEX = ['000300.SH']  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
 # 择时模型的配置
@@ -61,10 +61,12 @@ def algo(context):
     else:  # 调仓日执行算法，更新position_target
         position_now = False  # 虚拟上，调仓日需要提前清仓
         stock_dict[date_now] = {}
-        try:
-            code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
-        except IndexError:
-            code_list = w.wset("sectorconstituent", "date="+date_previous+";windcode="+INDEX).Data[1]
+        # 根据指数获取股票候选池的代码
+        all_code_set = set()
+        for index in INDEX:
+            code_set = set(w.wset("sectorconstituent", "date=" + date_previous + ";windcode=" + index).Data[1])
+            all_code_set = all_code_set | code_set
+        code_list = list(all_code_set)  # 股票候选池
         strategy = STRATEGY(code_list, date_previous, 0.9)
         select_code_list = list_wind2jq(strategy.select_code())
         if len(select_code_list) > 0:  # 有可选股票时记录下可选股票
