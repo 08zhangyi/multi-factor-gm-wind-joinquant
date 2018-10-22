@@ -56,7 +56,7 @@ def algo(context):
         strategy = STRATEGY(code_list, date_previous, 0.9)
         select_code_list = list_wind2jq(strategy.select_code())
         if len(select_code_list) > 0:  # 有可选股票时选取合适的股票
-            stock_now = stock_now = WEIGHTS(select_code_list, date_previous).get_weights()
+            stock_now = WEIGHTS(select_code_list, date_previous).get_weights()
             stock_dict[date_now] = stock_now
         else:
             stock_dict[date_now] = {}

@@ -18,8 +18,11 @@ def get_future_code(future, date):
 def future_term_annualized(code_last_day_list, date):
     # 计算年化下期货距到期日的比例，一年为365日
     date = datetime.datetime.strptime(date, '%Y-%m-%d')
-    for last_day in code_last_day_list:
-        print(last_day, date)
+    days_delta_annualized = [((last_day - date).days/365.0) for last_day in code_last_day_list]
+    return days_delta_annualized
+
+
+def get_premium_future(future, code_list, date):
     pass
 
 
