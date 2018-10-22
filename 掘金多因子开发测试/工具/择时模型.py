@@ -211,6 +211,7 @@ class RSRS_standardization_V1(object):
         index_list = self.RSRS_data[self.RSRS_times.index(self.backtest_start_date):]
         RSRS_raw_data = [self._get_raw_data(date) for date in self.RSRS_raw_cal_times]
         RSRS_stand_data = [self._get_std_data(date, RSRS_raw_data) for date in self.RSRS_stand_cal_times]
+        print(RSRS_stand_data)
         signal_list = []
         for i in range(len(date_list)):  # 根据计算的结果得出择时信号
             signal = RSRS_stand_data[i]
@@ -241,5 +242,5 @@ class RSRS_standardization_V1(object):
 if __name__ == '__main__':
     N = 18
     M = 5
-    model = RSRS_standardization_V1('2016-02-02', '2018-10-16', '801780.SI', N=N, M=M)
+    model = RSRS_standardization_V1('2018-10-10', '2018-10-16', '801780.SI', N=N, M=M)
     print(model['2018-10-08'])
