@@ -20,6 +20,7 @@ def future_term_annualized(code_last_day_list, date):
     date = datetime.datetime.strptime(date, '%Y-%m-%d')
     for last_day in code_last_day_list:
         print(last_day, date)
+    pass
 
 
 
