@@ -37,6 +37,7 @@ def get_premium_future_from_code_list(future, code_list, days_delta_annualized, 
 
 
 def get_premium_future_from(future, date):
+    print('获取'+future+'的第'+date+'日数据')
     code_list, code_last_day_list = get_future_code(future, date)
     days_delta_annualized = future_term_annualized(code_last_day_list, date)
     ratio = get_premium_future_from_code_list(future, code_list, days_delta_annualized, date)
@@ -44,4 +45,4 @@ def get_premium_future_from(future, date):
 
 
 if __name__ == '__main__':
-    print(get_premium_future_from('IF', '2018-10-19'))
+    print(get_premium_future_from('IH', '2018-09-03'))
