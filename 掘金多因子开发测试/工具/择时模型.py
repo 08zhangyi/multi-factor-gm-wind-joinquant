@@ -211,10 +211,10 @@ class RSRS_standardization_V1(object):
         index_list = self.RSRS_data[self.RSRS_times.index(self.backtest_start_date):]
         RSRS_raw_data = [self._get_raw_data(date) for date in self.RSRS_raw_cal_times]
         RSRS_stand_data = [self._get_std_data(date, RSRS_raw_data) for date in self.RSRS_stand_cal_times]
-        print(RSRS_stand_data)
         signal_list = []
         for i in range(len(date_list)):  # 根据计算的结果得出择时信号
             signal = RSRS_stand_data[i]
+            print(signal, date_list[i])
             if i == 0:
                 if signal > self.S1:
                     signal = 1
