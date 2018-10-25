@@ -15,7 +15,9 @@ class SelectTimeIndexBacktest(object):
         self.index_code = index_code
         self.date_list, self.index_list, self.signal_list = self._get_data()
         self.index_list = [t/self.index_list[0] for t in self.index_list]
-        self.signal_list = [1 if t == 1 else 0 for t in self.signal_list]  # 多信号入场，空信号空仓
+        self.signal_list = [1 if t == 1 else 0 for t in self.signal_list]  # 多信号入场，空信号空仓，适用于股票
+        # 对self.signal_list不修正时，1信号做多，-1信号做空，0信号空仓，适用于期货
+        print(self.signal_list)
         # 一句择时信号计算累积收益
         return_list = np.diff(np.log(np.array(self.index_list)))
         return_list = np.cumsum(return_list * np.array(self.signal_list[:-1]))
@@ -162,7 +164,7 @@ class RSRS_standardization(SelectTimeIndexBacktest):
     def __init__(self, backtest_start_date, backtest_end_date, index_code, N, M, S1=0.7, S2=-0.7):
         w.start()
         RSRS_start_date = get_trading_date_from_now(backtest_start_date, -N - M, ql.Days)
-        data = w.wsd(index_code, "high,low,close", RSRS_start_date, backtest_end_date, "")
+        data = w.wsd(index_code, "high,low,close", RSRS_start_date, backtest_end_date, "PriceAdj=T")
         self.RSRS_times = [t.strftime('%Y-%m-%d') for t in data.Times]
         self.RSRS_data_high = data.Data[0]
         self.RSRS_data_low = data.Data[1]
@@ -226,8 +228,28 @@ class RSRS_standardization(SelectTimeIndexBacktest):
         return RSRS_value
 
 
+class RSRS_standardization_VFuture(RSRS_standardization):
+    # 用于期货回测开发
+    def _get_data(self):
+        date_list = self.RSRS_stand_cal_times
+        index_list = self.RSRS_data[self.RSRS_times.index(self.backtest_start_date):]
+        RSRS_raw_data = [self._get_raw_data(date) for date in self.RSRS_raw_cal_times]
+        RSRS_stand_data = [self._get_std_data(date, RSRS_raw_data) for date in self.RSRS_stand_cal_times]
+        signal_list = []
+        for i in range(len(date_list)):  # 根据计算的结果得出择时信号
+            signal = RSRS_stand_data[i]
+            if signal > self.S1:
+                signal = 1
+            elif signal < self.S2:
+                signal = -1
+            else:
+                signal = 0
+            signal_list.append(signal)
+        return date_list, index_list, signal_list
+
+
 if __name__ == '__main__':
     N = 18
     M = 600
-    model = RSRS_standardization('2017-08-01', '2018-10-12', '000300.SH', N=N, M=M)
+    model = RSRS_standardization('2015-01-27', '2018-10-24', '000001.SZ', N=N, M=M)
     model.plot_return(str(N)+'_'+str(M))
