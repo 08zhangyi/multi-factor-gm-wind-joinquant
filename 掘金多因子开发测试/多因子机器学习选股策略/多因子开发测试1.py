@@ -10,7 +10,8 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 # 引入因子类
 from single_factor import RSI, PE
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq, list_gm2wind, select_code_pool
+from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq, list_gm2wind
+from 候选股票 import SelectedStockPoolFromListV1
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
@@ -53,7 +54,7 @@ def algo(context):
     else:  # 调仓日执行算法
         print(date_now+'日回测程序执行中...')
         # 根据指数获取股票候选池的代码
-        code_list = select_code_pool(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous)
+        code_list = SelectedStockPoolFromListV1(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous).get_stock_pool()
         I = trading_date_list.index(date_now)
         trading_dates = trading_date_list[I-HISTORY_LENGTH:I+1]
         data_dfs = []

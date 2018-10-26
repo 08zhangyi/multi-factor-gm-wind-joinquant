@@ -135,20 +135,5 @@ def get_SW1_industry(date, code_list):
     return sw1_result
 
 
-    # 候选股票池选取函数
-def select_code_pool(included_list, excluded_list, date):
-    # included_list为需要选择的指数代码
-    # decluded_list为需要提出的指数代码
-    w.start()
-    all_code_set = set()
-    for index in included_list:
-        code_set = set(w.wset("sectorconstituent", "date=" + date + ";windcode=" + index).Data[1])
-        all_code_set = all_code_set | code_set
-    for index in excluded_list:
-        code_set = set(w.wset("sectorconstituent", "date=" + date + ";windcode=" + index).Data[1])
-        all_code_set.difference(code_set)
-    return list(all_code_set)
-
-
 if __name__ == '__main__':
     print(get_SW1_industry('2016-12-29', ['600649.SH']))

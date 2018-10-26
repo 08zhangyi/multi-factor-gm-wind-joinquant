@@ -5,10 +5,11 @@ import json
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, get_SW1_industry, SW1_INDEX, select_code_pool
+from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, get_SW1_industry, SW1_INDEX
 from 行业轮动SW1 import RSRS_standardization
 from master_strategy import AllCode as STRATEGY
 from 持仓配置 import 等权持仓 as WEIGHTS
+from 候选股票 import SelectedStockPoolFromListV1
 
 w.start()
 
@@ -54,7 +55,7 @@ def algo(context):
         pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
         # 根据指数获取股票候选池的代码
-        code_list = select_code_pool(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous)
+        code_list = SelectedStockPoolFromListV1(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous).get_stock_pool()
         strategy = STRATEGY(code_list, date_previous)
         candidate_stock = strategy.select_code()  # 调仓日定期调节候选的股票池更新，非调仓日使用旧股票池
     sw1_industry = get_SW1_industry(date_now, candidate_stock)
