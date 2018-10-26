@@ -56,7 +56,6 @@ def algo(context):
             stock_dict[date_now] = stock_now
         else:
             stock_dict[date_now] = {}
-        # 待开发选股策略
 
 
 def on_backtest_finished(context, indicator):
