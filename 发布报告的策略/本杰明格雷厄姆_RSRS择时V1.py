@@ -15,7 +15,7 @@ w.start()
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2018-10-10'  # 回测开始日期
-BACKTEST_END_DATE = '2018-10-25'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2018-10-26'  # 回测结束日期，测试结束日期不运用算法
 INDEX = ['000300.SH']  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
@@ -43,8 +43,6 @@ while True:
 
 
 def init(context):
-    # 根据板块的历史数据组成订阅数据
-    # subscribe(symbols=history_constituents_all, frequency='1d')
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 

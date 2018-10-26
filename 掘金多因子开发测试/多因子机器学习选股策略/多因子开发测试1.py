@@ -10,12 +10,13 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 # 引入因子类
 from single_factor import RSI, PE
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq, list_gm2wind
+from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq, list_gm2wind, select_code_pool
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
 BACKTEST_END_DATE = '2018-07-23'  # 回测结束日期，测试结束日期不运用算法
-INDEX = 'SHSE.000016'  # 股票池代码，可以用掘金代码，也可以用Wind代码
+INCLUDED_INDEX = ['000300.SH', '000016.SH']  # 股票池代码，用Wind代码
+EXCLUDED_INDEX = ['801780.SI']  # 剔除的股票代码
 FACTOR_LIST = [RSI, PE]  # 需要获取的因子列表，用单因子研究中得模块
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 3  # 取得的历史样本的周期数
@@ -40,16 +41,6 @@ BACKTEST_START_DATE = trading_date_list[HISTORY_LENGTH]  # 调整回测起始日
 
 
 def init(context):
-    # 按照回测的将股票池的历史股票组成提出并合并
-    history_constituents = get_history_constituents(INDEX, start_date=BACKTEST_START_DATE, end_date=BACKTEST_END_DATE)
-    history_constituents = [set(temp['constituents'].keys()) for temp in history_constituents]
-    history_constituents_all = set()
-    for temp in history_constituents:
-        history_constituents_all = history_constituents_all | temp
-    history_constituents_all = list(history_constituents_all)
-    pd.DataFrame(history_constituents_all).to_csv('data\\涉及到的股票代码.csv')  # 存储股票代码以方便调试
-    # 根据板块的历史数据组成订阅数据
-    # subscribe(symbols=history_constituents_all, frequency='1d')
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 
@@ -61,10 +52,8 @@ def algo(context):
         pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
         print(date_now+'日回测程序执行中...')
-        try:
-            code_list = list_gm2wind(list(get_history_constituents(INDEX, start_date=date_previous, end_date=date_previous)[0]['constituents'].keys()))
-        except IndexError:
-            code_list = w.wset("sectorconstituent", "date="+date_previous+";windcode="+INDEX).Data[1]
+        # 根据指数获取股票候选池的代码
+        code_list = select_code_pool(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous)
         I = trading_date_list.index(date_now)
         trading_dates = trading_date_list[I-HISTORY_LENGTH:I+1]
         data_dfs = []

@@ -5,16 +5,17 @@ import json
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
+from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, select_code_pool
 from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
 from 持仓配置 import 等权持仓 as WEIGHTS
 
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2010-08-10'  # 回测开始日期
-BACKTEST_END_DATE = '2018-09-04'  # 回测结束日期，测试结束日期不运用算法
-INDEX = ['000300.SH', '000016.SH']  # 股票池代码，用Wind代码
+BACKTEST_START_DATE = '2018-01-05'  # 回测开始日期
+BACKTEST_END_DATE = '2018-10-25'  # 回测结束日期，测试结束日期不运用算法
+INCLUDED_INDEX = ['000300.SH', '000016.SH']  # 股票池代码，用Wind代码
+EXCLUDED_INDEX = ['801780.SI']  # 剔除的股票代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
 # 用于记录调仓信息的字典
@@ -34,8 +35,6 @@ while True:
 
 
 def init(context):
-    # 根据板块的历史数据组成订阅数据
-    # subscribe(symbols=history_constituents_all, frequency='1d')
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 
@@ -48,11 +47,7 @@ def algo(context):
     else:  # 调仓日执行算法
         print(date_now+'日回测程序执行中...')
         # 根据指数获取股票候选池的代码
-        all_code_set = set()
-        for index in INDEX:
-            code_set = set(w.wset("sectorconstituent", "date=" + date_previous + ";windcode=" + index).Data[1])
-            all_code_set = all_code_set | code_set
-        code_list = list(all_code_set)  # 股票候选池
+        code_list = select_code_pool(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous)
         strategy = STRATEGY(code_list, date_previous, 0.9)
         select_code_list = list_wind2jq(strategy.select_code())
         if len(select_code_list) > 0:  # 有可选股票时选取合适的股票

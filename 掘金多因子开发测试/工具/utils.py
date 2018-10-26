@@ -16,6 +16,7 @@ SW1_INDEX = [['801010.SI', '农林牧渔'], ['801020.SI', '采掘'], ['801030.SI
              ['801790.SI', '非银金融'], ['801880.SI', '汽车'], ['801890.SI', '机械设备']]
 
 
+# 计算不同交易日的函数
 def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
     calculation_date = ql.Date(int(date_now.split('-')[2]), int(date_now.split('-')[1]), int(date_now.split('-')[0]))
     calendar = ql.China()
@@ -49,6 +50,7 @@ def list_jq2wind(list_jq):
 
 def get_factor_from_wind(code_list, factor_list, date):
     # 用单因子研究\single_factor.py中的因子类直接获取数据
+    # 有缓存版本
     file_path = 'data_cache\\factor_' + date + '.csv'
     if os.path.exists(file_path):  # 使用缓存中数据减少数据交互，加快读取速度
         factors_df = pd.read_csv(file_path, index_col=0)
@@ -123,6 +125,7 @@ def get_JQData(date, code_list, factor):
     return results
 
 
+# 获取股票列表的申万一级代码
 def get_SW1_industry(date, code_list):
     w.start()
     sw1_industry = w.wss(code_list, "indexcode_sw", "tradeDate=" + date + ";industryType=1").Data[0]
@@ -130,6 +133,21 @@ def get_SW1_industry(date, code_list):
     for i, code in enumerate(code_list):
         sw1_result[code] = sw1_industry[i]
     return sw1_result
+
+
+    # 候选股票池选取函数
+def select_code_pool(included_list, excluded_list, date):
+    # included_list为需要选择的指数代码
+    # decluded_list为需要提出的指数代码
+    w.start()
+    all_code_set = set()
+    for index in included_list:
+        code_set = set(w.wset("sectorconstituent", "date=" + date + ";windcode=" + index).Data[1])
+        all_code_set = all_code_set | code_set
+    for index in excluded_list:
+        code_set = set(w.wset("sectorconstituent", "date=" + date + ";windcode=" + index).Data[1])
+        all_code_set.difference(code_set)
+    return list(all_code_set)
 
 
 if __name__ == '__main__':
