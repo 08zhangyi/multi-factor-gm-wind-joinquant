@@ -1,5 +1,6 @@
 import QuantLib as ql
 import pandas as pd
+from WindPy import w
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
@@ -364,5 +365,53 @@ class 戴维斯双击v4(MasterStrategy):
             df_temp1 = df_temp1.sort_values(by='差值', axis=0, ascending=False)
             df = pd.concat([df_temp1, df_temp2], axis=0)
 
+        code_list = list(df.index.values)
+        return code_list
+
+
+# 投资十法
+class 本杰明格雷厄姆经典价值投资法(MasterStrategy):
+    ''' 选股条件
+价值五法：
+1.股票的盈利回报率（市盈率倒数）应大于美国AAA 级债券收益的2 倍。例如某只股票的市盈率为10 倍，则盈利回报率为10%，
+    如AAA债券收益率为4%,则该只股票的盈利回报率满足条件；(直接用PE值）
+2.股票的市盈率应小于其过去五年最高市盈率的40%。
+3.股票派息率应大于美国AAA 级债券收益率的2/3。
+4.股价要低于每股有形资产净值的2/3。  # 每股有形资产 vs 每股净资产
+5.股价要低于每股净流动资产（流动资产-总负债）的2/3。
+
+安全五法：
+1.总负债要小于有形资产净值。
+2.流动比率（流动资产/流动负债）要大于2。
+3.总负债要要小于净流动资产的2 倍。
+4.过去10 年的平均年化盈利增长率要大于7%。
+5.过去十年中不能超过2 次的盈利增长率小于-5%。'''
+    def __init__(self, code_list, date, N=1):
+        super().__init__(code_list, date,)
+        self.N = N
+
+    def _get_data(self):
+        from single_factor import ClosePrice, PE, DividendYield, NetTangibleAssetPerShare, NetLiquidAssetPerShare, TotalLiability, NetLiquidAsset, NetTangibleAsset, CurrentRatio, NetProfitGrowRateV2, PE_MAX
+        factor_list = [ClosePrice, PE, DividendYield, NetTangibleAssetPerShare, NetLiquidAssetPerShare, TotalLiability, NetLiquidAsset, NetTangibleAsset, CurrentRatio, NetProfitGrowRateV2]
+        # factor_list = [PE_MAX] # 待添加到上述列表，条件筛选不完整
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        date_temp_1 = get_trading_date_from_now(self.date, -3, ql.Days)  # 取3天前国债收益率
+        yield_data = w.wss("TB" + str(self.N) + "Y.WI", "close", "tradeDate=" + str(date_temp_1) + ";priceAdj=U;cycle=D").Data[0][0]
+        df = df.dropna()
+        return df, yield_data
+
+    def select_code(self):
+        df, TB_yield = self._get_data()
+        df = df[df['市盈率PE'] < (1.0/(TB_yield*0.005))]  # 此处2倍 可以修改 0.02
+        # print(1.0/(TB_yield*0.005))  # 打印PE筛选条件
+        # df = df[df['市盈率PE'] < (df['过去5年最大PE值']*0.40)]  # 待优化 数据量太大
+        df = df[df['股息率指标'] > (TB_yield*0.5)]  # 原值2/3
+        # df = df[df['每股净有形资产'] > (df['收盘价'])]   # 原值 2/3  打开即崩
+        # df = df[df['每股净流动资产'] > (df['收盘价'])]    # 原值 2/3  打开即崩
+        # 安全5法
+        # df = df[df['总负债'] < df['有形资产净值']]  # 数据接口提取不稳定 出现None较多
+        df = df[df['流动比率'] > 1.0]  # 原值 2.0
+        df = df[(df['总负债']*1.0) < df['净流动资产']]  # 原值2.0
+        df = df[df['净利润增长率'] > 7.0]  # 原值7.0
         code_list = list(df.index.values)
         return code_list

@@ -3,10 +3,11 @@ from WindPy import w
 import numpy as np
 import pandas as pd
 import datetime
+import QuantLib as ql
 import jqdatasdk
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
-from utils import get_JQFactor_local, get_JQData
+from utils import get_JQFactor_local, get_JQData, get_trading_date_from_now
 
 
 class SingleFactorReasearch():
@@ -595,6 +596,19 @@ class DilutedEPS(SingleFactorReasearch):
         return DilutedEPS
 
 
+# 每股净资产
+class NetAssetPerShare(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '每股净资产'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list, "fa_bps", "tradeDate="+"".join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
 # ROA
 class ROA(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -967,6 +981,24 @@ class EstimatePEFY1(SingleFactorReasearch):
         return estpe_FY1
 
 
+# 过去N年最大PE值
+class PE_MAX(SingleFactorReasearch):
+    def __init__(self, date, code_list, N = 5):
+        self.N = N
+        factor_name = '过去' + str(N) + '年最大PE值'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        startDate = get_trading_date_from_now("-".join(date_list), -self.N, ql.Years)  # 年可以改成日月
+        pe_data = []
+        for i in self.code_list:
+            data = np.max(w.wsd(i, "pe_ttm", str(startDate), ''.join(date_list), "").Data[0])
+            pe_data.append(data)
+        df = pd.DataFrame(data=pe_data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
 # PB指标
 class PB(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -1124,6 +1156,94 @@ class StockPledgeRatio(SingleFactorReasearch):
             if list[i] == None:
                list[i] = datetime.datetime.strptime('2200-12-31', '%Y-%m-%d')
         return list
+
+
+# 收盘价 （不复权）
+class ClosePrice(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '收盘价'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        close_prc = np.array(w.wss(self.code_list, "close", "tradeDate="+"".join(date_list)+";priceAdj=U;cycle=D").Data[0])
+        df = pd.DataFrame(data=close_prc, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 每股净有形资产
+class NetTangibleAssetPerShare(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '每股净有形资产'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        tgb_asset = np.array(w.wss(self.code_list, "fa_tangibleasset", "tradeDate="+"".join(date_list)).Data[0])
+        tot_liab = np.array(w.wss(self.code_list, "fa_totliab", "tradeDate="+"".join(date_list)).Data[0])
+        total_shares = np.array(w.wss(self.code_list, "total_shares", "unit=1;tradeDate="+"".join(date_list)).Data[0])
+        data = (tgb_asset-tot_liab)/total_shares
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 每股净流动资产
+class NetLiquidAssetPerShare(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '每股净流动资产'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        total_equity = np.array(w.wss(self.code_list, "fa_totequity", "tradeDate="+"".join(date_list)).Data[0])
+        fixed_asset = np.array(w.wss(self.code_list, "fa_fixassets", "tradeDate="+"".join(date_list)).Data[0])
+        total_shares = np.array(w.wss(self.code_list, "total_shares", "unit=1;tradeDate="+"".join(date_list)).Data[0])
+        data = (total_equity-fixed_asset)/total_shares
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 总负债
+class TotalLiability(SingleFactorReasearch):
+    def __init__(self,date, code_list):
+        factor_name = '总负债'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        liab = np.array(w.wss(self.code_list, "fa_totliab", "tradeDate="+"".join(date_list)).Data[0])
+        df = pd.DataFrame(data=liab, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 净流动资产(单位：元）
+class NetLiquidAsset(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '净流动资产'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        total_equity = np.array(w.wss(self.code_list, "fa_totequity", "tradeDate="+"".join(date_list)).Data[0])
+        fixed_asset = np.array(w.wss(self.code_list, "fa_fixassets", "tradeDate="+"".join(date_list)).Data[0])
+        data = total_equity - fixed_asset
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 有形资产净值（单位：元）
+class NetTangibleAsset(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '有形资产净值'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        tgb_asset = np.array(w.wss(self.code_list, "fa_tangibleasset", "tradeDate="+"".join(date_list)).Data[0])
+        tot_liab = np.array(w.wss(self.code_list, "fa_totliab", "tradeDate="+"".join(date_list)).Data[0])
+        data = tgb_asset - tot_liab
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
 
 
 # 申万一级行业
