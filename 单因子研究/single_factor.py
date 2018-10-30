@@ -7,7 +7,7 @@ import QuantLib as ql
 import jqdatasdk
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
-from utils import get_JQFactor_local, get_JQData, get_trading_date_from_now
+from utils import get_JQFactor_local, get_JQData, get_trading_date_from_now, SW1_INDEX
 
 
 class SingleFactorReasearch():
@@ -1259,12 +1259,29 @@ class SW1Industry(SingleFactorReasearch):
         return sw1_industry
 
 
+# 申万一级行业one-hot编码
+class SW1IndustryOneHot(SW1Industry):
+    def _calculate_factor(self):
+        date_list = self.date
+        sw1_industry = w.wss(self.code_list, "indexcode_sw", "tradeDate="+''.join(date_list)+";industryType=1").Data[0]
+        SW1_INDEX_CODES = [t[0] for t in SW1_INDEX]
+        SW1_INDEX_NAMES = [t[1] for t in SW1_INDEX]
+        one_hot_matrix = np.zeros((len(sw1_industry), len(SW1_INDEX)))
+        for i, industry_index in enumerate(sw1_industry):
+            if industry_index == None:
+                pass
+            else:
+                industry_loc = SW1_INDEX_CODES.index(industry_index)
+                one_hot_matrix[i, industry_loc] = 1.0
+        sw1_industry = pd.DataFrame(data=one_hot_matrix, index=self.code_list, columns=SW1_INDEX_NAMES)
+        return sw1_industry
+
+
 if __name__ == '__main__':
     date = '2017-05-09'
     w.start()
-    # code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=000300.SH").Data[1]  # 沪深300动态股票池
-    code_list = ['000001.SZ', '000002.SZ']
-    factor_model = SW1Industry(date, code_list)
+    code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=000300.SH").Data[1]  # 沪深300动态股票池
+    # code_list = ['000001.SZ', '000002.SZ']
+    factor_model = SW1IndustryOneHot(date, code_list)
     df = factor_model.get_factor()
-    # df.to_csv('temp1.csv')
     print(df)
