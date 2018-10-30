@@ -48,9 +48,9 @@ def list_jq2wind(list_jq):
     return list_wind
 
 
+# 有缓存版本
 def get_factor_from_wind(code_list, factor_list, date):
     # 用单因子研究\single_factor.py中的因子类直接获取数据
-    # 有缓存版本
     file_path = 'data_cache\\factor_' + date + '.csv'
     if os.path.exists(file_path):  # 使用缓存中数据减少数据交互，加快读取速度
         factors_df = pd.read_csv(file_path, index_col=0)
@@ -64,9 +64,9 @@ def get_factor_from_wind(code_list, factor_list, date):
     return factors_df
 
 
+# 无缓存版本
 def get_factor_from_wind_v2(code_list, factor_list, date):
     # 用单因子研究\single_factor.py中的因子类直接获取数据
-    # 无缓存版本
     file_path = 'data_cache\\factor_' + date + '.csv'
     if os.path.exists(file_path):
         factors_df = pd.read_csv(file_path, index_col=0)
@@ -105,24 +105,6 @@ def sort_data(df):
     value = np.argsort(np.argsort(df.values, axis=0), axis=0) / (len(df)-1)  # 转化为0-1的排序值
     df = pd.DataFrame(data=value, columns=df.columns, index=df.index)
     return df
-
-
-def get_JQFactor_local(date, code_list, factor):
-    file_path = 'D:\\JQData_Factor_Data\\'
-    code_list = list_wind2jq(code_list)
-    df = pd.read_csv(file_path+date+'.csv', index_col=0)
-    ds = df.transpose()[factor]
-    results = list(ds[code_list].values)
-    return results
-
-
-def get_JQData(date, code_list, factor):
-    jqdatasdk.auth('13816324330', 'ccaipc')
-    code_list = list_wind2jq(code_list)
-    query = Query(factor).filter(jqdatasdk.valuation.code.in_(code_list))
-    df = jqdatasdk.get_fundamentals(query, date=date)
-    results = list(df.values.reshape(-1))
-    return results
 
 
 # 获取股票列表的申万一级代码
