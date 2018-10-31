@@ -1035,7 +1035,7 @@ class SW1IndustryOneHot(SW1Industry):
         one_hot_matrix = np.zeros((len(sw1_industry), len(SW1_INDEX)))
         for i, industry_index in enumerate(sw1_industry):
             if industry_index == None:
-                pass
+                continue
             else:
                 industry_loc = SW1_INDEX_CODES.index(industry_index)
                 one_hot_matrix[i, industry_loc] = 1.0

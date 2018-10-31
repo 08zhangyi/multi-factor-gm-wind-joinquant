@@ -79,6 +79,7 @@ def get_factor_from_wind_v2(code_list, factor_list, date):
     return factors_df
 
 
+# 有缓存版本
 def get_return_from_wind(code_list, date_start, date_end):
     # 从wind上获待选股票收益率数据，为百分比数据，如：3代表3%
     file_path = 'data_cache\\return_' + date_start + '_' + date_end + '.csv'
