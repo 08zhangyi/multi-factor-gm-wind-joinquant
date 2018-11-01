@@ -101,6 +101,7 @@ def delete_data_cache():
         os.remove(path_file)
 
 
+# 可以作废
 def sort_data(df):
     # 用排序值对数据进行标准化
     value = np.argsort(np.argsort(df.values, axis=0), axis=0) / (len(df)-1)  # 转化为0-1的排序值
@@ -108,6 +109,7 @@ def sort_data(df):
     return df
 
 
+# 可以作废
 # 获取股票列表的申万一级代码
 def get_SW1_industry(date, code_list):
     w.start()
