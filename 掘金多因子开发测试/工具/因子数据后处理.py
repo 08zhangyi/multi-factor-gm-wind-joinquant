@@ -11,6 +11,7 @@ from utils import get_factor_from_wind_v2
 
 
 # 因子后处理基类
+# 可以嵌套应用因子后处理工具
 class 因子后处理(object):
     def __init__(self, factor_df, date):
         self.factor_df = factor_df
@@ -43,8 +44,23 @@ class 因子排序值(去缺失值):
 
 
 class 因子去极值(去缺失值):
+    def __init__(self, factor_df, date, min_quantile=0.05, max_quantitle=0.95):
+        super().__init__(factor_df, date)
+        self.min_quantile = min_quantile
+        self.max_quantitle = max_quantitle
+
     def get_factor_df(self):
-        pass
+        df = self.factor_df
+        df = self._deextreme_value(df)
+        return df
+
+    def _deextreme_value(self, df):
+        values_df = df.values
+        values_df_min = df.quantile(0.05).values
+        values_df_max = df.quantile(0.95).values
+        values_df = np.minimum(np.maximum(values_df, values_df_min), values_df_max)
+        df.values[:, :] = values_df
+        return df
 
 
 class 因子行业中性化(去缺失值):
@@ -53,7 +69,7 @@ class 因子行业中性化(去缺失值):
         code_list = list(df.index.values)  # 股票的代码
         factor_list = list(df.columns.values)  # 因子名称的代码
         SW1_df = SW1Industry(self.date, code_list).get_factor()
-        df = pd.concat([df, SW1_df], axis=1).dropna()
+        df = pd.concat([df, SW1_df], axis=1).dropna()  # 去除缺失行业因子的股票
         # 根据行业分组进行因子标准化
         df_group_by = df.groupby('申万一级行业')
         result_df_list = []
@@ -71,7 +87,7 @@ class 因子行业排序值(去缺失值):
         code_list = list(df.index.values)  # 股票的代码
         factor_list = list(df.columns.values)  # 因子名称的代码
         SW1_df = SW1Industry(self.date, code_list).get_factor()
-        df = pd.concat([df, SW1_df], axis=1).dropna()
+        df = pd.concat([df, SW1_df], axis=1).dropna()  # 去除缺失行业因子的股票
         # 根据行业分组进行因子标准化
         df_group_by = df.groupby('申万一级行业')
         result_df_list = []
@@ -84,10 +100,28 @@ class 因子行业排序值(去缺失值):
         return df
 
 
+class 因子行业去极值(因子去极值):
+    def get_factor_df(self):
+        df = self.factor_df
+        code_list = list(df.index.values)  # 股票的代码
+        factor_list = list(df.columns.values)  # 因子名称的代码
+        SW1_df = SW1Industry(self.date, code_list).get_factor()
+        df = pd.concat([df, SW1_df], axis=1).dropna()  # 去除缺失行业因子的股票
+        # 根据行业分组进行因子标准化
+        df_group_by = df.groupby('申万一级行业')
+        result_df_list = []
+        for industry, df_industry in df_group_by:
+            df_industry = df_industry[factor_list]
+            df_industry = self._deextreme_value(df_industry)
+            result_df_list.append(df_industry)
+        df = pd.concat(result_df_list, axis=0)
+        return df
+
+
 if __name__ == '__main__':
     w.start()
     code_list = w.wset("sectorconstituent", "date=2018-10-30;windcode=000300.SH").Data[1]
     # code_list = ['000002.SZ', '600000.SH']
     factor_df = get_factor_from_wind_v2(code_list, [VOL10, RSI, PE], '2018-10-30')  # 故意引入错误数据
-    factor_df = 因子中心化(factor_df, '2018-10-30').get_factor_df()
+    factor_df = 因子行业去极值(factor_df, '2018-10-30').get_factor_df()
     print(factor_df)
