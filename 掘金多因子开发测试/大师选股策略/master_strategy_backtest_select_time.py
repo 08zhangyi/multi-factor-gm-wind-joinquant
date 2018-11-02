@@ -8,16 +8,16 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
 from 择时模型 import RSRS_standardization
 from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
-from 持仓配置 import 等权持仓 as WEIGHTS
+from 持仓配置 import 方差极小化权重_基本版 as WEIGHTS
 from 候选股票 import SelectedStockPoolFromListV1
 
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2016-02-02'  # 回测开始日期
-BACKTEST_END_DATE = '2018-10-15'  # 回测结束日期，测试结束日期不运用算法
-INCLUDED_INDEX = ['000300.SH', '000016.SH']  # 股票池代码，用Wind代码
-EXCLUDED_INDEX = ['801780.SI']  # 剔除的股票代码
+BACKTEST_START_DATE = '2015-01-05'  # 回测开始日期
+BACKTEST_END_DATE = '2018-11-02'  # 回测结束日期，测试结束日期不运用算法
+INCLUDED_INDEX = ['000300.SH']  # 股票池代码，用Wind代码
+EXCLUDED_INDEX = []  # 剔除的股票代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
 # 择时模型的配置

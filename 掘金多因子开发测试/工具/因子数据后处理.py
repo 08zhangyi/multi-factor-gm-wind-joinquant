@@ -21,6 +21,14 @@ class 因子后处理(object):
         return self.factor_df
 
 
+class 加入行业编码(因子后处理):
+    def get_factor_df(self):
+        code_list = list(self.factor_df.index.values)
+        SW1_df = SW1IndustryOneHot(self.date, code_list).get_factor()
+        df = pd.concat((self.factor_df, SW1_df), axis=1).dropna()
+        return df
+
+
 # 以下处理依赖于去除有缺失值的样本
 class 去缺失值(因子后处理):
     def __init__(self, factor_df, date):
@@ -120,8 +128,8 @@ class 因子行业去极值(因子去极值):
 
 if __name__ == '__main__':
     w.start()
-    code_list = w.wset("sectorconstituent", "date=2018-10-30;windcode=000300.SH").Data[1]
-    # code_list = ['000002.SZ', '600000.SH']
+    # code_list = w.wset("sectorconstituent", "date=2018-10-30;windcode=000300.SH").Data[1]
+    code_list = ['000002.SZ', '600000.SH']
     factor_df = get_factor_from_wind_v2(code_list, [VOL10, RSI, PE], '2018-10-30')  # 故意引入错误数据
-    factor_df = 因子行业去极值(factor_df, '2018-10-30').get_factor_df()
+    factor_df = 加入行业编码(factor_df, '2018-10-30').get_factor_df()
     print(factor_df)

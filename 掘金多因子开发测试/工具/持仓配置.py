@@ -1,5 +1,6 @@
 import numpy as np
 from WindPy import w
+import cvxopt
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import list_wind2jq, list_jq2wind
@@ -22,6 +23,7 @@ class 等权持仓(WeightsAllocation):
         return code_weights
 
 
+# 指数权重，市值权重系列
 class 指数权重(WeightsAllocation):
     def __init__(self, code_list, date, index_code):
         # 按照index_code的编制权重配置，code_list的股票应为index_code的成分股
@@ -91,6 +93,35 @@ class 自由流通市值权重(WeightsAllocation):
         return code_weights
 
 
+# 用协方差矩阵计算权重系列
+class 方差极小化权重_基本版(WeightsAllocation):
+    def __init__(self, code_list, date, N=60):
+        self.N = N  # 收益率数据采样的历史大小，默认N=60，为一个季度的数据
+        super().__init__(code_list, date)
+
+    def get_weights(self):
+        code_list = list_jq2wind(self.code_list)
+        w.start()
+        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-"+str(self.N-1)+"TD", self.date, "").Data)
+        return_cov = np.cov(return_value)
+        # 用CVXOPT求解方差最小的权重
+        size = len(code_list)
+        Q = cvxopt.matrix(return_cov)
+        p = cvxopt.matrix(np.zeros([size]))
+        G = cvxopt.matrix(-np.eye(N=size))  # 权重非负
+        h = cvxopt.matrix(np.zeros(shape=[size]))
+        A = cvxopt.matrix(np.ones(shape=[size]), (1, size))  # 权重和为1
+        b = cvxopt.matrix(1.0)
+        sol = cvxopt.solvers.qp(Q, p, G, h, A, b)
+        # 将权重分配给代码
+        weight_value = sol['x']
+        code_weights = {}
+        for i in range(len(code_list)):
+            code = code_list[i]
+            code_weights[list_wind2jq([code])[0]] = weight_value[i]
+        return code_weights
+
+
 if __name__ == '__main__':
-    model = 自由流通市值权重(['000002.XSHE', '600000.XSHG'], '2018-10-25')
+    model = 方差极小化权重_基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG'], '2018-10-25')
     print(model.get_weights())
