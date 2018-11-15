@@ -101,17 +101,8 @@ class 方差极小化权重_基本版(WeightsAllocation):
 
     def get_weights(self):
         code_list = list_jq2wind(self.code_list)
-        w.start()
-        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-"+str(self.N-1)+"TD", self.date, "").Data)
-        return_cov = np.cov(return_value)
+        (Q, p, G, h, A, b) = self._get_coef()
         # 用CVXOPT求解方差最小的权重
-        size = len(code_list)
-        Q = cvxopt.matrix(return_cov)
-        p = cvxopt.matrix(np.zeros([size]))
-        G = cvxopt.matrix(-np.eye(N=size))  # 权重非负
-        h = cvxopt.matrix(np.zeros(shape=[size]))
-        A = cvxopt.matrix(np.ones(shape=[size]), (1, size))  # 权重和为1
-        b = cvxopt.matrix(1.0)
         sol = cvxopt.solvers.qp(Q, p, G, h, A, b)
         # 将权重分配给代码
         weight_value = sol['x']
@@ -120,6 +111,21 @@ class 方差极小化权重_基本版(WeightsAllocation):
             code = code_list[i]
             code_weights[list_wind2jq([code])[0]] = weight_value[i]
         return code_weights
+
+    def _get_coef(self):
+        code_list = list_jq2wind(self.code_list)
+        w.start()
+        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
+        return_cov = np.cov(return_value)
+        # 为求解器提供合适的参数估计，只需修改此部分就可构造不同类型的求解器
+        size = len(code_list)
+        Q = cvxopt.matrix(return_cov)
+        p = cvxopt.matrix(np.zeros([size]))
+        G = cvxopt.matrix(-np.eye(N=size))  # 权重非负
+        h = cvxopt.matrix(np.zeros(shape=[size]))
+        A = cvxopt.matrix(np.ones(shape=[size]), (1, size))  # 权重和为1
+        b = cvxopt.matrix(1.0)
+        return Q, p, G, h, A, b
 
 
 if __name__ == '__main__':
