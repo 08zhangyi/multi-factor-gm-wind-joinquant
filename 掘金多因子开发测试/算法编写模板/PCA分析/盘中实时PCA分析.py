@@ -38,24 +38,6 @@ def get_data(now_date):
         df.to_csv(file_path)
 
 
-# 对相关性的df画热力图的函数
-def plot_heatmap(df, name=''):
-    fig, ax = plt.subplots(figsize=(16, 16))
-    ax.imshow(df.values)
-    ax.set_xticks(np.arange(len(columns_names)))
-    ax.set_yticks(np.arange(len(columns_names)))
-    ax.set_xticklabels(columns_names)
-    ax.set_yticklabels(columns_names)
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
-    for i in range(len(columns_names)):
-        for j in range(len(columns_names)):
-            ax.text(j, i, '%.0f' % (df.values[i, j]*100), ha="center", va="center", color="w")  # 乘以100取整
-    ax.set_title(name+'相关系数热力图')
-    fig.tight_layout()
-    # plt.show()
-    plt.savefig("data\\in_trading\\"+name+"相关系数热力图.jpg")
-
-
 # 主成分分布绘制图
 def plot_pca_components(n):
     # n为第几个主成分
@@ -64,7 +46,7 @@ def plot_pca_components(n):
     fig, ax = plt.subplots(figsize=(16, 12))
     ax.bar(np.arange(len(columns_names)), component, 0.8)
     ax.set_xticks(np.arange(len(columns_names)))
-    ax.set_xticklabels(columns_names)
+    ax.set_xticklabels(columns_names, size=20)
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
     ax.set_title('第'+str(n)+'个主成分的组成系数，方差比例为%.2f%%' % (ratio*100.0))
     fig.tight_layout()
@@ -81,12 +63,16 @@ def plot_pca_return_values(return_oneday, n):
     l2_ratio = np.square(np.linalg.norm(pca_return_values)) / np.square(np.linalg.norm(return_oneday))
     pca_return_values = pca_return_values / np.sqrt(len(columns_names))
     print(pca_return_values)
-    fig, ax = plt.subplots(figsize=(16, 16))
+    fig, ax = plt.subplots(figsize=(18, 16))
     rects = ax.bar(np.arange(len(pca_return_values)), pca_return_values, 0.8)
     for rect in rects:
         height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width()/2, 1.01 * height, '%.2f%%' % height, ha="center", va='bottom')
-    ax.set_title('前'+str(n)+'个主成分的收益贡献，占当日收益分布的平方范数比例为%.2f%%' % (l2_ratio * 100.0)+'，申万行业收益算术均值为%.2f%%' % return_oneday_mean)
+        if height >= 0.0:
+            height_text = height * 1.01
+        else:
+            height_text = height * 1.08
+        ax.text(rect.get_x() + rect.get_width()/2, height_text, '%.2f%%' % height, ha="center", va='bottom', size=40)
+    ax.set_title('前'+str(n)+'个主成分的收益贡献，占当日收益分布的平方范数比例为%.2f%%' % (l2_ratio * 100.0)+'，\n申万行业收益算术均值为%.2f%%' % return_oneday_mean, size=30)
     ax.set_xticks(np.arange(len(pca_return_values)))
     fig.tight_layout()
     # plt.show()
@@ -103,14 +89,6 @@ columns = list(df.columns.values)
 # w.start()
 # columns_names = w.wss(','.join(columns), "sec_name").Data[0]
 
-# 计算三大相关系数
-pearson_corr = df.corr(method='pearson')
-plot_heatmap(pearson_corr, 'Pearson')
-kendall_corr = df.corr(method='kendall')
-plot_heatmap(kendall_corr, 'Kendall')
-spearman_corr = df.corr(method='spearman')
-plot_heatmap(spearman_corr, 'Spearman')
-
 # PCA计算
 return_values = df.values
 pca = PCA(n_components=len(columns_names))
@@ -123,10 +101,9 @@ pca_explained_variance_ratio = pca.explained_variance_ratio_
 if np.sum(pca_components[0, :]) < 0:  # 修正第0个主成分为正值，且旋转矩阵pca_components保持镜像
     if np.linalg.det(pca_components) > 0:
         pca_components[0, :] = -pca_components[0, :]
-        pca_components[-1, :] = -pca_components[1, :]
+        pca_components[-1, :] = -pca_components[-1, :]
     else:
         pca_components[0, :] = -pca_components[0, :]
-print(np.linalg.det(pca_components))
 # PCA成分展示图
 for i in range(N):
     plot_pca_components(i)
