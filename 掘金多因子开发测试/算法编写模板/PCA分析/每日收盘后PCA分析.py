@@ -63,7 +63,7 @@ def plot_pca_components(n):
     fig, ax = plt.subplots(figsize=(16, 12))
     ax.bar(np.arange(len(columns_names)), component, 0.8)
     ax.set_xticks(np.arange(len(columns_names)))
-    ax.set_xticklabels(columns_names)
+    ax.set_xticklabels(columns_names, size=20)
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
     ax.set_title('第'+str(n)+'个主成分的组成系数，方差比例为%.2f%%' % (ratio*100.0))
     fig.tight_layout()
@@ -84,8 +84,8 @@ def plot_pca_return_values(return_oneday, n):
     rects = ax.bar(np.arange(len(pca_return_values)), pca_return_values, 0.8)
     for rect in rects:
         height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width()/2, 1.01 * height, '%.2f%%' % height, ha="center", va='bottom')
-    ax.set_title('前'+str(n)+'个主成分的收益贡献，占当日收益分布的平方范数比例为%.2f%%' % (l2_ratio * 100.0)+'，申万行业收益算术均值为%.2f%%' % return_oneday_mean)
+        ax.text(rect.get_x() + rect.get_width()/2, 1.01 * height, '%.2f%%' % height, ha="center", va='bottom', size=40)
+    ax.set_title('前'+str(n)+'个主成分的收益贡献，占当日收益分布的平方范数比例为%.2f%%' % (l2_ratio * 100.0)+'，申万行业收益算术均值为%.2f%%' % return_oneday_mean, size=30)
     ax.set_xticks(np.arange(len(pca_return_values)))
     fig.tight_layout()
     # plt.show()
@@ -93,7 +93,7 @@ def plot_pca_return_values(return_oneday, n):
 
 
 # 设定计算日期函数和主成分提取参数
-END_DATE = "2018-11-15"  # 收盘计算日期
+END_DATE = "2018-11-19"  # 收盘计算日期
 N = 5
 # 读取数据
 get_data(END_DATE)
