@@ -64,6 +64,7 @@ def get_factor_from_wind(code_list, factor_list, date):
     return factors_df
 
 
+# 待修改
 # 无缓存版本
 def get_factor_from_wind_v2(code_list, factor_list, date):
     # 用单因子研究\single_factor.py中的因子类直接获取数据

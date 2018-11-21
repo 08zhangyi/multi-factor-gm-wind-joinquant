@@ -3,7 +3,7 @@ from WindPy import w
 import cvxopt
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
-from utils import list_wind2jq, list_jq2wind
+from utils import list_wind2jq, list_jq2wind, SW1_INDEX
 
 
 class WeightsAllocation(object):
@@ -101,7 +101,7 @@ class 方差极小化权重_基本版(WeightsAllocation):
 
     def get_weights(self):
         code_list = list_jq2wind(self.code_list)
-        (Q, p, G, h, A, b) = self._get_coef()
+        (Q, p, G, h, A, b) = self._get_coef(code_list)
         # 用CVXOPT求解方差最小的权重
         sol = cvxopt.solvers.qp(Q, p, G, h, A, b)
         # 将权重分配给代码
@@ -112,8 +112,7 @@ class 方差极小化权重_基本版(WeightsAllocation):
             code_weights[list_wind2jq([code])[0]] = weight_value[i]
         return code_weights
 
-    def _get_coef(self):
-        code_list = list_jq2wind(self.code_list)
+    def _get_coef(self, code_list):
         w.start()
         return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
         return_cov = np.cov(return_value)
@@ -128,6 +127,34 @@ class 方差极小化权重_基本版(WeightsAllocation):
         return Q, p, G, h, A, b
 
 
+class 方差极小化权重_行业版(方差极小化权重_基本版):
+    def get_weights(self):
+        code_list = list_jq2wind(self.code_list)
+        SW1_code_list = [t[0] for t in SW1_INDEX]
+        (Q, p, G, h, A, b) = self._get_coef(SW1_code_list)
+        # 用CVXOPT求解方差最小的权重
+        sol = cvxopt.solvers.qp(Q, p, G, h, A, b)
+        # 将权重分配给代码
+        weight_value = sol['x']
+        industry_list = w.wss(code_list, "indexcode_sw", "tradeDate="+self.date+";industryType=1").Data[0]
+        code_weights = {}
+        weight_value_temp = []
+        for i in range(len(code_list)):
+            code = code_list[i]
+            industry_temp = industry_list[i]
+            if industry_temp == None:  # 无行业数据的处理
+                weight_value_temp.append(0.0)
+            else:
+                industry_index = SW1_code_list.index(industry_temp)
+                weight_value_temp.append(weight_value[industry_index])
+        weight_value_temp = np.array(weight_value_temp)
+        weight_value_temp = weight_value_temp / np.sum(weight_value_temp)  # 权重归一化
+        for i in range(len(code_list)):
+            code = code_list[i]
+            code_weights[list_wind2jq([code])[0]] = weight_value_temp[i]
+        return code_weights
+
+
 if __name__ == '__main__':
-    model = 方差极小化权重_基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG'], '2018-10-25')
+    model = 方差极小化权重_行业版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG'], '2018-10-25')
     print(model.get_weights())
