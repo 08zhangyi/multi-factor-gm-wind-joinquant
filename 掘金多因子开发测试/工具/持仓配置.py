@@ -8,7 +8,7 @@ from utils import list_wind2jq, list_jq2wind, SW1_INDEX
 
 class WeightsAllocation(object):
     def __init__(self, code_list, date):
-        self.code_list = code_list
+        self.code_list = code_list  # code_list用掘金的格式
         self.date = date  # date日收盘后计算配置比例
 
     def get_weights(self):
@@ -101,11 +101,7 @@ class 方差极小化权重_基本版(WeightsAllocation):
 
     def get_weights(self):
         code_list = list_jq2wind(self.code_list)
-        (Q, p, G, h, A, b) = self._get_coef(code_list)
-        # 用CVXOPT求解方差最小的权重
-        sol = cvxopt.solvers.qp(Q, p, G, h, A, b)
-        # 将权重分配给代码
-        weight_value = sol['x']
+        weight_value = self._calc_weights(code_list)
         code_weights = {}
         for i in range(len(code_list)):
             code = code_list[i]
@@ -113,48 +109,68 @@ class 方差极小化权重_基本版(WeightsAllocation):
         return code_weights
 
     def _get_coef(self, code_list):
+        # 提供_calc_weights需要计算的参数
         w.start()
         return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
         return_cov = np.cov(return_value)
-        # 为求解器提供合适的参数估计，只需修改此部分就可构造不同类型的求解器
-        size = len(code_list)
-        Q = cvxopt.matrix(return_cov)
-        p = cvxopt.matrix(np.zeros([size]))
-        G = cvxopt.matrix(-np.eye(N=size))  # 权重非负
-        h = cvxopt.matrix(np.zeros(shape=[size]))
-        A = cvxopt.matrix(np.ones(shape=[size]), (1, size))  # 权重和为1
+        return return_cov
+
+    def _calc_weights(self, code_list):
+        # 方差极小化权重计算
+        cov_mat = self._get_coef(code_list)
+        n = len(cov_mat)  # 资产个数
+        P = cvxopt.matrix(cov_mat)
+        q = cvxopt.matrix(0.0, (n, 1))
+        # 禁止做空的限制，Gx <= h
+        G = cvxopt.matrix(-np.identity(n))
+        h = cvxopt.matrix(0.0, (n, 1))
+        # 权重求和为一，Ax = b
+        A = cvxopt.matrix(1.0, (1, n))
         b = cvxopt.matrix(1.0)
-        return Q, p, G, h, A, b
+        sol = cvxopt.solvers.qp(P, q, G, h, A, b)
+        weights = np.array(sol['x']).squeeze()
+        return weights
 
 
+# 按照行业进行权重配置，行业内股票等权配置
 class 方差极小化权重_行业版(方差极小化权重_基本版):
     def get_weights(self):
         code_list = list_jq2wind(self.code_list)
         SW1_code_list = [t[0] for t in SW1_INDEX]
-        (Q, p, G, h, A, b) = self._get_coef(SW1_code_list)
-        # 用CVXOPT求解方差最小的权重
-        sol = cvxopt.solvers.qp(Q, p, G, h, A, b)
-        # 将权重分配给代码
-        weight_value = sol['x']
+        weight_value = self._calc_weights(SW1_code_list)  # 提取行业权重
         industry_list = w.wss(code_list, "indexcode_sw", "tradeDate="+self.date+";industryType=1").Data[0]
-        code_weights = {}
         weight_value_temp = []
         for i in range(len(code_list)):
-            code = code_list[i]
             industry_temp = industry_list[i]
-            if industry_temp == None:  # 无行业数据的处理
+            if industry_temp is None:  # 个股无行业分类数据的处理
                 weight_value_temp.append(0.0)
             else:
                 industry_index = SW1_code_list.index(industry_temp)
                 weight_value_temp.append(weight_value[industry_index])
         weight_value_temp = np.array(weight_value_temp)
         weight_value_temp = weight_value_temp / np.sum(weight_value_temp)  # 权重归一化
-        for i in range(len(code_list)):
-            code = code_list[i]
-            code_weights[list_wind2jq([code])[0]] = weight_value_temp[i]
+        code_weights = dict([[list_wind2jq([code_list[i]])[0], weight_value_temp[i]] for i in range(len(code_list))])
         return code_weights
 
 
+# 按照行业进行权重配置，行业内股票等权配置
+class 最大分散化组合_行业版(方差极小化权重_行业版):
+    def _calc_weights(self, code_list):
+        # 最大分散化权重计算
+        cov_mat = self._get_coef(code_list)
+        n = len(cov_mat)  # 资产个数
+        P = cvxopt.matrix(cov_mat)
+        q = cvxopt.matrix(0.0, (n, 1))
+        omega_diag = np.sqrt(cov_mat.diagonal())
+        # exp_rets*x >= 1 and x >= 0，组合收益大于等于1且禁止做空，Gx <= h
+        G = cvxopt.matrix(np.vstack((-omega_diag, -np.identity(n))))
+        h = h = cvxopt.matrix(np.vstack((-1.0, np.ones((n, 1)) * -0.0)))
+        sol = cvxopt.solvers.qp(P, q, G, h)
+        weights = np.array(sol['x']).squeeze()
+        weights /= weights.sum()
+        return weights
+
+
 if __name__ == '__main__':
-    model = 方差极小化权重_行业版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG'], '2018-10-25')
+    model = 最大分散化组合_行业版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
     print(model.get_weights())
