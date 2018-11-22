@@ -168,9 +168,22 @@ class 最大分散化组合_行业版(方差极小化权重_行业版):
         sol = cvxopt.solvers.qp(P, q, G, h)
         weights = np.array(sol['x']).squeeze()
         weights /= weights.sum()
+        for i in range(28):
+            print('第%d个行业的权重为%.2f%%' % (i + 1, weights[i] * 100.0))
         return weights
 
 
+class 最大分散化组合_行业版_OAS(最大分散化组合_行业版):
+    def _get_coef(self, code_list):
+        # 提供_calc_weights需要计算的参数
+        w.start()
+        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
+        from sklearn.covariance import OAS
+        return_cov = OAS().fit(return_value.transpose())
+        return_cov = return_cov.covariance_
+        return return_cov
+
+
 if __name__ == '__main__':
-    model = 最大分散化组合_行业版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
+    model = 最大分散化组合_行业版_OAS(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
     print(model.get_weights())
