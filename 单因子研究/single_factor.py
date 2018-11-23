@@ -317,7 +317,7 @@ class RSI(SingleFactorReasearch):
 
 # BETA
 class BETA_V1(SingleFactorReasearch):
-    def __init__(self, date, code_list, refer_index='000001.SH', length=22):
+    def __init__(self, date, code_list, refer_index='000300.SH', length=22):
         factor_name = 'BETA'
         self.refer_index = refer_index  # 计算Beta值时用的参考指数
         self.length = 22  # 计算Beta的历史数据长度
@@ -329,6 +329,11 @@ class BETA_V1(SingleFactorReasearch):
         beta_data = np.array(w.wss(self.code_list, "beta", "startDate="+startDate+";endDate="+"".join(date_list)+";period=2;returnType=1;index="+self.refer_index).Data[0])
         BETA = pd.DataFrame(data=beta_data, index=self.code_list, columns=[self.factor_name])
         return BETA
+
+
+class BETA_V2(BETA_V1):
+    def __init__(self, date, code_list):
+        super().__init__(date, code_list, refer_index='000016.SH', length=50)
 
 
 # 残差收益波动率，万德因子名称：252日残差收益波动率

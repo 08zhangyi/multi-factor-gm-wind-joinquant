@@ -84,7 +84,7 @@ def algo(context):
             factors_df = get_factor_from_wind(code_list, FACTOR_LIST, date_start)  # 获取因子
             return_df = get_return_from_wind(code_list, date_start, date_end)
             factors_df_and_return_df = pd.concat([factors_df, return_df], axis=1).dropna()  # 去掉因子或者回报有空缺值的样本
-            factors_df_and_return_df = factor_and_return_process(factors_df_and_return_df)  # 使用排序数据作为输入
+            factors_df_and_return_df = factor_and_return_process(factors_df_and_return_df)  # 对因子和回报进行预处理# 使用排序数据作为输入
             data_dfs.append(factors_df_and_return_df)
         factors_return_df = pd.concat(data_dfs, axis=0)  # 获取的最终训练数据拼接，return为目标
         # 根据data_df训练模型
@@ -92,7 +92,7 @@ def algo(context):
         model.fit(factors_return_df)
         # 根据factor_date_previous选取股票，使用模型
         factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous).dropna()
-        factor_date_previous_df = factor_process(factor_date_previous_df)
+        factor_date_previous_df = factor_process(factor_date_previous_df)  # 对因子进行预处理
         select_code_list = model.predict(factor_date_previous_df)  # 返回选取的股票代码，Wind格式
         # 行业轮动部分
         sw1_industry = get_SW1_industry(date_now, select_code_list)
