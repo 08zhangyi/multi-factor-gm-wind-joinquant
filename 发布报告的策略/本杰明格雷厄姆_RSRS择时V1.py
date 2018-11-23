@@ -73,7 +73,7 @@ def algo(context):
         else:
             position_target = {}
 
-    # LLT择时判定
+    # 择时判定
     if select_time_value >= 0 and not position_now and position_target != {}:  # LLT择时信号为正,空仓且有目标持仓状态
         stock_dict[date_now] = position_target
         position_now = True

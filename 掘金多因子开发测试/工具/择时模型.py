@@ -8,6 +8,15 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 from utils import get_trading_date_from_now
 
 
+class Without_select_time(object):
+    def __getitem__(self, date_now):
+        '''
+        :param date_now: 计算date_now前一天收盘后的择时指标
+        :return llt_value: 择时信号返回值，1为看多，-1为看空，0为不确定
+        '''
+        return 1
+
+
 class LLT_base(object):
     # LLT择时基本版模型
     # 根据LLT曲线的趋势进行择时操作
@@ -57,7 +66,10 @@ class RSRS_base(object):
         self.date_list, _, self.signal_list = self._get_data()
 
     def __getitem__(self, date_now):
-        # 取date_now头一天收盘计算的择时信号
+        '''
+        :param date_now: 计算date_now前一天收盘后的择时指标
+        :return llt_value: 择时信号返回值，1为看多，-1为看空，0为不确定
+        '''
         date_previous = get_trading_date_from_now(date_now, -1, ql.Days)
         index = self.date_list.index(date_previous)
         signal = self.signal_list[index]

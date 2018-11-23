@@ -64,19 +64,14 @@ def get_factor_from_wind(code_list, factor_list, date):
     return factors_df
 
 
-# 待修改
 # 无缓存版本
 def get_factor_from_wind_v2(code_list, factor_list, date):
     # 用单因子研究\single_factor.py中的因子类直接获取数据
-    file_path = 'data_cache\\factor_' + date + '.csv'
-    if os.path.exists(file_path):
-        factors_df = pd.read_csv(file_path, index_col=0)
-    else:
-        factors_dfs = []
-        for factor in factor_list:
-            factor_df = factor(date, code_list).get_factor()
-            factors_dfs.append(factor_df)
-        factors_df = pd.concat(factors_dfs, axis=1)
+    factors_dfs = []
+    for factor in factor_list:
+        factor_df = factor(date, code_list).get_factor()
+        factors_dfs.append(factor_df)
+    factors_df = pd.concat(factors_dfs, axis=1)
     return factors_df
 
 
@@ -100,14 +95,6 @@ def delete_data_cache():
     for i in os.listdir('data_cache'):
         path_file = os.path.join('data_cache', i)
         os.remove(path_file)
-
-
-# 可以作废
-def sort_data(df):
-    # 用排序值对数据进行标准化
-    value = np.argsort(np.argsort(df.values, axis=0), axis=0) / (len(df)-1)  # 转化为0-1的排序值
-    df = pd.DataFrame(data=value, columns=df.columns, index=df.index)
-    return df
 
 
 # 可以作废

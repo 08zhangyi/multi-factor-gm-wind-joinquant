@@ -1,17 +1,20 @@
 from gm.api import *
 import QuantLib as ql
 import pandas as pd
+import numpy as np
 from WindPy import w
 import json
 from learning_model import OrdinaryLinearRegression
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
-sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入因子类
 from single_factor import RSI, PE
+sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq, list_gm2wind
 from 候选股票 import SelectedStockPoolFromListV1
+from 择时模型 import Without_select_time
+from 持仓配置 import 等权持仓
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
@@ -21,10 +24,17 @@ EXCLUDED_INDEX = ['801780.SI']  # 剔除的股票代码
 FACTOR_LIST = [RSI, PE]  # 需要获取的因子列表，用单因子研究中得模块
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 3  # 取得的历史样本的周期数
-STOCK_NUMBER = 10  # 选股数量
+# 选股策略的参数
+SELECT_NUMBER = 10  # 选股数量
+# 择时模型的配置
+select_time_model = Without_select_time()
+# 仓位配置的参数
+WEIGHTS = 等权持仓
+# 仓位记录变量
+stock_dict = {}  # 用于记录调仓信息的字典
+position_target = {}  # 无目标持仓
+position_now = False  # 无持仓
 
-# 用于记录调仓信息的字典
-stock_dict = {}
 w.start()
 
 # 根据回测阶段选取好调仓日期
@@ -47,12 +57,15 @@ def init(context):
 
 
 def algo(context):
+    global position_now, position_target
     date_now = context.now.strftime('%Y-%m-%d')
     date_previous = get_trading_date_from_now(date_now, -1, ql.Days)  # 前一个交易日，用于获取因子数据的日期
+    select_time_value = select_time_model[date_now]  # 择时信号计算
+    print(date_now + ('日回测程序执行中...，择时值：%.2f' % select_time_value))
+
     if date_now not in trading_date_list:  # 非调仓日
         pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
-        print(date_now+'日回测程序执行中...')
         # 根据指数获取股票候选池的代码
         code_list = SelectedStockPoolFromListV1(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous).get_stock_pool()
         I = trading_date_list.index(date_now)
@@ -61,7 +74,7 @@ def algo(context):
         for i in range(len(trading_dates)-1):
             date_start = get_trading_date_from_now(trading_dates[i], -1, ql.Days)  # 计算因子值的日子，买入前一日的因子值
             date_end = get_trading_date_from_now(trading_dates[i+1], -1, ql.Days)  # 计算收益率到期的日子-收盘
-
+            # 提取因子和收益数据
             factors_df = get_factor_from_wind(code_list, FACTOR_LIST, date_start)  # 获取因子
             return_df = get_return_from_wind(code_list, date_start, date_end)
             factors_df_and_return_df = pd.concat([factors_df, return_df], axis=1).dropna()  # 去掉因子或者回报有空缺值的样本
@@ -69,18 +82,25 @@ def algo(context):
             data_dfs.append(factors_df_and_return_df)
         factors_return_df = pd.concat(data_dfs, axis=0)  # 获取的最终训练数据拼接，return为目标
         # 根据data_df训练模型
-        model = OrdinaryLinearRegression()
+        model = OrdinaryLinearRegression(select_number=SELECT_NUMBER)
         model.fit(factors_return_df)
         # 根据factor_date_previous选取股票
         factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous).dropna()
-        sorted_codes = model.predict(factor_date_previous_df)  # 获取预测收益率从小到大排序的股票列表
-        sorted_codes = list_wind2jq(sorted_codes)
+        select_code_list = model.predict(factor_date_previous_df)  # 获取预测收益率从小到大排序的股票列表
         # 根据股票列表下单
-        stock_codes = sorted_codes[-STOCK_NUMBER:]
-        stock_now = {}
-        for stock_code in stock_codes:  # 平均持仓持股
-            stock_now[stock_code] = 1./STOCK_NUMBER
-        stock_dict[date_now] = stock_now
+        if len(select_code_list) > 0:  # 有可选股票时记录下可选股票
+            stock_now = WEIGHTS(select_code_list, date_previous).get_weights()
+            position_target = stock_now
+        else:
+            position_target = {}
+
+    # 择时判定
+    if select_time_value >= 0 and not position_now and position_target != {}:  # LLT择时信号为正,空仓且有目标持仓状态
+        stock_dict[date_now] = position_target
+        position_now = True
+    elif select_time_value < 0 and position_now and position_target != {}:  # LLT择时信号为负且持仓状态:
+        stock_dict[date_now] = {}
+        position_now = False
 
 
 def on_backtest_finished(context, indicator):
@@ -91,6 +111,13 @@ def on_backtest_finished(context, indicator):
     stock_file = open('data\\stock_json.json', 'w')
     stock_file.write(stock_json)
     stock_file.close()
+
+
+def sort_data(df):
+    # 用排序值对数据进行标准化
+    value = np.argsort(np.argsort(df.values, axis=0), axis=0) / (len(df)-1)  # 转化为0-1的排序值
+    df = pd.DataFrame(data=value, columns=df.columns, index=df.index)
+    return df
 
 
 if __name__ == '__main__':
