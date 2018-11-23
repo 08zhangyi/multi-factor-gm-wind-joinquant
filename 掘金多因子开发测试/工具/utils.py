@@ -97,7 +97,6 @@ def delete_data_cache():
         os.remove(path_file)
 
 
-# 可以作废
 # 获取股票列表的申万一级代码
 def get_SW1_industry(date, code_list):
     w.start()

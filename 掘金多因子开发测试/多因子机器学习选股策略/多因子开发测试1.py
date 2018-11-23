@@ -11,14 +11,16 @@ sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 from single_factor import RSI, PE
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, sort_data, list_wind2jq, list_gm2wind
+from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, list_wind2jq, list_gm2wind, get_SW1_industry
 from 候选股票 import SelectedStockPoolFromListV1
+from 因子数据后处理 import 因子排序值
 from 择时模型 import Without_select_time
+from 行业轮动SW1 import Without_industry_wheel_movement
 from 持仓配置 import 等权持仓
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-02-27'  # 回测开始日期
-BACKTEST_END_DATE = '2018-07-23'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2018-11-22'  # 回测结束日期，测试结束日期不运用算法
 INCLUDED_INDEX = ['000300.SH', '000016.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = ['801780.SI']  # 剔除的股票代码
 FACTOR_LIST = [RSI, PE]  # 需要获取的因子列表，用单因子研究中得模块
@@ -28,6 +30,8 @@ HISTORY_LENGTH = 3  # 取得的历史样本的周期数
 SELECT_NUMBER = 10  # 选股数量
 # 择时模型的配置
 select_time_model = Without_select_time()
+# 行业轮动的配置
+industry_wheel_movement = Without_industry_wheel_movement()
 # 仓位配置的参数
 WEIGHTS = 等权持仓
 # 仓位记录变量
@@ -66,10 +70,12 @@ def algo(context):
     if date_now not in trading_date_list:  # 非调仓日
         pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
+        position_now = False  # 虚拟上，调仓日需要提前清仓
         # 根据指数获取股票候选池的代码
         code_list = SelectedStockPoolFromListV1(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous).get_stock_pool()
         I = trading_date_list.index(date_now)
         trading_dates = trading_date_list[I-HISTORY_LENGTH:I+1]
+        # 提取训练数据并训练模型
         data_dfs = []
         for i in range(len(trading_dates)-1):
             date_start = get_trading_date_from_now(trading_dates[i], -1, ql.Days)  # 计算因子值的日子，买入前一日的因子值
@@ -78,15 +84,22 @@ def algo(context):
             factors_df = get_factor_from_wind(code_list, FACTOR_LIST, date_start)  # 获取因子
             return_df = get_return_from_wind(code_list, date_start, date_end)
             factors_df_and_return_df = pd.concat([factors_df, return_df], axis=1).dropna()  # 去掉因子或者回报有空缺值的样本
-            factors_df_and_return_df = sort_data(factors_df_and_return_df)  # 使用排序数据作为输入
+            factors_df_and_return_df = factor_and_return_process(factors_df_and_return_df)  # 使用排序数据作为输入
             data_dfs.append(factors_df_and_return_df)
         factors_return_df = pd.concat(data_dfs, axis=0)  # 获取的最终训练数据拼接，return为目标
         # 根据data_df训练模型
         model = OrdinaryLinearRegression(select_number=SELECT_NUMBER)
         model.fit(factors_return_df)
-        # 根据factor_date_previous选取股票
+        # 根据factor_date_previous选取股票，使用模型
         factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous).dropna()
-        select_code_list = model.predict(factor_date_previous_df)  # 获取预测收益率从小到大排序的股票列表
+        factor_date_previous_df = factor_process(factor_date_previous_df)
+        select_code_list = model.predict(factor_date_previous_df)  # 返回选取的股票代码，Wind格式
+        # 行业轮动部分
+        sw1_industry = get_SW1_industry(date_now, select_code_list)
+        industry_wm_result = industry_wheel_movement[date_now]
+        select_code_list = [stock for stock in select_code_list if sw1_industry[stock] is not None and industry_wm_result[sw1_industry[stock]] == 1]  # 忽略无行业信息的股票并根据行业择时信号选择候选股票
+        # 转化为聚宽代码格式
+        select_code_list = list_wind2jq(select_code_list)
         # 根据股票列表下单
         if len(select_code_list) > 0:  # 有可选股票时记录下可选股票
             stock_now = WEIGHTS(select_code_list, date_previous).get_weights()
@@ -113,10 +126,16 @@ def on_backtest_finished(context, indicator):
     stock_file.close()
 
 
-def sort_data(df):
-    # 用排序值对数据进行标准化
-    value = np.argsort(np.argsort(df.values, axis=0), axis=0) / (len(df)-1)  # 转化为0-1的排序值
-    df = pd.DataFrame(data=value, columns=df.columns, index=df.index)
+# 辅助函数区
+def factor_and_return_process(df):
+    model = 因子排序值(df, None)
+    df = model.get_factor_df()
+    return df
+
+
+def factor_process(df):
+    model = 因子排序值(df, None)
+    df = model.get_factor_df()
     return df
 
 

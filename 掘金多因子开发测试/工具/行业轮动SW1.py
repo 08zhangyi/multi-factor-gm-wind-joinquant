@@ -7,6 +7,15 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 from utils import get_trading_date_from_now, SW1_INDEX
 
 
+class Without_industry_wheel_movement(object):
+    def __getitem__(self, date_now):
+        value_result = {}
+        sw1_index_code = [t[0] for t in SW1_INDEX]
+        for index in sw1_index_code:
+            value_result[index] = 1
+        return value_result
+
+
 class LLT_base(object):
     # LLT择时行业轮动基本版模型
     # 根据LLT曲线的趋势进行行业轮动择时操作
