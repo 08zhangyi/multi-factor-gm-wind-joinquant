@@ -15,7 +15,7 @@ w.start()
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2018-10-10'  # 回测开始日期
-BACKTEST_END_DATE = '2018-11-23'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2018-12-03'  # 回测结束日期，测试结束日期不运用算法
 INDEX = ['000300.SH']  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
@@ -52,7 +52,6 @@ def algo(context):
     date_now = context.now.strftime('%Y-%m-%d')
     date_previous = get_trading_date_from_now(date_now, -1, ql.Days)  # 前一个交易日，用于获取因子数据的日期
     select_time_value = select_time_model[date_now]  # 择时信号计算
-    print(date_now + ('日回测程序执行中...，择时值：%.2f' % select_time_value))
 
     if date_now not in trading_date_list:  # 非调仓日
         pass
@@ -80,6 +79,11 @@ def algo(context):
     elif select_time_value < 0 and position_now and position_target != {}:  # LLT择时信号为负且持仓状态:
         stock_dict[date_now] = {}
         position_now = False
+
+    # 打印择时信号和仓位配置信息
+    print(date_now + ('日回测程序执行中...，择时值：%.2f' % select_time_value))
+    print(date_now + '日回测程序执行中...，选股：')
+    print(position_target)
 
 
 def on_backtest_finished(context, indicator):
