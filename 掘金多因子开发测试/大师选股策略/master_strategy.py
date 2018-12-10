@@ -415,3 +415,52 @@ class 本杰明格雷厄姆经典价值投资法(MasterStrategy):
         df = df[df['净利润增长率'] > 7.0]  # 原值7.0
         code_list = list(df.index.values)
         return code_list
+
+
+class 柯林麦克连成长价值优势投资法(MasterStrategy):
+    ''' 选股条件
+1.年度营收成长率> 前一年度营收成长率，
+2.预估营收成长率> 年度营收成长率，
+3.最近三年每股自由现金流量皆> 0，
+4.近四季营业利益率>= 10 %，
+5.最近四季可运用资本报酬率>= 10 %，
+6.最近年度有效税率>= 5 %，
+7.高估/低估指数(股价营收比*边际获利乘数) <= 1。
+'''
+    def __init__(self, code_list, date,):
+        super().__init__(code_list, date, )
+
+    def _get_data(self):
+        from single_factor import RevenueGrowthRate,EstimateNetRevenueGrowRateFY16M,FreeCashFlowPerShare,GrossIncomeRatio,ROC,EffectiveTaxRate,PS
+        factor_list = [RevenueGrowthRate,EstimateNetRevenueGrowRateFY16M,FreeCashFlowPerShare,GrossIncomeRatio,ROC,EffectiveTaxRate,PS]
+        date_one_year = get_trading_date_from_now(self.date, -1, ql.Years)
+        date_two_year = get_trading_date_from_now(self.date, -2, ql.Years)
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df_Revenue_growth_one_year = get_factor_from_wind_v2(self.code_list, [RevenueGrowthRate], date_one_year)
+        df_Revenue_growth_one_year.rename(columns={'营业收入增长率': '营业收入增长率_去年'}, inplace=True)
+        df_FreeCashFlowPerShare_one_year = get_factor_from_wind_v2(self.code_list, [FreeCashFlowPerShare], date_one_year)
+        df_FreeCashFlowPerShare_one_year.rename(columns={'每股企业自由现金流': '每股企业自由现金流_去年'}, inplace=True)
+        df_FreeCashFlowPerShare_two_year = get_factor_from_wind_v2(self.code_list, [FreeCashFlowPerShare], date_two_year)
+        df_FreeCashFlowPerShare_two_year.rename(columns={'每股企业自由现金流': '每股企业自由现金流_前年'}, inplace=True)
+        df_temp = df['市销率'] * df['销售毛利率'] * 10.0  # 边际获利乘数即：销售毛利率*10
+
+        df = pd.concat([df, df_Revenue_growth_one_year,df_FreeCashFlowPerShare_one_year,df_FreeCashFlowPerShare_two_year, df_temp], axis=1)
+        df.rename(columns={0: '高估/低估指数'}, inplace=True)
+        df = df.dropna()
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        df = df[df['营业收入增长率'] > df['营业收入增长率_去年']]   # 可以尝试>0
+        # df = df[df['一致预测营业收入增长率（6个月数据计算）'] > df['营业收入增长率']]
+        df = df[df['一致预测营业收入增长率（6个月数据计算）'] > 0.0]  # 上一行为原文条件
+        df = df[df['每股企业自由现金流'] > 0.0]
+        # df = df[df['每股企业自由现金流_去年'] > 0]
+        # df = df[df['每股企业自由现金流_前年'] > 0]
+        df = df[df['销售毛利率'] >= 0.10]
+        df = df[df['资本回报率ROC'] > 5.0]  # 原值10.0
+        df = df[df['实际税率'] >= 0.05]  # 原值0.05
+        df = df[df['高估/低估指数'] <= 20.0]  # 原值1.0
+
+        code_list = list(df.index.values)
+        return code_list
