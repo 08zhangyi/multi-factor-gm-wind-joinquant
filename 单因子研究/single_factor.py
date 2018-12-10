@@ -531,8 +531,8 @@ class PS(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        roc_ttm = np.array(w.wss(self.code_list, "ps_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
-        df = pd.DataFrame(data=roc_ttm, index=self.code_list, columns=[self.factor_name])
+        ps_ttm = np.array(w.wss(self.code_list, "ps_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
+        df = pd.DataFrame(data=ps_ttm, index=self.code_list, columns=[self.factor_name])
         return df
 
 
