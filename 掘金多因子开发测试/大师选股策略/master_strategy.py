@@ -431,12 +431,12 @@ class 柯林麦克连成长价值优势投资法(MasterStrategy):
         super().__init__(code_list, date, )
 
     def _get_data(self):
-        from single_factor import RevenueGrowthRate,EstimateNetRevenueGrowRateFY16M,FreeCashFlowPerShare,GrossIncomeRatio,ROC,EffectiveTaxRate,PS
-        factor_list = [RevenueGrowthRate,EstimateNetRevenueGrowRateFY16M,FreeCashFlowPerShare,GrossIncomeRatio,ROC,EffectiveTaxRate,PS]
+        from single_factor import OperationRevenueGrowth, EstimateNetRevenueGrowRateFY16M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate,PS
+        factor_list = [OperationRevenueGrowth, EstimateNetRevenueGrowRateFY16M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate, PS]
         date_one_year = get_trading_date_from_now(self.date, -1, ql.Years)
         date_two_year = get_trading_date_from_now(self.date, -2, ql.Years)
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
-        df_Revenue_growth_one_year = get_factor_from_wind_v2(self.code_list, [RevenueGrowthRate], date_one_year)
+        df_Revenue_growth_one_year = get_factor_from_wind_v2(self.code_list, [OperationRevenueGrowth], date_one_year)
         df_Revenue_growth_one_year.rename(columns={'营业收入增长率': '营业收入增长率_去年'}, inplace=True)
         df_FreeCashFlowPerShare_one_year = get_factor_from_wind_v2(self.code_list, [FreeCashFlowPerShare], date_one_year)
         df_FreeCashFlowPerShare_one_year.rename(columns={'每股企业自由现金流': '每股企业自由现金流_去年'}, inplace=True)

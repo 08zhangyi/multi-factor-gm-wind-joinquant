@@ -523,6 +523,19 @@ class DilutedEPS(SingleFactorReasearch):
         return DilutedEPS
 
 
+# 市销率PS指标
+class PS(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '市销率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        roc_ttm = np.array(w.wss(self.code_list, "ps_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
+        df = pd.DataFrame(data=roc_ttm, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
 # 每股净资产
 class NetAssetPerShare(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -888,6 +901,47 @@ class Revenue(SingleFactorReasearch):
         return revenue
 
 
+# 一致预测营业收入增长率（6个月数据计算）
+class EstimateNetRevenueGrowRateFY16M(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '一致预测营业收入增长率（6个月数据计算）'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        west_netprofit_fy1_6m = np.array(w.wss(self.code_list,  "west_sales_fy1_6m", "tradeDate="+"".join(date_list)).Data[0])
+        west_netprofit_fy1_6m = pd.DataFrame(data=west_netprofit_fy1_6m, index=self.code_list, columns=[self.factor_name])
+        return west_netprofit_fy1_6m
+
+
+# 实际税率（所得税费用/营业收入)
+class EffectiveTaxRate(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '实际税率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        tax_exp = np.array(w.wss(self.code_list, "fa_tax_ttm", "tradeDate="+"".join(date_list)).Data[0])
+        EBIT = np.array(w.wss(self.code_list, "fa_ebit_ttm", "tradeDate="+"".join(date_list)).Data[0])
+        tax_rate = tax_exp/EBIT
+        df = pd.DataFrame(data=tax_rate, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 资本回报率ROC指标
+class ROC(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '资本回报率ROC'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        roc_ttm = np.array(w.wss(self.code_list, "fa_roc_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
+        df = pd.DataFrame(data=roc_ttm, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
 # 股权质押比例（三年统计）
 class StockPledgeRatio(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -1046,6 +1100,19 @@ class SW1IndustryOneHot(SW1Industry):
                 one_hot_matrix[i, industry_loc] = 1.0
         sw1_industry = pd.DataFrame(data=one_hot_matrix, index=self.code_list, columns=SW1_INDEX_NAMES)
         return sw1_industry
+
+
+# 月收益率
+class ReturnsOneMonth(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '月收益率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        roc_ttm = np.array(w.wss(self.code_list, "pct_chg", "tradeDate=" + ''.join(date_list) + ";cycle=M").Data[0])
+        df = pd.DataFrame(data=roc_ttm, index=self.code_list, columns=[self.factor_name])
+        return df
 
 
 if __name__ == '__main__':
