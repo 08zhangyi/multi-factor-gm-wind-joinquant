@@ -48,7 +48,7 @@ def df_to_basket(df, N):
 
 
 def print_results(rules):
-    print(END_DATE+'日收盘后截取'+str(history)+'个交易日挖掘的规则数据（处于日收益前'+str(N)+'的行业')
+    print(END_DATE+'日收盘后截取'+str(history)+'个交易日挖掘的规则数据（处于日收益前'+str(N)+'的行业）')
     print('最小支撑度为%.3f，最小置信度为%.3f' % (min_support, min_confidence))
     for rule in rules:
         conf = '置信度: {0:.3f}'.format(rule.confidence)
@@ -58,10 +58,10 @@ def print_results(rules):
 
 
 # 算法参数配置
-END_DATE = '2017-12-29'
+END_DATE = '2018-12-12'
 history = 240  # 提取数据的历史长短
-N = 5  # 排名前N的数据进入篮子
-min_support = 0.03  # 共同出现项的频率
+N = 8  # 排名前N的数据进入篮子
+min_support = 0.10  # 共同出现项的频率
 min_confidence = 0.75  # 挖掘出规则的置信度
 get_data(END_DATE, history)
 df = pd.read_csv('data\\data.csv', index_col=0)

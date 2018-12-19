@@ -93,7 +93,7 @@ def plot_pca_return_values(return_oneday, n):
 
 
 # 设定计算日期函数和主成分提取参数
-END_DATE = "2018-12-07"  # 收盘计算日期
+END_DATE = "2018-12-17"  # 收盘计算日期
 N = 5
 # 读取数据
 get_data(END_DATE)

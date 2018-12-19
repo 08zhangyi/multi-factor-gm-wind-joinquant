@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import sklearn
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 from single_factor import SW1Industry, SW1IndustryOneHot
@@ -89,6 +90,28 @@ class 因子行业中性化(去缺失值):
         return df
 
 
+class 因子行业中性化_回归法(去缺失值):
+    def get_factor_df(self):
+        factor_df = self.factor_df
+        code_list = list(factor_df.index.values)  # 股票的代码
+        factor_list = list(factor_df.columns.values)  # 因子名称的代码
+        SW1_df = SW1IndustryOneHot(self.date, code_list).get_factor()
+        df = pd.concat([factor_df, SW1_df], axis=1).dropna()  # 去除缺失行业因子的股票
+        # 将因子值行业关于行业哑变量回归，去残值作为中性化 的因子值
+        for factor in factor_list:  # 对因子依次做回归
+            factor_df_temp = factor_df[factor]
+            df_temp = pd.concat([factor_df_temp, SW1_df], axis=1)
+            df_y = df_temp[factor].values  # 因子值
+            del df_temp[factor]
+            df_x = df_temp.values  # 行业哑变量值
+            from sklearn.linear_model import LinearRegression
+            model = LinearRegression()
+            model.fit(df_x, df_y)
+            res_value = df_y - model.predict(df_x)
+            factor_df[factor].values[:] = res_value
+        return factor_df
+
+
 class 因子行业排序值(去缺失值):
     def get_factor_df(self):
         df = self.factor_df
@@ -130,6 +153,6 @@ if __name__ == '__main__':
     w.start()
     # code_list = w.wset("sectorconstituent", "date=2018-10-30;windcode=000300.SH").Data[1]
     code_list = ['000002.SZ', '600000.SH']
-    factor_df = get_factor_from_wind_v2(code_list, [VOL10, RSI, PE], '2018-10-30')  # 故意引入错误数据
-    factor_df = 加入行业编码(factor_df, '2018-10-30').get_factor_df()
+    factor_df = get_factor_from_wind_v2(code_list, [VOL10, RSI, PE], '2018-12-18')  # 故意引入错误数据
+    factor_df = 因子行业中性化_回归法(factor_df, '2018-12-18').get_factor_df()
     print(factor_df)
