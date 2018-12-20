@@ -97,12 +97,18 @@ class SVMClassifier(BaseLearnerForSKLearnClassifier):
 
 # 优矿Adaboost算法
 class Adaboost(BaseLearner):
-    def __init__(self, select_number=None, select_ratio=None):
+    def __init__(self, select_number=None, select_ratio=None, mode='Regressor', criteria='Discrimination'):
         super().__init__()
         self.select_number = select_number
         self.select_ratio = select_ratio
+        self.mode = mode  # Regressor或Classification
+        if self.mode != 'Regressor' or self.mode != 'Classifier':
+            raise Exception('非合适的参数-mode')
+        self.criteria = criteria
 
-    def fit(self, factors_return_df, QN=5, L=100, tol=1e-6, mode='Regressor', criteria='Discrimination', fcycle=0):
+    def fit(self, factors_return_df, QN=5, L=100, tol=1e-6, fcycle=0):
+        mode = self.mode
+        criteria = self.criteria
         # 提取收益率数据，使用排序值
         Y = np.array(factors_return_df['return'].values)
         Y = Y.argsort().argsort() / float(len(Y))
