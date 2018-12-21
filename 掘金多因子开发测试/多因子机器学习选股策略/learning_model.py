@@ -102,7 +102,7 @@ class Adaboost(BaseLearner):
         self.select_number = select_number
         self.select_ratio = select_ratio
         self.mode = mode  # Regressor或Classification
-        if self.mode != 'Regressor' or self.mode != 'Classifier':
+        if self.mode != 'Regressor' and self.mode != 'Classifier':
             raise Exception('非合适的参数-mode')
         self.criteria = criteria
 
