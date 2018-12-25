@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from WindPy import w
 import json
-from learning_model import Adaboost
+from learning_model import AdaboostRegressor
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 # 引入因子类
@@ -89,7 +89,7 @@ def algo(context):
             data_dfs.append(factors_df_and_return_df)
         factors_return_df = pd.concat(data_dfs, axis=0)  # 获取的最终训练数据拼接，return为目标
         # 根据data_df训练模型
-        model = Adaboost(select_number=SELECT_NUMBER)  # 模型名称可以修改在前面
+        model = AdaboostRegressor(select_number=SELECT_NUMBER)  # 模型名称可以修改在前面
         model.fit(factors_return_df)
         # 根据factor_date_previous选取股票，使用模型
         factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous).dropna()  # 验证集    已经校验了日期问题，没有数据重合 和 时间函数问题
