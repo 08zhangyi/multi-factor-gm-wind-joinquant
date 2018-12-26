@@ -410,6 +410,19 @@ class VOL_N(SingleFactorReasearch):
         return VOL240
 
 
+# 总市值
+class MarketCap(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '总市值'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list, "ev", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
 # 对数市值  # 算法：np.log(个股当日股价*当日总股本)
 class LCap(SingleFactorReasearch):
     def __init__(self, date, code_list):

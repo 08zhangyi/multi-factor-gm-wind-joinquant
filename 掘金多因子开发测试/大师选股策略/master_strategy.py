@@ -120,13 +120,15 @@ class 霍华罗斯曼审慎致富投资法(MasterStrategy):
         return df
 
     def select_code(self):
-        df = self._get_data()
         df = df[df['对数市值'] >= df['对数市值'].median()]
         df = df[df['流动比率'] >= df['流动比率'].median()]
         df = df[df['权益回报率ROE'] >= df['权益回报率ROE'].median()]
-        df = df[(df['营业收入增长率'] >= 0.06) & (df['营业收入增长率'] <= 0.3)]
-        df = df[(df['净利润增长率'] >= 0.08) & (df['营业收入增长率'] <= 0.5)]
-        df = df[(df['每股企业自由现金流指标_0'] > 0.0) & (df['每股企业自由现金流指标_1'] > 0.0) & (df['每股企业自由现金流指标_2'] > 0.0) & (df['每股企业自由现金流指标_3'] > 0.0) & (df['每股企业自由现金流指标_4'] > 0.0)]
+        df = df[(df['营业收入增长率'] >= 6.0)]
+        df = df[(df['营业收入增长率'] <= 30.0)]
+        df = df[df['净利润增长率'] >= 8.0]
+        df = df[df['净利润增长率'] <= 50.0]
+        df = df[(df['每股企业自由现金流指标_0'] > 0.0) & (df['每股企业自由现金流指标_1'] > 0.0) & (df['每股企业自由现金流指标_2'] > 0.0) &\
+                (df['每股企业自由现金流指标_3'] > 0.0) & (df['每股企业自由现金流指标_4'] > 0.0)]
         code_list = list(df.index.values)
         return code_list
 
@@ -431,7 +433,7 @@ class 柯林麦克连成长价值优势投资法(MasterStrategy):
         super().__init__(code_list, date, )
 
     def _get_data(self):
-        from single_factor import OperationRevenueGrowth, EstimateNetRevenueGrowRateFY16M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate,PS
+        from single_factor import OperationRevenueGrowth, EstimateNetRevenueGrowRateFY16M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate, PS
         factor_list = [OperationRevenueGrowth, EstimateNetRevenueGrowRateFY16M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate, PS]
         date_one_year = get_trading_date_from_now(self.date, -1, ql.Years)
         date_two_year = get_trading_date_from_now(self.date, -2, ql.Years)
