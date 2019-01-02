@@ -132,6 +132,35 @@ class 方差极小化权重_基本版(WeightsAllocation):
         return weights
 
 
+# 用协方差矩阵计算权重系列
+class 最大分散化组合_基本版(方差极小化权重_基本版):
+    def _calc_weights(self, code_list):
+        # 最大分散化权重计算
+        cov_mat = self._get_coef(code_list)
+        n = len(cov_mat)  # 资产个数
+        P = cvxopt.matrix(cov_mat)
+        q = cvxopt.matrix(0.0, (n, 1))
+        omega_diag = np.sqrt(cov_mat.diagonal())
+        # exp_rets*x >= 1 and x >= 0，组合收益大于等于1且禁止做空，Gx <= h
+        G = cvxopt.matrix(np.vstack((-omega_diag, -np.identity(n))))
+        h = h = cvxopt.matrix(np.vstack((-1.0, np.ones((n, 1)) * -0.0)))
+        sol = cvxopt.solvers.qp(P, q, G, h)
+        weights = np.array(sol['x']).squeeze()
+        weights /= weights.sum()
+        return weights
+
+
+class 最大分散化组合_基本版_OAS(最大分散化组合_基本版):
+    def _get_coef(self, code_list):
+        # 提供_calc_weights需要计算的参数
+        w.start()
+        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
+        from sklearn.covariance import OAS
+        return_cov = OAS().fit(return_value.transpose())
+        return_cov = return_cov.covariance_
+        return return_cov
+
+
 # 按照行业进行权重配置，行业内股票等权配置
 class 方差极小化权重_行业版(方差极小化权重_基本版):
     def get_weights(self):
