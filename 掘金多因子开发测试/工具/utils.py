@@ -21,6 +21,9 @@ def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
     calculation_date = ql.Date(int(date_now.split('-')[2]), int(date_now.split('-')[1]), int(date_now.split('-')[0]))
     calendar = ql.China()
     date_diff = calendar.advance(calculation_date, diff_periods, period).to_date().strftime('%Y-%m-%d')
+    # 临时修正错误，是包QuantLib的错误，节假日问题
+    if date_now == '2019-01-02':
+        return '2018-12-28'
     return date_diff
 
 
@@ -108,4 +111,4 @@ def get_SW1_industry(date, code_list):
 
 
 if __name__ == '__main__':
-    print(get_SW1_industry('2016-12-29', ['600649.SH']))
+    print(get_trading_date_from_now('2018-01-02', -1))
