@@ -127,7 +127,8 @@ class 方差极小化权重_基本版(WeightsAllocation):
         # 权重求和为一，Ax = b
         A = cvxopt.matrix(1.0, (1, n))
         b = cvxopt.matrix(1.0)
-        sol = cvxopt.solvers.qp(P, q, G, h, A, b)
+        init_x = cvxopt.matrix(1.0/n, (n, 1))
+        sol = cvxopt.solvers.qp(P, q, G, h, A, b, initvals={'x': init_x})
         weights = np.array(sol['x']).squeeze()
         return weights
 
@@ -144,7 +145,8 @@ class 最大分散化组合_基本版(方差极小化权重_基本版):
         # exp_rets*x >= 1 and x >= 0，组合收益大于等于1且禁止做空，Gx <= h
         G = cvxopt.matrix(np.vstack((-omega_diag, -np.identity(n))))
         h = h = cvxopt.matrix(np.vstack((-1.0, np.ones((n, 1)) * -0.0)))
-        sol = cvxopt.solvers.qp(P, q, G, h)
+        init_x = cvxopt.matrix(1.0 / n, (n, 1))
+        sol = cvxopt.solvers.qp(P, q, G, h, initvals={'x': init_x})
         weights = np.array(sol['x']).squeeze()
         weights /= weights.sum()
         return weights
@@ -193,8 +195,9 @@ class 最大分散化组合_行业版(方差极小化权重_行业版):
         omega_diag = np.sqrt(cov_mat.diagonal())
         # exp_rets*x >= 1 and x >= 0，组合收益大于等于1且禁止做空，Gx <= h
         G = cvxopt.matrix(np.vstack((-omega_diag, -np.identity(n))))
-        h = h = cvxopt.matrix(np.vstack((-1.0, np.ones((n, 1)) * -0.0)))
-        sol = cvxopt.solvers.qp(P, q, G, h)
+        h = cvxopt.matrix(np.vstack((-1.0, np.ones((n, 1)) * -0.0)))
+        init_x = cvxopt.matrix(1.0 / n, (n, 1))
+        sol = cvxopt.solvers.qp(P, q, G, h, initvals={'x': init_x})
         weights = np.array(sol['x']).squeeze()
         weights /= weights.sum()
         for i in range(28):
@@ -214,5 +217,5 @@ class 最大分散化组合_行业版_OAS(最大分散化组合_行业版):
 
 
 if __name__ == '__main__':
-    model = 最大分散化组合_行业版_OAS(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
+    model = 最大分散化组合_基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
     print(model.get_weights())

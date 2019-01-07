@@ -1,10 +1,9 @@
 import tushare as ts
 from aip import AipNlp
 import time
-import re
 
-start_date = '2018-12-28 15:00:00'
-end_date = '2019-01-02 09:00:00'
+start_date = '2019-01-04 15:00:00'
+end_date = '2019-01-07 09:00:00'
 # 百度配置
 APP_ID = '10709883'
 API_KEY = 'DP7yZde5EK2MEKLzcjzwCCp5'
@@ -14,7 +13,8 @@ client = AipNlp(APP_ID, API_KEY, SECRET_KEY)
 pro = ts.pro_api(token='9668f6b57f4e3fe1199446a9c7b251d553963832bbf6e411b8065ea2')
 # 股票中文名称列表
 names_data = pro.stock_basic(exchange='', list_status='L', fields='name').values
-names_data = [re.sub('[AB]', '', d[0]) for d in names_data]
+name_normalization = lambda d: d[0][:-1] if d[0][-1] == 'A' or d[0][-1] == 'B' else d[0]
+names_data = [name_normalization(d) for d in names_data]
 
 # 提取新闻信息
 df_news = pro.news(src='sina', start_date=start_date, end_date=end_date)
@@ -43,7 +43,7 @@ for i in range(len(ds_content)):
 # 排序数据
 takeSecond = lambda elem: elem[1]
 content_negative.sort(key=takeSecond)
-content_negative = content_negative[-40:]  # 取最负面的若干条新闻
+content_negative = content_negative[-20:]  # 取最负面的若干条新闻
 name_negative = []
 for i in range(len(content_negative)):
     print(content_negative[i])
