@@ -143,7 +143,7 @@ class 最大分散化组合_基本版(方差极小化权重_基本版):
         omega_diag = np.sqrt(cov_mat.diagonal())
         # exp_rets*x >= 1 and x >= 0，组合收益大于等于1且禁止做空，Gx <= h
         G = cvxopt.matrix(np.vstack((-omega_diag, -np.identity(n))))
-        h = h = cvxopt.matrix(np.vstack((-1.0, np.ones((n, 1)) * -0.0)))
+        h = cvxopt.matrix(np.vstack((-1.0, np.ones((n, 1)) * -0.0)))
         sol = cvxopt.solvers.qp(P, q, G, h)
         weights = np.array(sol['x']).squeeze()
         weights /= weights.sum()
@@ -213,6 +213,50 @@ class 最大分散化组合_行业版_OAS(最大分散化组合_行业版):
         return return_cov
 
 
+class 风险平价组合_迭代求解基本版(方差极小化权重_基本版):
+    def _calc_weights(self, code_list):
+        # 风险平价组合，迭代法求解
+        sigma = self._get_coef(code_list)
+        n = len(sigma)  # 资产个数
+        # 迭代法初始值
+        x_0 = np.ones((n, 1)) * 1.0/n
+        lambda_value_0 = np.ones((1, 1)) * 0.1
+        y_0 = np.concatenate((x_0, lambda_value_0), axis=0)
+        # 两个使用到的辅助函数
+        def F(y):
+            x = y[0:n, :]
+            lambda_value = y[n, 0]
+            x = np.matmul(sigma, x) - lambda_value * (1.0 / x)
+            lambda_value = np.array([[np.sum(x) - 1.0]])
+            F = np.concatenate((x, lambda_value), axis=0)
+            return F
+        def J(y):
+            x = y[0:n, :]
+            lambda_value = y[n, 0]
+            a = lambda_value * np.diag((1.0 / (x * x))[:, 0]) + sigma
+            b = -1.0 / x
+            c = np.ones((1, n))
+            d = np.zeros((1, 1))
+            J1 = np.concatenate((a, c), axis=0)
+            J2 = np.concatenate((b, d), axis=0)
+            J = np.concatenate((J1, J2), axis=1)
+            J = np.linalg.inv(J)  # 对J求逆
+            return J
+        y_n = y_0 - np.matmul(J(y_0), F(y_0))
+        y_n = np.abs(y_n)
+        y_n = y_n / np.sum(y_n)  # 和为一
+        eps_value = np.sqrt(np.sum((y_n-y_0) * (y_n-y_0)))
+        while eps_value > 1e-8:  # 计算精度评价标准
+            print(eps_value)
+            y_0 = y_n
+            y_n = y_0 - np.matmul(J(y_0), F(y_0))
+            y_n = np.abs(y_n)
+            y_n = y_n / np.sum(y_n)  # 和为一
+            eps_value = np.sum((y_n-y_0) * (y_n-y_0))
+        weights = y_n[0:n, 0] / np.sum(y_n[0:n, 0])
+        return weights
+
+
 if __name__ == '__main__':
-    model = 最大分散化组合_基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
+    model = 风险平价组合_迭代求解基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
     print(model.get_weights())

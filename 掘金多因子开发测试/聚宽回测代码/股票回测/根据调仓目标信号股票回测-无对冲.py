@@ -45,8 +45,11 @@ def algo(context):
             stocks_now = list(context.portfolio.long_positions.keys())
             # 平仓，调仓，开仓
             stocks_close = list(set(stocks_now) - set(stocks_target))
+            stocks_close.sort()
             stocks_adjust = list(set(stocks_now) - set(stocks_close))
+            stocks_adjust.sort()
             stocks_open = list(set(stocks_target) - set(stocks_now))
+            stocks_open.sort()
 
             for stock in stocks_close:
                 order_target_value(stock, 0.0)
