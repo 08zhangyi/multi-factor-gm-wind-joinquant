@@ -6,7 +6,7 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
-from 持仓配置 import 最大分散化组合_基本版 as WEIGHTS
+from 持仓配置 import 风险平价组合_迭代求解基本版 as WEIGHTS
 
 w.start()
 

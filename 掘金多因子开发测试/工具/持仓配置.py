@@ -257,6 +257,17 @@ class 风险平价组合_迭代求解基本版(方差极小化权重_基本版):
         return weights
 
 
+class 风险平价组合_迭代求解基本版_OAS(风险平价组合_迭代求解基本版):
+    def _get_coef(self, code_list):
+        # 提供_calc_weights需要计算的参数
+        w.start()
+        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
+        from sklearn.covariance import OAS
+        return_cov = OAS().fit(return_value.transpose())
+        return_cov = return_cov.covariance_
+        return return_cov
+
+
 if __name__ == '__main__':
     model = 风险平价组合_迭代求解基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
     print(model.get_weights())
