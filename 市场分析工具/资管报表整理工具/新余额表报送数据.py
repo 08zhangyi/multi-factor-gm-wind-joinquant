@@ -7,11 +7,13 @@ import xlwt
 def get_data_from_excel(sheet, data_name, col_number):
     # 寻找data_name所在的行，用col_number的列提取出实际数据
     n_rows = sheet.nrows  # 提取表格的行数
+    n_cols = sheet.ncols
     value_data_name = 0.0
-    for n_r in range(n_rows):
-        name_temp = sheet.cell_value(n_r, 数据位置字典['科目名称'])
-        if name_temp == data_name:
-            value_data_name += sheet.cell_value(n_r, col_number)
+    for n_r in range(n_rows):  # 寻找data_name所对应的行
+        for n_c in range(n_cols):
+            name_temp = sheet.cell_value(n_r, n_c)
+            if name_temp == data_name:
+                value_data_name += sheet.cell_value(n_r, col_number)
     return value_data_name
 
 
@@ -43,6 +45,10 @@ files_path = 'data\\余额表原始'  # 原始excel文件的列表
           '其他投资': {'其他投资': 数据位置字典['期末']},
           '应收股利': {'应收股利': 数据位置字典['期末']},
           '证券清算款': {'证券清算款': 数据位置字典['期末']},
+          '计算的资产总值': {'银行存款': 数据位置字典['期末'], '清算备付金': 数据位置字典['期末'], '存出保证金': 数据位置字典['期末'],
+                      '买入返售金融资产': 数据位置字典['期末'], '股票投资': 数据位置字典['期末'], '债券投资': 数据位置字典['期末'],
+                      '应收利息': 数据位置字典['期末'], '应收申购款': 数据位置字典['期末'], '基金投资': 数据位置字典['期末'],
+                      '其他投资': 数据位置字典['期末'], '应收股利': 数据位置字典['期末'], '证券清算款': 数据位置字典['期末']},
           '应付管理人报酬': {'应付管理人报酬':  数据位置字典['期末']},
           '应付托管费': {'应付托管费': 数据位置字典['期末']},
           '应付交易费用': {'应付交易费用': 数据位置字典['期末']},
