@@ -9,11 +9,18 @@ def get_data_from_excel(sheet, data_name, col_number):
     n_rows = sheet.nrows  # 提取表格的行数
     n_cols = sheet.ncols
     value_data_name = 0.0
+    if_get = False  # 读取到数据的标识，读取到数据即跳出
     for n_r in range(n_rows):  # 寻找data_name所对应的行
         for n_c in range(n_cols):
             name_temp = sheet.cell_value(n_r, n_c)
-            if name_temp == data_name:
-                value_data_name += sheet.cell_value(n_r, col_number)
+            if isinstance(name_temp, float):
+                continue
+            if name_temp == data_name or name_temp[:-1] == data_name:
+                value_data_name += float(sheet.cell_value(n_r, col_number)) if sheet.cell_value(n_r, col_number) != '' else 0.0
+                if_get = True
+                break
+        if if_get:
+            break
     return value_data_name
 
 

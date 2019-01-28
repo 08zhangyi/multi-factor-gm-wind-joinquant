@@ -9,6 +9,7 @@ def get_data_from_excel(sheet, data_name, col_number):
     n_rows = sheet.nrows  # 提取表格的行数
     n_cols = sheet.ncols
     value_data_name = 0.0
+    if_get = False  # 读取到数据的标识，读取到数据即跳出
     for n_r in range(n_rows):  # 寻找data_name所对应的行
         for n_c in range(n_cols):
             name_temp = sheet.cell_value(n_r, n_c)
@@ -16,6 +17,10 @@ def get_data_from_excel(sheet, data_name, col_number):
                 continue
             if name_temp == data_name or name_temp[:-1] == data_name:
                 value_data_name += float(sheet.cell_value(n_r, col_number)) if sheet.cell_value(n_r, col_number) != '' else 0.0
+                if_get = True
+                break
+        if if_get:
+            break
     return value_data_name
 
 
@@ -31,7 +36,8 @@ files_path = 'data\\估值表原始'  # 原始excel文件的列表
 原始文件列表 = os.listdir(files_path)
 原始文件列表 = [files_path+'\\'+f for f in 原始文件列表]
 数据位置字典 = {'科目名称': 1, '市值': 7}
-产品简称列表 = ['中惠1号', '融通10号', '融通5号']
+产品简称列表 = ['中惠1号', '天诚25号', '天盈12号', '融通10号', '融通5号', '天泽1号', '汇沣1号', '天利1号', '天盈13号',
+          '汇沣2号']
 # 结构为{'栏目名称': {'提取数据栏目1': 栏目位置1, '提取数据栏目2': 栏目位置2},}
 读取栏目字典 = {'基金资产净值': {'基金资产净值': 数据位置字典['市值']},
           '资产类合计': {'资产类合计': 数据位置字典['市值']},
@@ -46,11 +52,15 @@ files_path = 'data\\估值表原始'  # 原始excel文件的列表
           '存出保证金': {'存出保证金': 数据位置字典['市值']},
           '其他现金类资产': {'清算备付金': 数据位置字典['市值'], '存出保证金': 数据位置字典['市值']},
           '买入返售金额资产': {'买入返售金额资产': 数据位置字典['市值']},
+          '买入返售金融资产': {'买入返售金融资产': 数据位置字典['市值']},
+          '股票投资': {'股票投资': 数据位置字典['市值']},
+          '债券投资': {'债券投资': 数据位置字典['市值']},
           '应收利息': {'应收利息': 数据位置字典['市值']},
           '应付管理人报酬': {'应付管理人报酬': 数据位置字典['市值']},
           '应付托管费': {'应付托管费': 数据位置字典['市值']},
           '应交税费': {'应交税费': 数据位置字典['市值']},
-          '其他应付款': {'其他应付款': 数据位置字典['市值']}}
+          '其他应付款': {'其他应付款': 数据位置字典['市值']},
+          '证券清算款': {'证券清算款': 数据位置字典['市值']}}
 
 # 准备写入的excel文件
 f = xlwt.Workbook()
@@ -76,4 +86,4 @@ for i, product_name in enumerate(产品简称列表):
                 value_data_name += get_data_from_excel(sheet, data_name, item_dict[data_name])
         print(product_name, item, value_data_name, i, j)
         sheet_write.write(i+1, j+1, value_data_name)
-f.save('data\\output\\原估值表1.xls')
+f.save('data\\output\\月报估值表.xls')
