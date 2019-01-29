@@ -1,6 +1,7 @@
 import os
 import xlrd
 import xlwt
+import numpy as np
 
 
 # 辅助函数区
@@ -92,8 +93,10 @@ for i, product_name in enumerate(产品简称列表):
         sheet_write.write(0, j+1, item)
         item_dict = 读取栏目字典[item]
         value_data_name = 0.0  # 此项目的数总和，单位为元
-        for data_name in item_dict:
-            value_data_name += get_data_from_excel(sheet, data_name, item_dict[data_name])
+        value_data_list = []  # 提取的数据的存储区
+        for data_name in item_dict:  # 提取数据的操作
+            value_data_list.append(get_data_from_excel(sheet, data_name, item_dict[data_name]))
+        value_data_name = np.sum(np.array(value_data_list))
         if '计提' not in item:
             value_data_name = value_data_name / 10000.0  # 单位转化为万元
         print(product_name, item, value_data_name, i, j)
