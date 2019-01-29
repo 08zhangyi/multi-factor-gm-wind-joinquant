@@ -79,10 +79,7 @@ for i, product_name in enumerate(产品简称列表):
         value_data_list = []  # 提取的数据的存储区
         for data_name in item_dict:    # 提取数据的操作
             value_data_list.append(get_data_from_excel(sheet, data_name, item_dict[data_name]))
-        if item == '年化收益率':  # 年化收益率非求和，特殊处理
-            value_data_name = (value_data_list[0] - value_data_list[1]) / value_data_list[1]
-        else:
-            value_data_name = np.sum(np.array(value_data_list))
+        value_data_name = np.sum(np.array(value_data_list))
         print(product_name, item, value_data_name, i, j)
         sheet_write.write(j+1, i+1, value_data_name)
 f.save('data\\output\\周报估值表.xls')
