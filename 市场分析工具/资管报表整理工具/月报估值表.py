@@ -83,6 +83,7 @@ for i, product_name in enumerate(产品简称列表):
             value_data_list.append(get_data_from_excel(sheet, data_name, item_dict[data_name]))
         if item == '年化收益率':  # 年化收益率非求和，特殊处理
             value_data_name = (value_data_list[0] - value_data_list[1]) / value_data_list[1]
+            value_data_name = '%.2f%%' % (value_data_name * 100.0)
         else:
             value_data_name = np.sum(np.array(value_data_list))
         print(product_name, item, value_data_name, i, j)
