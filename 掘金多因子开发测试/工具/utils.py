@@ -22,8 +22,10 @@ def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
     calendar = ql.China()
     date_diff = calendar.advance(calculation_date, diff_periods, period).to_date().strftime('%Y-%m-%d')
     # 临时修正错误，是包QuantLib的错误，节假日问题
-    if date_now == '2019-01-02':
+    if date_now == '2019-01-02' and diff_periods == -1 and period == ql.Days:
         return '2018-12-28'
+    if (date_now == '2019-02-08' or date_now == '2019-02-09' or date_now == '2019-02-10' or date_now == '2019-02-11') and diff_periods == -1 and period == ql.Days:
+        return '2019-02-01'
     return date_diff
 
 

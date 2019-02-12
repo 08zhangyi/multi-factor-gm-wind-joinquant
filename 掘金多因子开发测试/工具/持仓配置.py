@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats, scipy.optimize
 from WindPy import w
 import cvxopt
 import sys
@@ -268,6 +269,50 @@ class 风险平价组合_迭代求解基本版_OAS(风险平价组合_迭代求�
         return return_cov
 
 
+class 高阶矩优化配置策略_V0(WeightsAllocation):
+    def __init__(self, code_list, date, N=60, w2=1.0, w3=1.0, w4=1.0):
+        self.N = N  # 收益率数据采样的历史大小，默认N=60，为一个季度的数据
+        self.w2 = w2  # 优化目标函数的权重参数
+        self.w3 = w3
+        self.w4 = w4
+        super().__init__(code_list, date)
+
+    def get_weights(self):
+        code_list = list_jq2wind(self.code_list)
+        code_weights = {}
+        return_value = self._get_return(code_list)
+        def optimization_target(weight_temp):
+            weight_temp = weight_temp[:, np.newaxis]
+            portfolio_return_value = np.matmul(weight_temp.transpose(), return_value)[0, :]  # 组合的投资回报序列
+            mean = np.mean(portfolio_return_value)
+            var = np.var(portfolio_return_value)
+            skew = scipy.stats.skew(portfolio_return_value)
+            kurtosis = scipy.stats.kurtosis(portfolio_return_value)
+            loss = self.w2 * var + self.w3 * skew + self.w4 * kurtosis
+            return loss
+        def constraint(weight_temp):
+            return np.sum(weight_temp) - 1.0
+        n = len(self.code_list)  # 资产个数
+        x_0 = np.ones((n,)) * 1.0 / n
+        bounds = n * ((0.0, None),)  # 权重非负约束条件
+        res = scipy.optimize.minimize(optimization_target, x_0, method='SLSQP', bounds=bounds, constraints={'type': 'eq', 'fun': constraint})
+        print(res)
+        if res.success:  # 优化成功
+            x = res.x
+        else:  # 优化失败，用等权
+            x = x_0
+        for i in range(len(code_list)):
+            code = code_list[i]
+            code_weights[list_wind2jq([code])[0]] = x[i]
+        return code_weights
+
+    def _get_return(self, code_list):
+        # 提供_calc_weights需要计算的参数
+        w.start()
+        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
+        return return_value
+
+
 if __name__ == '__main__':
-    model = 风险平价组合_迭代求解基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
+    model = 高阶矩优化配置策略_V0(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
     print(model.get_weights())
