@@ -466,3 +466,23 @@ class 柯林麦克连成长价值优势投资法(MasterStrategy):
 
         code_list = list(df.index.values)
         return code_list
+
+
+class 必要消费(MasterStrategy):
+    def __init__(self, code_list, date,):
+        super().__init__(code_list, date, )
+
+    def _get_data(self):
+        from single_factor import SteadyProfitAcc, InventoryTurnRatio,PB
+        factor_list = [SteadyProfitAcc, InventoryTurnRatio, PB]
+        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = df.dropna()
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        df = df[df['利润稳健加速度'] > df['利润稳健加速度'].quantile(1/3)]
+        df = df[df['存货周转率'] > df['存货周转率'].quantile(0.5)]
+        df = df[df['PB市净率指标'] < df['PB市净率指标'].quantile(1/3)]
+        code_list = list(df.index.values)
+        return code_list

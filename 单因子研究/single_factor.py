@@ -6,6 +6,7 @@ import datetime
 import QuantLib as ql
 import jqdatasdk
 import sys
+from sklearn.linear_model import LinearRegression
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import get_trading_date_from_now, SW1_INDEX
 
@@ -59,6 +60,80 @@ class NetProfitGrowRateV2(SingleFactorReasearch):
         npgr = np.array(w.wss(self.code_list,  "fa_npgr_ttm", "tradeDate="+"".join(date_list)).Data[0])
         NPGR = pd.DataFrame(data=npgr, index=self.code_list, columns=[self.factor_name])
         return NPGR
+
+
+# 净利润值对期数回归，返回二次项系数
+class ProfitAcc(SingleFactorReasearch):
+    def __init__(self, date, code_list, N=8):
+        # N为期数，一个季度为一期
+        factor_name = '利润成长加速度'
+        self.N = N
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        X_0 = np.arange(1, (self.N+1), 1).reshape((self.N, 1))
+        X_1 = X_0 * X_0
+        X = np.concatenate((X_1, X_0), axis=1)
+        profit_data = []
+        alpha = []
+        for i in np.arange(0, self.N*3, 3):  # 按日期遍历提取利润数据
+            temp_day = get_trading_date_from_now("-".join(self.date), -int(i), ql.Months)
+            profit = w.wss(self.code_list, "profit_ttm", "unit=1;tradeDate=" + str(temp_day)).Data[0]
+            profit_data.append(profit)
+        profit_data = np.array(profit_data).transpose()
+        for y in profit_data:  # 回归计算因子值
+            try:
+                model = LinearRegression().fit(X, y)
+                a = model.coef_[0]
+                alpha.append(a)
+            except ValueError:
+                alpha.append(np.nan)
+        alpha = np.array(alpha)
+        df = pd.DataFrame(data=alpha, index=self.code_list, columns=[self.factor_name]).dropna()
+        return df
+
+
+# 连续N期的净利润同比增速的均值除以其标准差
+class SteadyProfitGrowth(SingleFactorReasearch):
+    def __init__(self, date, code_list, N=8):
+        # N为期数，一个季度为一期
+        factor_name = '利润稳健增速'
+        self.N = N
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        profit_data = []
+        data = []
+        for i in np.arange(0, self.N*3, 3):  # 按日期遍历提取利润数据
+            temp_day = get_trading_date_from_now("-".join(self.date), -int(i), ql.Months)
+            profit = w.wss(self.code_list, "profit_ttm", "unit=1;tradeDate=" + str(temp_day)).Data[0]
+            profit_data.append(profit)
+        profit_data = np.array(profit_data).transpose()
+        for j in profit_data:
+            mean = np.mean(np.array(j))
+            std = np.std(np.array(j))
+            data_temp = mean/std
+            data.append(data_temp)
+        data = np.array(data)
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 利润稳健加速度
+class SteadyProfitAcc(SingleFactorReasearch):
+    def __init__(self, date, code_list, N=8):
+        # N为期数，一个季度为一期
+        factor_name = '利润稳健加速度'
+        self.N = N
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_previous = get_trading_date_from_now("-".join(self.date), -3, ql.Months)
+        current_data = SteadyProfitGrowth("-".join(self.date), self.code_list).get_factor()
+        previous_data = SteadyProfitGrowth(date_previous, self.code_list).get_factor()
+        data = current_data - previous_data
+        data.rename(columns={"利润稳健增速": "利润稳健加速度"}, inplace=True)
+        return data
 
 
 # 一致预测净利润增长率（6个月数据计算）
@@ -641,6 +716,19 @@ class OperationRevenueGrowth(SingleFactorReasearch):
         fa_orgr_ttm = np.array(w.wss(self.code_list, "fa_orgr_ttm", "tradeDate=" + ''.join(date_list)).Data[0])
         fa_orgr_ttm = pd.DataFrame(data=fa_orgr_ttm, index=self.code_list, columns=[self.factor_name])
         return fa_orgr_ttm
+
+
+# 一致预测营业收入增长率（6个月数据计算）
+class EstimateNetRevenueGrowRateFY16M(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '一致预测营业收入增长率（6个月数据计算）'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        west_netprofit_fy1_6m = np.array(w.wss(self.code_list,  "west_sales_fy1_6m", "tradeDate="+"".join(date_list)).Data[0])
+        west_netprofit_fy1_6m = pd.DataFrame(data=west_netprofit_fy1_6m, index=self.code_list, columns=[self.factor_name])
+        return west_netprofit_fy1_6m
 
 
 # 销售毛利率
