@@ -4,8 +4,8 @@ import time
 import pyecharts
 import math
 
-start_date = '2019-02-21 15:00:00'
-end_date = '2019-02-22 09:00:00'
+start_date = '2019-02-27 15:00:00'
+end_date = '2019-02-28 09:00:00'
 # 百度配置
 APP_ID = '10709883'
 API_KEY = 'DP7yZde5EK2MEKLzcjzwCCp5'
@@ -34,6 +34,8 @@ for i in range(len(ds_content)):
     if len(content_title2) > 40:  # 调整标题长度过长
         content_title2 = content_title2[:40]
     content_main2 = content_main
+    if content_main2 == '':  # 无内容，跳过
+        continue
     while len(content_main2) < 50:  # 调整内容长度过短
         content_main2 = 2 * content_main2
     print('正在处理第%d条新闻，总共%d篇' % (i + 1, len(ds_content)))
