@@ -21,7 +21,7 @@ class 个股分析模板():
         return result
 
     @staticmethod
-    def _get_last_year_end(date):
+    def _get_last_season_end(date):
         year = int(date[0:4])
         month = int(date[5:7])
         season = (month-1) // 3
@@ -44,11 +44,11 @@ class 个股分析模板():
 class 个股主营业务分析(个股分析模板):
     def output(self):
         pro = ts.pro_api(token=TS_TOKEN)
-        date = self._get_last_year_end(self.date)
+        date = self._get_last_season_end(self.date)
         df = pro.fina_mainbz(ts_code=self.code, period=self.tushare_date_format(date), type='P')
         for i in range(6):  # 取6个季度的数据
             if len(df) == 0:
-                date = self._get_last_year_end(date)
+                date = self._get_last_season_end(date)
                 df = pro.fina_mainbz(ts_code=self.code, period=self.tushare_date_format(date), type='P')
         text = self.code_name + '（' + self.code + '）的主营业务构成为（数据截止为'+date+'）：\n'
         df = df.sort_values(by='bz_sales', axis=0, ascending=False)

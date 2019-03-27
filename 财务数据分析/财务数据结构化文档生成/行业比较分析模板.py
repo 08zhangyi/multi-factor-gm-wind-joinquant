@@ -8,9 +8,14 @@ class 行业比较分析模板():
     def __init__(self, code, date, mode):
         self.code = code
         self.date = date
-        self.industry_name, self.industry_code_list = self._get_industry_code_list(mode)
+        self.industry_name, self.industry_code_list = self._get_industry_code_list(code, date, mode)
 
-    def _get_industry_code_list(self, mode):
+    def output(self):
+        result = {'text': ''}
+        return result
+
+    @staticmethod
+    def _get_industry_code_list(code, date, mode):
         w.start()
         INDEXCODE = {'sw1': ['indexcode_sw', 'industryType=1'],  # 申万一级行业
                      'sw2': ['indexcode_sw', 'industryType=2'],  # 申万二级行业
@@ -26,19 +31,13 @@ class 行业比较分析模板():
                      'amac': ['indexcode_AMAC', ''],  # 基金业协会行业
                      }
         if mode == 'all':  # 提取全部A股
-            industry_code_list = w.wset("sectorconstituent", "date="+self.date+";windcode=881001.WI").Data[1]
+            industry_code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=881001.WI").Data[1]
             industry_name = '全部A股'
         else:  # 按照行业分类提取本行业A股
-            industry_code = w.wss(self.code, INDEXCODE[mode][0], 'tradeDate='+self.date+';'+INDEXCODE[mode][1]).Data[0][0]
-            industry_code_list = w.wset("sectorconstituent", "date="+self.date+";windcode="+industry_code).Data[1]
+            industry_code = w.wss(code, INDEXCODE[mode][0], 'tradeDate=' + date + ';' + INDEXCODE[mode][1]).Data[0][0]
+            industry_code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=" + industry_code).Data[1]
             industry_name = w.wss(industry_code, "sec_name").Data[0][0]
-        print(industry_code_list)
-        print(industry_name)
         return industry_name, industry_code_list
-
-    def output(self):
-        result = {'text': ''}
-        return result
 
 
 if __name__ == '__main__':
