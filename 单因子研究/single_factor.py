@@ -62,6 +62,19 @@ class NetProfitGrowRateV2(SingleFactorReasearch):
         return NPGR
 
 
+# 营业收入增长率
+class RevenueGrowthRate(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '营业收入增长率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list, "fa_orgr_ttm", "tradeDate="+''.join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
 # 净利润值对期数回归，返回二次项系数
 class ProfitAcc(SingleFactorReasearch):
     def __init__(self, date, code_list, N=8):
