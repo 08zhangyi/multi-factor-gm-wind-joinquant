@@ -94,7 +94,7 @@ class 个股主营业务分析_按产品(个股分析模板):
         bz_item = df['bz_item'].values
         bz_sales_ratio = df['bz_sales_ratio'].values
         bz_sales_ratio_cumsum = np.cumsum(bz_sales_ratio)
-        first_bigger_index = int(np.where(bz_sales_ratio_cumsum > 0.90)[0][0])  # 第一个求和大于85%的指标，包括指标本身
+        first_bigger_index = int(np.where(bz_sales_ratio_cumsum > 0.90)[0][0])  # 第一个求和大于90%的指标，包括指标本身，为主要业务
         text = code_name + '的主要业务有：'
         for i in range(first_bigger_index+1):
             text = text + bz_item[i]
@@ -102,78 +102,43 @@ class 个股主营业务分析_按产品(个股分析模板):
                 text = text + '；\n'
             else:
                 text = text + '，'
-        for i in range(0, first_bigger_index+1):  # 提取核心业务成分，主业的50%权重为核心业务
-            core_index = first_bigger_index - i
-            if bz_sales_ratio[core_index] / bz_sales_ratio[0] >= 0.5:
-                break
-        aux_index = core_index
-        for i in range(0, first_bigger_index-core_index+1):  # 提取辅助业务成分，主业的15%权重为辅助业务
-            aux_index = first_bigger_index - i
-            if bz_sales_ratio[aux_index] / bz_sales_ratio[0] >= 0.15:
-                break
+        bz_sales_ratio_main = bz_sales_ratio[:first_bigger_index+1]  # 主要业务比例列表
+        bz_sales_ratio_main = bz_sales_ratio_main / bz_sales_ratio_main[0]
+        bz_sales_ratio_core = np.where(bz_sales_ratio_main > 0.5)[0]  # 核心业务指标
+        bz_sales_ratio_aux = np.where((bz_sales_ratio_main <= 0.5) & (bz_sales_ratio_main > 0.2))[0]  # 辅助业务指标
+        bz_sales_ratio_supple = np.where(bz_sales_ratio_main <= 0.2)[0]  # 补充业务指标
         text = text + '其中'
-        for i in range(0, core_index+1):
-            text = text + bz_item[i]
-            if i == core_index:
-                text = text + '是核心业务成分；'
-            else:
-                text = text + '、'
-        for i in range(core_index+1, aux_index+1):
-            text = text + bz_item[i]
-            if i == aux_index:
-                text = text + '是辅助业务成分；'
-            else:
-                text = text + '、'
-        for i in range(aux_index+1, first_bigger_index+1):
-            text = text + bz_item[i]
-            if i == first_bigger_index:
-                text = text + '是补充业务成分；'
-            else:
-                text = text + '、'
-        if text[-1] == '；':
-            text = text[:-1] + '。'
-        text = text + '\n'
-        if (core_index + 1) > 3:
+        for i in bz_sales_ratio_core:
+            text = text + bz_item[i] + '、'
+        text = text[:-1] + '是核心业务成分；'
+        for i in bz_sales_ratio_aux:
+            text = text + bz_item[i] + '、'
+        text = text[:-1] + '是辅助业务成分；'
+        for i in bz_sales_ratio_supple:
+            text = text + bz_item[i] + '、'
+        text = text[:-1] + '是补充业务成分；'
+        text = text[:-1] + '。\n'
+        if len(bz_sales_ratio_core) > 3:
             text = text + code_name + '的业务非常多元化，无明显主营业务'
-            if core_index == first_bigger_index:
-                text = text + '，且公司无其他主要业务。'
-            elif aux_index == core_index:
-                text = text + '，且公司无辅助业务，但公司有少量补充业务。'
-            elif aux_index == first_bigger_index:
-                text = text + '，但公司有少量辅助业务，无补充业务。'
-            else:
-                text = text + '，但公司有少量辅助业务和补充业务。'
-        elif (core_index + 1) == 3:
+        elif len(bz_sales_ratio_core) == 3:
             text = text + code_name + '的业务比较多元化，属于三核心业务类型'
-            if core_index == first_bigger_index:
-                text = text + '，且公司无其他主要业务。'
-            elif aux_index == core_index:
-                text = text + '，且公司无辅助业务，但公司有少量补充业务。'
-            elif aux_index == first_bigger_index:
-                text = text + '，但公司有少量辅助业务，无补充业务。'
-            else:
-                text = text + '，但公司有少量辅助业务和补充业务。'
-        elif (core_index + 1) == 2:
+        elif len(bz_sales_ratio_core) == 2:
             text = text + code_name + '的业务双核心特征明显，属于双核心业务类型'
-            if core_index == first_bigger_index:
-                text = text + '，且公司无其他主要业务。'
-            elif aux_index == core_index:
-                text = text + '，且公司无辅助业务，但公司有少量补充业务。'
-            elif aux_index == first_bigger_index:
-                text = text + '，但公司有少量辅助业务，无补充业务。'
-            else:
-                text = text + '，但公司有少量辅助业务和补充业务。'
         else:
             text = text + code_name + '的业务核心业务突出，属于单核心业务类型'
-            if core_index == first_bigger_index:
-                text = text + '，且公司无其他主要业务。'
-            elif aux_index == core_index:
-                text = text + '，且公司无辅助业务，但公司有少量补充业务。'
-            elif aux_index == first_bigger_index:
-                text = text + '，但公司有少量辅助业务，无补充业务。'
-            else:
-                text = text + '，但公司有少量辅助业务和补充业务。'
-        text = text + '\n'
+        if len(bz_sales_ratio_aux) > 3:
+            text = text + '，同时公司具有较多的辅助业务'
+        elif len(bz_sales_ratio_aux) > 0 and len(bz_sales_ratio_aux) < 3:
+            text = text + '，同时公司具有一定的辅助业务'
+        else:
+            text = text + '，公司无辅助业务'
+        if len(bz_sales_ratio_supple) > 3:
+            text = text + '，具有较多的补充业务'
+        elif len(bz_sales_ratio_supple) > 0 and len(bz_sales_ratio_supple) < 3:
+            text = text + '，具有一定的补充业务'
+        else:
+            text = text + '，无补充业务'
+        text = text + '。\n'
         return text
 
 
@@ -232,56 +197,38 @@ class 个股主营业务分析_按地区(个股分析模板):
                 text = text + '；\n'
             else:
                 text = text + '，'
-        for i in range(0, first_bigger_index + 1):  # 提取核心业务区域，主要业务区域的50%权重为核心业务区域
-            core_index = first_bigger_index - i
-            if bz_sales_ratio[core_index] / bz_sales_ratio[0] >= 0.5:
-                break
+        bz_sales_ratio_main = bz_sales_ratio[:first_bigger_index + 1]  # 主要业务比例列表
+        bz_sales_ratio_main = bz_sales_ratio_main / bz_sales_ratio_main[0]
+        bz_sales_ratio_core = np.where(bz_sales_ratio_main > 0.5)[0]  # 核心业务区域指标
+        bz_sales_ratio_aux = np.where(bz_sales_ratio_main <= 0.5)[0]  # 补充业务区域指标
         text = text + '其中'
-        for i in range(0, core_index + 1):
-            text = text + bz_item[i]
-            if i == core_index:
-                text = text + '是核心业务区域；'
-            else:
-                text = text + '、'
-        for i in range(core_index + 1, first_bigger_index + 1):
-            text = text + bz_item[i]
-            if i == first_bigger_index:
-                text = text + '是辅助业务区域；'
-            else:
-                text = text + '、'
-        if text[-1] == '；':
-            text = text[:-1] + '。'
-        text = text + '\n'
-        if (core_index + 1) > 3:
+        for i in bz_sales_ratio_core:
+            text = text + bz_item[i] + '、'
+        text = text[:-1] + '是核心业务区域；'
+        for i in bz_sales_ratio_aux:
+            text = text + bz_item[i] + '、'
+        text = text[:-1] + '是补充业务区域；'
+        text = text[:-1] + '。\n'
+        if len(bz_sales_ratio_core) > 3:
             text = text + code_name + '的业务区域非常多元化，业务在地域分布上比较分散'
-            if core_index == first_bigger_index:
-                text = text + '。'
-            else:
-                text = text + '，公司还少量辅助业务区域。'
-        elif (core_index + 1) == 3:
+        elif len(bz_sales_ratio_core) == 3:
             text = text + code_name + '的业务区域比较多元化，属于三核心业务区域类型'
-            if core_index == first_bigger_index:
-                text = text + '。'
-            else:
-                text = text + '，公司还少量辅助业务区域。'
-        elif (core_index + 1) == 2:
+        elif len(bz_sales_ratio_core) == 2:
             text = text + code_name + '的业务集中在两个区域，属于双核心业务区域类型'
-            if core_index == first_bigger_index:
-                text = text + '。'
-            else:
-                text = text + '，公司还少量辅助业务区域。'
         else:
             text = text + code_name + '的业务集中在一个区域，属于单核心业务区域类型'
-            if core_index == first_bigger_index:
-                text = text + '。'
-            else:
-                text = text + '，公司还少量辅助业务区域。'
-        text = text + '\n'
+        if len(bz_sales_ratio_aux) > 3:
+            text = text + '，同时公司还有较多的辅助业务区域'
+        elif len(bz_sales_ratio_aux) > 0 and len(bz_sales_ratio_aux) < 3:
+            text = text + '，同时公司还有一定的辅助业务区域'
+        else:
+            text = text + '，同时公司无辅助业务区域'
+        text = text + '。\n'
         return text
 
 
 if __name__ == '__main__':
-    code = '000063.SZ'
+    code = '600519.SH'
     date = '2019-01-01'
-    model = 个股主营业务分析_按产品(code, date)
+    model = 个股主营业务分析_按地区(code, date)
     model.output()

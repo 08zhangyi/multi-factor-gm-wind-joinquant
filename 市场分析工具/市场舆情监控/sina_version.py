@@ -4,8 +4,8 @@ import time
 import pyecharts
 import math
 
-start_date = '2019-03-27 15:00:00'
-end_date = '2019-03-28 09:00:00'
+start_date = '2019-03-28 15:00:00'
+end_date = '2019-03-29 08:30:00'
 # 百度配置
 APP_ID = '10709883'
 API_KEY = 'DP7yZde5EK2MEKLzcjzwCCp5'
@@ -65,7 +65,7 @@ content_negative = content_negative[:20]  # 取最负面的若干条新闻
 name_negative = []
 negative_content = '重要舆情新闻汇总\n\n'
 for i in range(len(content_negative)):
-    negative_content += ('第' + str(i+1) + '条新闻：' + content_negative[i][0] + '\n\n')
+    negative_content += ('    第' + str(i+1) + '条新闻：' + content_negative[i][0] + '\n\n')
     for name in names_data:
         if name in content_negative[i][0]:
             name_negative.append(name)
