@@ -131,7 +131,7 @@ class 个股主营业务分析_按产品(个股分析模板):
         elif len(bz_sales_ratio_aux) > 0 and len(bz_sales_ratio_aux) < 3:
             text = text + '，同时公司具有一定的辅助业务'
         else:
-            text = text + '，公司无辅助业务'
+            text = text + '，同时公司无辅助业务'
         if len(bz_sales_ratio_supple) > 3:
             text = text + '，具有较多的补充业务'
         elif len(bz_sales_ratio_supple) > 0 and len(bz_sales_ratio_supple) < 3:
@@ -228,7 +228,7 @@ class 个股主营业务分析_按地区(个股分析模板):
 
 
 if __name__ == '__main__':
-    code = '600519.SH'
+    code = '000002.SZ'
     date = '2019-01-01'
     model = 个股主营业务分析_按地区(code, date)
     model.output()
