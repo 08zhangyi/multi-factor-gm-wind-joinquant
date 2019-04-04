@@ -63,7 +63,7 @@ class 个股主营业务分析_按产品(个股分析模板):
         df['bz_profit'] = pd.to_numeric(df['bz_profit'])
         df['bz_cost'] = pd.to_numeric(df['bz_cost'])
         # 计算辅助指标
-        df['bz_sales_ratio'] = df['bz_sales'] / np.sum(df['bz_sales'].values)  # 计算营业收入占比
+        df['bz_sales_ratio'] = df['bz_sales'] / np.sum(df['bz_sales'].fillna(0.0).values)  # 计算营业收入占比
         df['bz_profit_ratio'] = df['bz_profit'] / df['bz_sales']  # 计算毛利率
         # 文字生成部分
         table = prettytable.PrettyTable(['业务名称', '销售收入', '销售成本', '销售毛利', '销售毛利率', '销售收入占比'])
@@ -228,7 +228,7 @@ class 个股主营业务分析_按地区(个股分析模板):
 
 
 if __name__ == '__main__':
-    code = '000002.SZ'
+    code = '600155.SH'
     date = '2019-01-01'
-    model = 个股主营业务分析_按地区(code, date)
+    model = 个股主营业务分析_按产品(code, date)
     model.output()
