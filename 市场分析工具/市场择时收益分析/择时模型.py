@@ -362,7 +362,7 @@ class 量价共振_v2_华创(SelectTimeIndexBacktest):
                     signal_list[i] = 1
                 else:
                     signal_list[i] = -1
-        return date_list, index_list, signal_list移动
+        return date_list, index_list, signal_list
 
 
 def 使用模板1():
