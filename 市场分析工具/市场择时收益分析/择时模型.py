@@ -3,6 +3,7 @@ import QuantLib as ql
 import numpy as np
 import pandas as pd
 import pygal
+import talib
 from sklearn import linear_model
 from sklearn.metrics import r2_score
 import sys
@@ -248,8 +249,135 @@ class RSRS_standardization_VFuture(RSRS_standardization):
         return date_list, index_list, signal_list
 
 
-if __name__ == '__main__':
+class 量价共振_v1_华创(SelectTimeIndexBacktest):
+    def __init__(self, backtest_start_date, backtest_end_date, index_code, L=50, N=3, Long=100, Threshold=1.02):
+        self.backtest_start_date = backtest_start_date
+        # 策略参数设定
+        self.L = L
+        self.N = N
+        self.Long = Long
+        self.Threshold = Threshold
+        # 基本数据获取
+        w.start()
+        start_date = get_trading_date_from_now(backtest_start_date, -(max(L+N, Long)+100), ql.Days)
+        data = w.wsd(index_code, "close,amt", start_date, backtest_end_date, "")
+        self.times = [t.strftime('%Y-%m-%d') for t in data.Times]  # 日期序列
+        self.close = data.Data[0]  # 价格序列
+        self.amt = data.Data[1]  # 成交额序列
+        self._get_signal('2015-01-27')
+        super().__init__(backtest_start_date, backtest_end_date, index_code)
+
+    def _get_signal(self, date_now):
+        index = self.times.index(date_now) + 1
+        diff_step = 1
+        # 量能
+        amt_5 = np.array(self.amt[index-5-diff_step:index])
+        amt_Long = np.array(self.amt[index-self.Long-diff_step:index])
+        amt_5 = talib.KAMA(amt_5, timeperiod=5)[-1]
+        amt_Long = talib.KAMA(amt_Long, timeperiod=self.Long)[-1]
+        amt_index = amt_5 / amt_Long
+        # 价能
+        close_today = np.array(self.close[index-self.L-diff_step:index])
+        close_today_n = np.array(self.close[index-self.N-self.L-diff_step:index-self.N])
+        _, close_today, _ = talib.BBANDS(close_today, timeperiod=self.L)
+        _, close_today_n, _ = talib.BBANDS(close_today_n, timeperiod=self.L)
+        close_today = close_today[-1]
+        close_today_n = close_today_n[-1]
+        close_index = close_today / close_today_n
+        # 返回指标值
+        all_index = amt_index * close_index
+        return all_index
+
+    def _get_data(self):
+        start_date_index = self.times.index(self.backtest_start_date)
+        date_list = self.times[start_date_index:]
+        index_list = self.close[start_date_index:]
+        signal_list = [self._get_signal(date) for date in date_list]
+        signal_list = [1 if t > self.Threshold else -1 for t in signal_list]
+        return date_list, index_list, signal_list
+
+
+class 量价共振_v2_华创(SelectTimeIndexBacktest):
+    def __init__(self, backtest_start_date, backtest_end_date, index_code, L=50, N=3, Long=100, Threshold1=0.98, Threshold2=1.075):
+        self.backtest_start_date = backtest_start_date
+        # 策略参数设定
+        self.L = L
+        self.N = N
+        self.Long = Long
+        self.Threshold1 = Threshold1
+        self.Threshold2 = Threshold2
+        # 基本数据获取
+        w.start()
+        start_date = get_trading_date_from_now(backtest_start_date, -(max(L+N, Long)+120), ql.Days)
+        data = w.wsd(index_code, "close,amt", start_date, backtest_end_date, "")
+        self.times = [t.strftime('%Y-%m-%d') for t in data.Times]  # 日期序列
+        self.close = data.Data[0]  # 价格序列
+        self.amt = data.Data[1]  # 成交额序列
+        self._get_signal('2015-01-27')
+        super().__init__(backtest_start_date, backtest_end_date, index_code)
+
+    def _get_signal(self, date_now):
+        index = self.times.index(date_now) + 1
+        diff_step = 20
+        # 量能
+        amt_5 = np.array(self.amt[index-5-diff_step:index])
+        amt_Long = np.array(self.amt[index-self.Long-diff_step:index])
+        amt_5 = talib.KAMA(amt_5, timeperiod=5)[-1]
+        amt_Long = talib.KAMA(amt_Long, timeperiod=self.Long)[-1]
+        amt_index = amt_5 / amt_Long
+        # 价能
+        close_today = np.array(self.close[index-self.L-diff_step:index])
+        close_today_n = np.array(self.close[index-self.N-self.L-diff_step:index-self.N])
+        _, close_today, _ = talib.BBANDS(close_today, timeperiod=self.L)
+        _, close_today_n, _ = talib.BBANDS(close_today_n, timeperiod=self.L)
+        close_today = close_today[-1]
+        close_today_n = close_today_n[-1]
+        close_index = close_today / close_today_n
+        # 返回指标值
+        all_index = amt_index * close_index
+        # 牛熊指标
+        ma_5 = np.array(self.close[index-5-diff_step:index])
+        ma_90 = np.array(self.close[index-90-diff_step:index])
+        ma_5 = talib.MA(ma_5, timeperiod=5)[-1]
+        ma_90 = talib.MA(ma_90, timeperiod=90)[-1]
+        if ma_5 > ma_90:
+            bull_bear = 1
+        else:
+            bull_bear = -1
+        return (all_index, bull_bear)
+
+    def _get_data(self):
+        start_date_index = self.times.index(self.backtest_start_date)
+        date_list = self.times[start_date_index:]
+        index_list = self.close[start_date_index:]
+        signal_list = [self._get_signal(date) for date in date_list]
+        for i, t in enumerate(signal_list):
+            if t[1] > 1:  # 牛市
+                if t[0] > self.Threshold1:
+                    signal_list[i] = 1
+                else:
+                    signal_list[i] = -1
+            else:  # 熊市
+                if t[0] > self.Threshold2:
+                    signal_list[i] = 1
+                else:
+                    signal_list[i] = -1
+        return date_list, index_list, signal_list移动
+
+
+def 使用模板1():
     N = 18
     M = 600
-    model = RSRS_standardization('2015-01-27', '2018-10-24', '000001.SZ', N=N, M=M)
-    model.plot_return(str(N)+'_'+str(M))
+    model = RSRS_standardization('2015-01-27', '2018-10-24', '000300.SH', N=N, M=M)
+    model.plot_return(str(N) + '_' + str(M))
+
+
+def 使用模板2():
+    # model = 量价共振_v1_华创('2015-01-27', '2019-04-11', '000300.SH')
+    # model.plot_return('1')
+    model = 量价共振_v2_华创('2013-05-13', '2019-04-11', '000300.SH')
+    model.plot_return('2')
+
+
+if __name__ == '__main__':
+    使用模板2()

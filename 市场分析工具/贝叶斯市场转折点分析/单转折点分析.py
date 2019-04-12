@@ -7,8 +7,8 @@ import scipy.stats
 
 w.start()
 INDEX = '000300.SH'  # 分析的指数代码
-START_DATE = '2018-01-30'
-END_DATE = '2019-03-01'
+START_DATE = '2019-01-07'
+END_DATE = '2019-04-11'
 data = w.wsd(INDEX, "pct_chg", START_DATE, END_DATE, "")
 times = data.Times
 data = data.Data[0]
