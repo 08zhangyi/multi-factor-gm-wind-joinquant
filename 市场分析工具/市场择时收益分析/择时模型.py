@@ -365,6 +365,49 @@ class 量价共振_v2_华创(SelectTimeIndexBacktest):
         return date_list, index_list, signal_list
 
 
+class 脉冲比_银河(SelectTimeIndexBacktest):
+    def __init__(self, backtest_start_date, backtest_end_date, index_code, threshold=1.5, hold_L=30, mean_L=5):
+        self.backtest_start_date = backtest_start_date
+        # 策略参数设定
+        self.threshold = threshold
+        self.hold_L = hold_L
+        self.mean_L = mean_L
+        # 提取数据
+        w.start()
+        start_date = get_trading_date_from_now(backtest_start_date, -mean_L-3, ql.Days)
+        data = w.wsd(index_code, "amt, close", start_date, backtest_end_date, "")
+        self.times = [t.strftime('%Y-%m-%d') for t in data.Times]  # 日期序列
+        self.amt = data.Data[0]  # 成交额数据
+        self.close = data.Data[1]  # 价格序列
+        super().__init__(backtest_start_date, backtest_end_date, index_code)
+
+    def _get_signal(self, date_now):
+        index = self.times.index(date_now) + 1
+        amt_5 = np.mean(self.amt[index-self.mean_L-1:index-1])
+        amt = self.amt[index-1]
+        pulse_ratio = amt / amt_5
+        return pulse_ratio
+
+    def _get_data(self):
+        start_date_index = self.times.index(self.backtest_start_date)
+        date_list = self.times[start_date_index:]
+        index_list = self.close[start_date_index:]
+        signal_list = [self._get_signal(date) for date in date_list]
+        signal_list = [1 if t > self.threshold else -1 for t in signal_list]
+        # signal_list的后处理，用到self.hold_L参数
+        index_1_t = []
+        for index_t, i_t in enumerate(signal_list):
+            if i_t == 1:
+                index_1_t.append(index_t)  # 获取1的下角标
+        for index_t in index_1_t:
+            for j_t in range(self.hold_L):
+                if (index_t + j_t) > (len(signal_list)-1):  # 超出范围
+                    pass
+                else:
+                    signal_list[index_t + j_t] = 1
+        return date_list, index_list, signal_list
+
+
 def 使用模板1():
     N = 18
     M = 600
@@ -379,5 +422,10 @@ def 使用模板2():
     model.plot_return('2')
 
 
+def 使用模板3():
+    model = 脉冲比_银河('2013-05-13', '2019-04-11', '000001.SH')
+    model.plot_return('2')
+
+
 if __name__ == '__main__':
-    使用模板2()
+    使用模板3()
