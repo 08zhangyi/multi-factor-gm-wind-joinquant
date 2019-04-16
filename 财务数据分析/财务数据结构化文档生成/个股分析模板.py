@@ -6,7 +6,7 @@ import tushare as ts
 import prettytable
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
-TS_TOKEN = '9668f6b57f4e3fe1199446a9c7b251d553963832bbf6e411b8065ea2'
+TS_TOKEN = 'fcd3ee99a7d5f0e27c546d074a001f0b3eae01312c4dd8354415fba1'
 
 
 class 个股分析模板():

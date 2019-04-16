@@ -4,22 +4,22 @@ import time
 import pyecharts
 import math
 
-start_date = '2019-04-11 15:00:00'
-end_date = '2019-04-12 08:30:00'
+start_date = '2019-04-15 15:00:00'
+end_date = '2019-04-16 08:30:00'
 # 百度配置
 APP_ID = '10709883'
 API_KEY = 'DP7yZde5EK2MEKLzcjzwCCp5'
 SECRET_KEY = 'EQPFBZOjgyyhpf9llpsZobIUIftpyj8I'
 client = AipNlp(APP_ID, API_KEY, SECRET_KEY)
 # tushare配置
-pro = ts.pro_api(token='9668f6b57f4e3fe1199446a9c7b251d553963832bbf6e411b8065ea2')
+pro = ts.pro_api(token='fcd3ee99a7d5f0e27c546d074a001f0b3eae01312c4dd8354415fba1')
 # 股票中文名称列表
 names_data = pro.stock_basic(exchange='', list_status='L', fields='name').values
 name_normalization = lambda d: d[0][:-1] if d[0][-1] == 'A' or d[0][-1] == 'B' else d[0]
 names_data = [name_normalization(d) for d in names_data]
 
 # 提取新闻信息
-df_news = pro.news(src='sina', start_date=start_date, end_date=end_date)
+df_news = pro.news(src='sina', fields='datetime,content,channels', start_date=start_date, end_date=end_date)
 ds_content = df_news['content']
 ds_channel = df_news['channels']
 
