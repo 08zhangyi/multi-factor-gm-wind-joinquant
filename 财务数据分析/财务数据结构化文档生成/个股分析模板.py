@@ -43,6 +43,12 @@ class 个股分析模板():
         return last_year_end
 
     @staticmethod
+    def _get_last_year_date(date):
+        year = int(date[0:4])
+        last_year_date = str(year - 1) + date[4:]
+        return last_year_date
+
+    @staticmethod
     def tushare_date_format(date):
         date = ''.join(date.split('-'))
         return date

@@ -39,6 +39,38 @@ class 行业比较分析模板():
             industry_name = w.wss(industry_code, "sec_name").Data[0][0]
         return industry_name, industry_code_list
 
+    @staticmethod
+    def _get_last_season_end(date):
+        year = int(date[0:4])
+        month = int(date[5:7])
+        season = (month - 1) // 3
+        if season == 0:
+            last_season_end = str(year - 1) + '-12-31'
+        elif season == 1:
+            last_season_end = str(year) + '-03-31'
+        elif season == 2:
+            last_season_end = str(year) + '-06-30'
+        else:
+            last_season_end = str(year) + '-09-30'
+        return last_season_end
+
+    @staticmethod
+    def _get_last_year_end(date):
+        year = int(date[0:4])
+        last_year_end = str(year - 1) + '-12-31'
+        return last_year_end
+
+    @staticmethod
+    def _get_last_year_date(date):
+        year = int(date[0:4])
+        last_year_date = str(year - 1) + date[4:]
+        return last_year_date
+
+    @staticmethod
+    def tushare_date_format(date):
+        date = ''.join(date.split('-'))
+        return date
+
 
 if __name__ == '__main__':
     code = '000002.SZ'
