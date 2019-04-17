@@ -410,6 +410,57 @@ class 脉冲比_银河(SelectTimeIndexBacktest):
         return date_list, index_list, signal_list
 
 
+class 单向波动差_国信(SelectTimeIndexBacktest):
+    def __init__(self, backtest_start_date, backtest_end_date, index_code, threshold=0.0, RPS_history=250, max_vol_diff_history=100):
+        self.backtest_start_date = backtest_start_date
+        # 策略参数设定
+        self.threshold = threshold
+        self.RPS_history = RPS_history
+        self.max_vol_diff_history = max_vol_diff_history
+        # 提取数据
+        w.start()
+        start_date = get_trading_date_from_now(backtest_start_date, -RPS_history-max_vol_diff_history-30, ql.Days)
+        data = w.wsd(index_code, "open, close, high, low", start_date, backtest_end_date, "")
+        self.times = [t.strftime('%Y-%m-%d') for t in data.Times]  # 日期序列
+        self.open = data.Data[0]
+        self.close = data.Data[1]
+        self.high = data.Data[2]
+        self.low = data.Data[3]
+        super().__init__(backtest_start_date, backtest_end_date, index_code)
+
+    def _get_signal(self, date_now):
+        index = self.times.index(date_now) + 1
+        up_vol = (self.high[index-1] - self.open[index-1]) / self.open[index-1]
+        down_vol = (self.open[index-1] - self.low[index-1]) / self.open[index-1]
+        vol_diff = up_vol - down_vol  # 波动率剪刀差
+        RPS = -(self.close[index-1]-np.max(self.high[index-self.RPS_history:index])) / (np.max(self.high[index-self.RPS_history:index]) - np.min(self.low[index-self.RPS_history:index]))
+        return [vol_diff, RPS]
+
+    def _get_data(self):
+        start_date_index = self.times.index(self.backtest_start_date)
+        # 获取未均值化的数据
+        date_list = self.times[start_date_index-self.max_vol_diff_history - 20:]
+        signal_list = [self._get_signal(date) for date in date_list]
+        vol_diff_seq = [t[0] for t in signal_list]
+        RPS_seq = [t[1] for t in signal_list]
+        # 开始计算信号
+        date_list = self.times[start_date_index:]
+        index_list = self.close[start_date_index:]
+        signal_list = []
+        for i in range(start_date_index, len(self.times)):
+            k = i - start_date_index + self.max_vol_diff_history + 20
+            RPS = np.mean(RPS_seq[k-9:k+1])
+            MEAN_DAYS = int(RPS*self.max_vol_diff_history)
+            vol_diff_mean = np.mean(vol_diff_seq[k-MEAN_DAYS:k])
+            signal = vol_diff_seq[k] - vol_diff_mean
+            if signal > self.threshold:
+                signal_list.append(1)
+            else:
+                signal_list.append(0)
+        print('单向波动差择时信号为：%.4f' % signal)
+        return date_list, index_list, signal_list
+
+
 def 使用模板1():
     N = 18
     M = 600
@@ -429,6 +480,11 @@ def 使用模板3():
     model.plot_return('2')
 
 
+def 使用模板4():
+    model = 单向波动差_国信('2013-05-13', '2019-04-11', '000300.SH')
+    model.plot_return('2')
+
+
 def 发布报告的模板1():
     end_date = '2019-04-16'
     start_date = get_trading_date_from_now(end_date, -100, ql.Days)
@@ -438,6 +494,8 @@ def 发布报告的模板1():
     model = RSRS_standardization(start_date, end_date, '000300.SH', N=N, M=M)
     # 脉冲比模型
     model = 脉冲比_银河(start_date, end_date, '000001.SH')
+    # 单向波动差模型
+    model = 单向波动差_国信(start_date, end_date, '000300.SH')
 
 
 if __name__ == '__main__':
