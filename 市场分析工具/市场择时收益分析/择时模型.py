@@ -202,6 +202,7 @@ class RSRS_standardization(SelectTimeIndexBacktest):
         index_list = self.RSRS_data[self.RSRS_times.index(self.backtest_start_date):]
         RSRS_raw_data = [self._get_raw_data(date) for date in self.RSRS_raw_cal_times]
         RSRS_stand_data = [self._get_std_data(date, RSRS_raw_data) for date in self.RSRS_stand_cal_times]
+        print('RSRS最新择时信号为：%.4f' % RSRS_stand_data[-1])
         signal_list = []
         for i in range(len(date_list)):  # 根据计算的结果得出择时信号
             signal = RSRS_stand_data[i]
@@ -405,6 +406,7 @@ class 脉冲比_银河(SelectTimeIndexBacktest):
                     pass
                 else:
                     signal_list[index_t + j_t] = 1
+        print('脉冲比最新择时信号为：' + str(signal_list[-1]))
         return date_list, index_list, signal_list
 
 
@@ -427,5 +429,16 @@ def 使用模板3():
     model.plot_return('2')
 
 
+def 发布报告的模板1():
+    end_date = '2019-04-16'
+    start_date = get_trading_date_from_now(end_date, -100, ql.Days)
+    # RSRS模型
+    N = 18
+    M = 600
+    model = RSRS_standardization(start_date, end_date, '000300.SH', N=N, M=M)
+    # 脉冲比模型
+    model = 脉冲比_银河(start_date, end_date, '000001.SH')
+
+
 if __name__ == '__main__':
-    使用模板3()
+    发布报告的模板1()
