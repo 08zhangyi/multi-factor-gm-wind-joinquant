@@ -4,8 +4,8 @@ import time
 import pyecharts
 import math
 
-start_date = '2019-04-18 15:00:00'
-end_date = '2019-04-19 08:30:00'
+start_date = '2019-04-30 15:00:00'
+end_date = '2019-05-06 08:30:00'
 # 百度配置
 APP_ID = '10709883'
 API_KEY = 'DP7yZde5EK2MEKLzcjzwCCp5'
@@ -55,7 +55,7 @@ for i in range(len(ds_content)):
         items = baidu_return['items']
         for item in items:
             words_score_dict[item['tag']] = words_score_dict.get(item['tag'], 0.0) + item['score']
-    except (UnicodeEncodeError, KeyError):
+    except (UnicodeEncodeError, UnicodeDecodeError, KeyError):
         continue
 
 # 舆情负面程度排序

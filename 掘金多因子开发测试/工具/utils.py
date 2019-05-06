@@ -26,6 +26,8 @@ def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
         return '2018-12-28'
     if (date_now == '2019-02-08' or date_now == '2019-02-09' or date_now == '2019-02-10' or date_now == '2019-02-11') and diff_periods == -1 and period == ql.Days:
         return '2019-02-01'
+    if (date_now == '2019-05-06' or date_now == '2019-05-02' or date_now == '2019-05-03' or date_now == '2019-05-04') and diff_periods == -1 and period == ql.Days:
+        return '2019-04-30'
     return date_diff
 
 
