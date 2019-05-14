@@ -1,12 +1,12 @@
 import numpy as np
 import pandas as pd
-import pygal
 from WindPy import w
 import tushare as ts
-import prettytable
+import random
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 TS_TOKEN = 'fcd3ee99a7d5f0e27c546d074a001f0b3eae01312c4dd8354415fba1'
+from utils import rl_build, rl_text, rl_table, rl_pie_chart, clean_path
 
 
 class 个股分析模板():
@@ -18,7 +18,7 @@ class 个股分析模板():
 
     def output(self):
         # 主体内容
-        result = {'text': ''}
+        result = []
         return result
 
     @staticmethod
@@ -63,7 +63,8 @@ class 个股主营业务分析_按产品(个股分析模板):
             if len(df) == 0:
                 date = self._get_last_season_end(date)
                 df = pro.fina_mainbz(ts_code=self.code, period=self.tushare_date_format(date), type='P')
-        text = self.code_name + '（' + self.code + '）的主营业务构成为（数据截止为'+date+'）：\n'
+        text = '\0\0' + self.code_name + '（' + self.code + '）的主营业务构成为（数据截止为'+date+'）：\n'
+        para_1 = rl_text(text)
         df = df.sort_values(by='bz_sales', axis=0, ascending=False)
         # 预处理，将None转化为np.nan
         df['bz_profit'] = pd.to_numeric(df['bz_profit'])
@@ -72,28 +73,30 @@ class 个股主营业务分析_按产品(个股分析模板):
         df['bz_sales_ratio'] = df['bz_sales'] / np.sum(df['bz_sales'].fillna(0.0).values)  # 计算营业收入占比
         df['bz_profit_ratio'] = df['bz_profit'] / df['bz_sales']  # 计算毛利率
         # 文字生成部分
-        table = prettytable.PrettyTable(['业务名称', '销售收入', '销售成本', '销售毛利', '销售毛利率', '销售收入占比'])
+        table_list = [['业务名称', '销售收入', '销售成本', '销售毛利', '销售毛利率', '销售收入占比']]
         for i in range(len(df)):
             data = df.iloc[i].values
-            table.add_row(['%s' % data[2], '%.2f万元' % (data[3]/10000.0), '%.2f万元' % (data[5]/10000.0), '%.2f万元' % (data[4]/10000.0), '%.2f%%' % (data[8]*100.0), '%.2f%%' % (data[7]*100.0)])
-        text = text + str(table) + '\n'
-        # 画图部分
-        pie_chart = pygal.Pie()
-        pie_chart.title = self.code_name + '（' + self.code + '）的主营业务百分比构成图（数据截止为'+date+'）'
-        for i in range(len(df)):
-            data = df.iloc[i].values
-            pie_chart.add(data[2], data[7]*100.0)
+            table_list.append(['%s' % data[2], '%.2f万元' % (data[3]/10000.0), '%.2f万元' % (data[5]/10000.0), '%.2f万元' % (data[4]/10000.0), '%.2f%%' % (data[8]*100.0), '%.2f%%' % (data[7]*100.0)])
+        table_1 = rl_table(table_list)
         # 总结内容
+        text = '\0\0'
         if len(df) > 0:
             summary_text = self._get_summary(df, self.code_name)
             text = text + summary_text
         else:  # 无数据披露的情形
             text = text + '无数据！\n'
         # 结果展示
-        print(text)
-        pie_chart.render_to_file('output\\temp.svg')
-        result = {'text': text, 'image': [pie_chart]}
-        return result
+        para_2 = rl_text(text)
+        # 饼图
+        texts = []
+        datas = []
+        for i in range(len(df)):
+            data = df.iloc[i].values
+            texts.append(data[2])
+            datas.append(data[7]*100)
+        title = self.code_name + '（' + self.code + '）的主营业务百分比构成图（数据截止为'+date+'）'
+        image_1 = rl_pie_chart(title, datas, texts, str(random.randint(0, 100000)))
+        return [para_1, table_1, rl_text('\0'), para_2, image_1, rl_text('\0')]
 
     @staticmethod
     def _get_summary(df, code_name):
@@ -114,15 +117,18 @@ class 个股主营业务分析_按产品(个股分析模板):
         bz_sales_ratio_aux = np.where((bz_sales_ratio_main <= 0.5) & (bz_sales_ratio_main > 0.2))[0]  # 辅助业务指标
         bz_sales_ratio_supple = np.where(bz_sales_ratio_main <= 0.2)[0]  # 补充业务指标
         text = text + '其中'
-        for i in bz_sales_ratio_core:
-            text = text + bz_item[i] + '、'
-        text = text[:-1] + '是核心业务成分；'
-        for i in bz_sales_ratio_aux:
-            text = text + bz_item[i] + '、'
-        text = text[:-1] + '是辅助业务成分；'
-        for i in bz_sales_ratio_supple:
-            text = text + bz_item[i] + '、'
-        text = text[:-1] + '是补充业务成分；'
+        if len(bz_sales_ratio_core) > 0:
+            for i in bz_sales_ratio_core:
+                text = text + bz_item[i] + '、'
+            text = text[:-1] + '是核心业务成分；'
+        if len(bz_sales_ratio_aux) > 0:
+            for i in bz_sales_ratio_aux:
+                text = text + bz_item[i] + '、'
+            text = text[:-1] + '是辅助业务成分；'
+        if len(bz_sales_ratio_supple) > 0:
+            for i in bz_sales_ratio_supple:
+                text = text + bz_item[i] + '、'
+            text = text[:-1] + '是补充业务成分；'
         text = text[:-1] + '。\n'
         if len(bz_sales_ratio_core) > 3:
             text = text + code_name + '的业务非常多元化，无明显主营业务'
@@ -158,7 +164,8 @@ class 个股主营业务分析_按地区(个股分析模板):
                 date = self._get_last_season_end(date)
                 df = pro.fina_mainbz(ts_code=self.code, period=self.tushare_date_format(date), type='D')
         print(df)
-        text = self.code_name + '（' + self.code + '）的主营业务构成为（数据截止为'+date+'）：\n'
+        text = '\0\0' + self.code_name + '（' + self.code + '）的主营业务构成为（数据截止为'+date+'）：\n'
+        para_1 = rl_text(text)
         df = df.sort_values(by='bz_sales', axis=0, ascending=False)
         # 预处理，将None转化为np.nan
         df['bz_profit'] = pd.to_numeric(df['bz_profit'])
@@ -167,28 +174,29 @@ class 个股主营业务分析_按地区(个股分析模板):
         df['bz_sales_ratio'] = df['bz_sales'] / np.sum(df['bz_sales'].values)  # 计算营业收入占比
         df['bz_profit_ratio'] = df['bz_profit'] / df['bz_sales']  # 计算毛利率
         # 文字生成部分
-        table = prettytable.PrettyTable(['业务名称', '销售收入', '销售成本', '销售毛利', '销售毛利率', '销售收入占比'])
+        table_list = [['业务名称', '销售收入', '销售成本', '销售毛利', '销售毛利率', '销售收入占比']]
         for i in range(len(df)):
             data = df.iloc[i].values
-            table.add_row(['%s' % data[2], '%.2f万元' % (data[3] / 10000.0), '%.2f万元' % (data[5] / 10000.0), '%.2f万元' % (data[4] / 10000.0), '%.2f%%' % (data[8] * 100.0), '%.2f%%' % (data[7] * 100.0)])
-        text = text + str(table) + '\n'
+            table_list.append(['%s' % data[2], '%.2f万元' % (data[3] / 10000.0), '%.2f万元' % (data[5] / 10000.0), '%.2f万元' % (data[4] / 10000.0), '%.2f%%' % (data[8] * 100.0), '%.2f%%' % (data[7] * 100.0)])
+        table_1 = rl_table(table_list)
         # 画图部分
-        pie_chart = pygal.Pie()
-        pie_chart.title = self.code_name + '（' + self.code + '）的主营业务百分比构成图（数据截止为'+date+'）'
+        datas = []
+        texts = []
         for i in range(len(df)):
             data = df.iloc[i].values
-            pie_chart.add(data[2], data[7]*100.0)
+            texts.append(data[2])
+            datas.append(data[7]*100.0)
+        title = self.code_name + '（' + self.code + '）的主营业务百分比构成图（数据截止为'+date+'）'
+        image_1 = rl_pie_chart(title, datas, texts, str(random.randint(0, 100000)))
         # 总结内容
+        text = '\0\0'
         if len(df) > 0:
             summary_text = self._get_summary(df, self.code_name)
             text = text + summary_text
         else:  # 无数据披露的情形
             text = text + '无数据！\n'
-        # 结果展示
-        print(text)
-        pie_chart.render_to_file('output\\temp.svg')
-        result = {'text': text, 'image': [pie_chart]}
-        return result
+        para_2 = rl_text(text)
+        return [para_1, table_1, rl_text('\0'), para_2, image_1, rl_text('\0')]
 
     @staticmethod
     def _get_summary(df, code_name):
@@ -208,12 +216,14 @@ class 个股主营业务分析_按地区(个股分析模板):
         bz_sales_ratio_core = np.where(bz_sales_ratio_main > 0.5)[0]  # 核心业务区域指标
         bz_sales_ratio_aux = np.where(bz_sales_ratio_main <= 0.5)[0]  # 补充业务区域指标
         text = text + '其中'
-        for i in bz_sales_ratio_core:
-            text = text + bz_item[i] + '、'
-        text = text[:-1] + '是核心业务区域；'
-        for i in bz_sales_ratio_aux:
-            text = text + bz_item[i] + '、'
-        text = text[:-1] + '是补充业务区域；'
+        if len(bz_sales_ratio_core):
+            for i in bz_sales_ratio_core:
+                text = text + bz_item[i] + '、'
+            text = text[:-1] + '是核心业务区域；'
+        if len(bz_sales_ratio_aux):
+            for i in bz_sales_ratio_aux:
+                text = text + bz_item[i] + '、'
+            text = text[:-1] + '是补充业务区域；'
         text = text[:-1] + '。\n'
         if len(bz_sales_ratio_core) > 3:
             text = text + code_name + '的业务区域非常多元化，业务在地域分布上比较分散'
@@ -234,7 +244,11 @@ class 个股主营业务分析_按地区(个股分析模板):
 
 
 if __name__ == '__main__':
+    clean_path()
     code = '600155.SH'
     date = '2019-01-01'
     model = 个股主营业务分析_按产品(code, date)
-    model.output()
+    output_list = model.output()
+    model = 个股主营业务分析_按地区(code, date)
+    output_list += model.output()
+    rl_build(output_list)
