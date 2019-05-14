@@ -486,7 +486,7 @@ def 使用模板4():
 
 
 def 发布报告的模板1():
-    end_date = '2019-04-30'
+    end_date = '2019-05-13'
     start_date = get_trading_date_from_now(end_date, -100, ql.Days)
     # RSRS模型
     N = 18

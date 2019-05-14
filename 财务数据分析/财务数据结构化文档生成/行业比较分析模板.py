@@ -11,7 +11,7 @@ class 行业比较分析模板():
         self.industry_name, self.industry_code_list = self._get_industry_code_list(code, date, mode)
 
     def output(self):
-        result = {'text': ''}
+        result = []
         return result
 
     @staticmethod
