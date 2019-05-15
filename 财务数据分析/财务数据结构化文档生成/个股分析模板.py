@@ -333,7 +333,7 @@ class 经营活动现金流分析(个股分析模板):
         text_summary = self._get_summary(df)
         text = text + text_summary
         para_2 = rl_text(text)
-        return [para_1, para_2]
+        return [para_1, para_2, rl_text('\0')]
 
     def _get_summary(self, df):
         from single_factor import NetProfit
