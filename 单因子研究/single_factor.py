@@ -1229,6 +1229,185 @@ class ReturnsOneMonth(SingleFactorReasearch):
         return df
 
 
+# 经营活动现金流
+class OperateCashFlow(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '经营活动现金流'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list,  "fa_operactcashflow_ttm", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 经营活动现金流/净利润
+class CashFlowCoverRatio(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '利润现金保障倍数'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        operateCF = np.array(w.wss(self.code_list,  "fa_operactcashflow_ttm", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        netprofit = np.array(w.wss(self.code_list,  "fa_profit_ttm", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        data = operateCF/netprofit
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 销售费用
+class SellExpense(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '销售费用'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list, "fa_sellexpense_ttm", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
+        df = pd.DataFrame(data = data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 销售费用占营业收入比
+class SellExpenseRevenue(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '销售费用占营业收入比'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        sellexpense = np.array(w.wss(self.code_list, "fa_sellexpense_ttm", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
+        revenue_data = np.array(w.wss(self.code_list, "or_ttm", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        if revenue_data == None:
+            revenue_data = np.nan
+        if sellexpense == None:
+            sellexpense = np.nan
+        data = sellexpense/revenue_data
+        df = pd.DataFrame(data = data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 销售费用增长率
+class SellExpenseGrowth(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '销售费用增长率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        sellexpense_now = np.array(w.wss(self.code_list, "fa_sellexpense_ttm", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
+        date_list[0] = str(int(date_list[0])-1)
+        sellexpense_prev = np.array(w.wss(self.code_list, "fa_sellexpense_ttm", "unit=1;tradeDate=" + ''.join(date_list)).Data[0])
+        if sellexpense_now == None:
+            sellexpense_now = np.nan
+        if sellexpense_prev == None:
+            sellexpense_prev = np.nan
+        data = (sellexpense_now - sellexpense_prev) / sellexpense_prev
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 非流动资产占比
+class NonCurrentAssetRatio(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '非流动资产占比'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list,  "fa_noncurassetsratio", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 资产周转率
+class AssetTurnoverRatio(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '资产周转率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list,  "fa_taturn_ttm", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 应收账款周转率
+class AccRecTurnRatioV1(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '应收账款周转率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list,  "fa_arturn_ttm", "tradeDate=" + "".join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 总资产
+class TotalAsset(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '总资产'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list, "fa_totassets", "unit=1;tradeDate="+"".join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 只支持报告期数据
+
+# 研发费用目前只支持报告期数据，19年1月开始对研发费用的会计政策变更，从管理费用中剥离出研发费用
+class RDExpense(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '研发费用'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list, "rd_exp", "unit=1;rptDate=" + ''.join(date_list) + ";rptType=1").Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 研发费用目前只支持报告期数据，19年1月开始对研发费用的会计政策变更，从管理费用中剥离出研发费用
+class RDExpenseRevenue(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '研发费用占营业收入比'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        RDExpense = np.array(w.wss(self.code_list, "rd_exp", "unit=1;rptDate=" + ''.join(date_list) + ";rptType=1").Data[0])
+        revenue_data = np.array(w.wss(self.code_list, "or_ttm", "unit=1;tradeDate=" + "".join(date_list)).Data[0])
+        if revenue_data == None:
+            revenue_data = np.nan
+        if RDExpense == None:
+            RDExpense = np.nan
+        data = RDExpense / revenue_data
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 应收账款周转率目前只支持报告期数据
+class AccRecTurnRatioV2(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '应收账款周转率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list,  "arturn", "rptDate=" + "".join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
 if __name__ == '__main__':
     date = '2017-05-09'
     w.start()

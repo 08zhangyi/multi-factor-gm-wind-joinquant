@@ -5,8 +5,11 @@ import tushare as ts
 import random
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
+sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
+from utils import get_factor_from_wind_v2
+from utils_rl import rl_build, rl_text, rl_table, rl_pie_chart, clean_path
 TS_TOKEN = 'fcd3ee99a7d5f0e27c546d074a001f0b3eae01312c4dd8354415fba1'
-from utils import rl_build, rl_text, rl_table, rl_pie_chart, clean_path
+MAX_RANDOM = 10000000
 
 
 class 个股分析模板():
@@ -95,7 +98,7 @@ class 个股主营业务分析_按产品(个股分析模板):
             texts.append(data[2])
             datas.append(data[7]*100)
         title = self.code_name + '（' + self.code + '）的主营业务百分比构成图（数据截止为'+date+'）'
-        image_1 = rl_pie_chart(title, datas, texts, str(random.randint(0, 100000)))
+        image_1 = rl_pie_chart(title, datas, texts, str(random.randint(0, MAX_RANDOM)))
         return [para_1, table_1, rl_text('\0'), para_2, image_1, rl_text('\0')]
 
     @staticmethod
@@ -187,7 +190,7 @@ class 个股主营业务分析_按地区(个股分析模板):
             texts.append(data[2])
             datas.append(data[7]*100.0)
         title = self.code_name + '（' + self.code + '）的主营业务百分比构成图（数据截止为'+date+'）'
-        image_1 = rl_pie_chart(title, datas, texts, str(random.randint(0, 100000)))
+        image_1 = rl_pie_chart(title, datas, texts, str(random.randint(0, MAX_RANDOM)))
         # 总结内容
         text = '\0\0'
         if len(df) > 0:
@@ -243,12 +246,412 @@ class 个股主营业务分析_按地区(个股分析模板):
         return text
 
 
+class 个股营收增长分析(个股分析模板):
+    def output(self):
+        from single_factor import RevenueGrowthRate, EstimateNetRevenueGrowRateFY16M
+        factor_list = [RevenueGrowthRate, EstimateNetRevenueGrowRateFY16M]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
+        text = '\0\0营业收入分析（数据截止' + self.date + '）：'
+        para_1 = rl_text(text)
+        text = '营业收入增长率为%.2f%%；分析师一致预期营业收入增长率为%.2f%%；'
+        text = text % (df.iloc[:, 0].values, df.iloc[:, 1].values)
+        text_summary = self._get_summary(df)
+        text = text + text_summary
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+
+    @staticmethod
+    def _get_summary(df):
+        real = df.iloc[:, 0].values
+        predict = df.iloc[:, 1].values
+        diff = real - predict
+        diff = diff[0]
+        if diff > 0.05:
+            text_summary = "营业收入增速超过最新的一致预期。"
+        elif diff < 0.05 or diff > -0.05:
+            text_summary = "营业收入增速符合最新的一致预期"
+        elif diff < -0.05:
+            text_summary = "营业收入增速未达到最新的一致预期。"
+        elif np.isnan(diff):
+            text_summary = "暂无分析师对此公司进行营业收入预测，受关注度不高。"
+        else:
+            text_summary = "Warining: recoding is needed!"
+        return text_summary
+
+
+class 个股净利润增长分析(个股分析模板):
+    def output(self):
+        from single_factor import NetProfit, NetProfitGrowRateV2, EstimateNetProfitGrowRateFY16M
+        factor_list = [NetProfit, NetProfitGrowRateV2, EstimateNetProfitGrowRateFY16M]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
+        df.iloc[:, 2] = pd.to_numeric(df.iloc[:, 2])
+        text = '\0\0净利润增长分析（数据截止' + self.date + '）：'
+        para_1 = rl_text(text)
+        text = '公司净利润为%.2f亿元；净利润增长率为%.2f%%；分析师一致预期净利润增长率为%.2f%%；'
+        text = text % (df.iloc[:, 0].values/100000000.0, df.iloc[:, 1].values, df.iloc[:, 2].values)
+        text_summary = self._get_summary(df)
+        text = text + text_summary
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+    @staticmethod
+    def _get_summary(df):
+        real = df.iloc[:, 0].values
+        predict = df.iloc[:, 1].values
+        diff = (real - predict)
+        if diff > 0.05:
+            text_summary = "净利润增速超过最新的一致预期。"
+        elif diff < 0.05 or diff > -0.05:
+            text_summary = "净利润增速符合最新的一致预期。"
+        elif diff < -0.05:
+            text_summary = "净利润增速未达到最新的一致预期。"
+        elif np.isnan(diff):
+            text_summary = "暂无分析师对此公司进行评级预测，受关注度不高。"
+        else:
+            text_summary = "Warining: recoding is needed!。"
+        return text_summary
+
+
+class 经营活动现金流分析(个股分析模板):
+    def output(self):
+        from single_factor import OperateCashFlow, CashFlowCoverRatio
+        factor_list = [OperateCashFlow, CashFlowCoverRatio]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
+        text = '\0\0现金流分析（数据截止' + self.date + '）：'
+        para_1 = rl_text(text)
+        text = '经营活动现金流为%.2f亿元；' + '利润现金保障倍数为%.2f倍；'
+        text = text % (df.iloc[:, 0].values/100000000.0, df.iloc[:, 1].values)
+        text_summary = self._get_summary(df)
+        text = text + text_summary
+        para_2 = rl_text(text)
+        return [para_1, para_2]
+
+    def _get_summary(self, df):
+        from single_factor import NetProfit
+        factor_list = [NetProfit]
+        code = [self.code]
+        netprofit = get_factor_from_wind_v2(code, factor_list, self.date).iloc[:, 0].values
+        if df.iloc[:, 0].values < 0.0 and netprofit < 0.0:
+            text_summary = "此时利润现金保障倍数无实际含义，公司目前整体亏损，公司主营业务经营活动并无现金流入，整体现金流情况较差。"
+        elif df.iloc[:, 0].values < 0.0 and netprofit > 0.0:
+            text_summary = "利润现金保障倍数为负值，财务报表中提现公司仍然盈利，但经营活动现金流为负值，说明公司造血能力较差，" \
+                           "日常经营消耗企业现存货币积累。此种情况可以从应收账款、投资活动、筹资活动或者会计记账原则的角度来进一步分析。"
+        elif df.iloc[:, 0].values > 0.0 and netprofit < 0.0:
+            text_summary = "企业经营活动现金流为正，但是公司整体亏损，说明公司在主营业务经营活动正常运转，" \
+                           "此类情况并不寻常，可以从成本端和营业外支出/收入中寻找原因。"
+        elif df.iloc[:, 0].values > 0.0 and netprofit > 0.0:
+            if df.iloc[:, 1].values > 0.85: # 利润现金保障倍数
+                text_summary = "净利润和经营现金流都为正数，企业健康发展，运营正常，自身能够产生充足经营现金流，公司产生的净利润是有足够的现金流支持。"
+            elif df.iloc[:, 1].values <= 0.85 and df.iloc[:, 1].values > 0.5:
+                text_summary = "净利润和经营现金流都为正数，企业经营活动能够正常运转，但是经营活动现金流入水平较低，公司产生的净利润是有一定的现金流支持，公司经营管理水平有待改善。"
+            elif df.iloc[:, 1].values <= 0.5 and df.iloc[:, 1].values > 0.0:
+                text_summary = "净利润和经营现金流都为正数，企业经营活动处于正常运转，但是经营活动现金流入水平偏低，公司产生的净利润缺乏足够的现金流支持，公司经营管理水平有待提高。"
+        else:
+            text_summary = "Warining: recoding is needed!"
+        return text_summary
+
+
+class 经营理念分析_销售费用(个股分析模板):
+    def output(self):
+        from single_factor import SellExpense, SellExpenseRevenue, SellExpenseGrowth
+        factor_list = [SellExpense, SellExpenseRevenue, SellExpenseGrowth]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
+        df.iloc[:, 2] = pd.to_numeric(df.iloc[:, 2])
+        text = '\0\0经营理念分析——销售费用（数据截止' + self.date + '）：'
+        para_1 = rl_text(text)
+        text = '销售费用为为%.2f亿元；销售费用占营业收入的比重为：%.2f%%；销售费用增长率为%.2f%%；'
+        text = text % (df.iloc[:, 0].values/100000000.0, df.iloc[:, 1].values * 100.0, df.iloc[:, 2].values * 100)
+        text_summary = self._get_summary(df)
+        text = text + text_summary
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+    def _get_summary(self, df):
+        from single_factor import RevenueGrowthRate
+        factor_list = [RevenueGrowthRate]
+        code = [self.code]
+        rev_growth = get_factor_from_wind_v2(code, factor_list, self.date).iloc[:, 0].values/100.0
+        sellexp_growth = df.iloc[:, 2]
+        diff = (rev_growth - sellexp_growth)[0]
+        if diff >= 0.03:
+            text_summary = "销售费用的增长慢于销售收入增长，预期公司毛利率具有一定的增长潜力。"
+        elif diff < -0.03:
+            text_summary = "销售费用的增长快于销售收入增长，预期公司毛利率增长不乐观。"
+        elif diff < 0.03 or diff > -0.03:
+            text_summary = "销售费用的增长与销售收入增长基本持平，预期公司经营稳定。"
+        elif np.isnan(diff):
+            text_summary = "公司缺失相关数据，无法分析。"
+        else:
+            text_summary = "Warining: recoding is needed!"
+        return text_summary
+
+
+class 经营理念分析_研发费用(个股分析模板):
+    def output(self):
+        from single_factor import RDExpense, RDExpenseRevenue
+        factor_list = [RDExpense, RDExpenseRevenue]
+        code = [self.code]
+        date = self._get_last_year_end(self.date)
+        df = get_factor_from_wind_v2(code, factor_list, date)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
+        text = '\0\0经营理念分析——研发费用（数据截止' + date + '）：'
+        para_1 = rl_text(text)
+        text = '研发费用为%.2f亿元：占营业收入为%.2f%%。'
+        text = text % (df.iloc[:, 0].values / 100000000.0, df.iloc[:, 1].values * 100.0)
+        para_2 = rl_text(text)
+        if np.isnan(df.iloc[:, 0].values):
+            return []
+        else:
+            return [para_1, para_2, rl_text('\0')]
+
+
+# 部分金融股不具备此指标
+class 资产结构分析(个股分析模板):
+    def output(self):
+        from single_factor import NonCurrentAssetRatio
+        factor_list = [NonCurrentAssetRatio]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        date_last = self._get_last_year_date(self.date)
+        df_last_year = get_factor_from_wind_v2(code, factor_list, date_last)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
+        growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
+        text = '\0\0资产结构分析（数据截止' + date + '）：'
+        para_1 = rl_text(text)
+        text = '公司非流动资产占比为%.2f%%；上年同期为%.2f%%；同比增长为%.2f%%；'
+        text = text % (df.iloc[:, 0].values, df_last_year.iloc[:, 0], growth * 100.0)
+        text_summary = self._get_summary(df)
+        text = text + text_summary
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+    def _get_summary(self, df):
+        ratio = df.iloc[:, 0].values
+        if ratio <= 15.0:
+            text_summary = '企业非流动资产占比低，属于轻资产公司。'
+        elif ratio >= 40.0:
+            text_summary = '企业非流动资产占比高，属于重资产公司。'
+        elif ratio > 15.0 and ratio < 40.0:
+            text_summary = '企业非流动资产占比较高，需要结合公司主营业务特点来看资产构成。'
+        elif np.isnan(ratio):
+            text_summary = '缺乏资产相关数据，无法分析。'
+        else:
+            text_summary = 'Warining: recoding is needed!'
+        return text_summary
+
+
+# 资产周转率指标在应用于房地产行业需要谨慎考虑，因为土地资源可能会带来增值收益。
+class 管理层面分析_效率(个股分析模板):
+    def output(self):
+        from single_factor import AssetTurnoverRatio
+        factor_list = [AssetTurnoverRatio]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        last_year = self._get_last_year_date(self.date)
+        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
+        growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
+        text = '\0\0管理层面分析_效率分析（数据截止' + self.date + '）：'
+        para_1 = rl_text(text)
+        text = '总资产周转率本年为%.2f次；上年同期为%.2f次；同比增长率为%.2f%%；'
+        text = text % (df.iloc[:, 0].values, df_last_year.iloc[:, 0], growth * 100.0)
+        text_summary = self._get_summary(df, growth)
+        text = text + text_summary
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+    def _get_summary(self, df, growth):
+        turnover = df.iloc[:, 0].values
+        if turnover >= 0.9 and growth > 0.0:
+            text_summary = '公司具有较高的资产周转率，且较上年同期有所提升，资产使用效率较高。'
+        elif turnover >= 0.9 and growth <= 0.0:
+            text_summary = '公司具有较高的资产周转率，且较上年同期并未显著提高，反而资产使用效率有所下降，但总体处于较高水平。'
+        elif turnover > 0.5 and turnover < 0.9 and growth > 0.0:
+            text_summary = '资产周转率较上年同期有所改善，资产使用效率有待提高。'
+        elif turnover > 0.5 and turnover < 0.9 and growth <= 0.0:
+            text_summary = '资产周转率总体良好，但较去年同期有所下降，资产使用效率有待提高。'
+        elif turnover > 0.0 and turnover < 0.5 and growth > 0.0:
+            text_summary = '资产周转率处于较低水平，但是较上年同期有所提高，总体资产使用效率有待提高。'
+        elif turnover > 0.0 and turnover < 0.5 and growth <= 0.0:
+            text_summary = '资产周转率处于较低水平，从最近一期数据来看情况并没有得到改善，需要做出更进一步分析。'
+        elif np.isnan(turnover) or np.isnan(growth):
+            text_summary = '缺乏相关数据，无法做出分析。'
+        else:
+            text_summary = 'Warining: recoding is needed!'
+        return text_summary
+
+
+class 应收账款周转率(个股分析模板):
+    def output(self):
+        from single_factor import AccRecTurnRatioV2
+        factor_list = [AccRecTurnRatioV2]
+        code = [self.code]
+        date = self._get_last_year_end(self.date)
+        df = get_factor_from_wind_v2(code, factor_list, date)
+        date_last = self._get_last_year_date(date)
+        df_last_year = get_factor_from_wind_v2(code, factor_list, date_last)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
+        growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
+        text = '\0\0应收账款率分析（数据截止' + date + '）：'
+        para_1 = rl_text(text)
+        text = '应收账款周转率为%.2f次；上年同期为%.2f次；同比增长为%.2f%%。'
+        text = text % (df.iloc[:, 0].values, df_last_year.iloc[:, 0], growth * 100.0)
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+
+class 存货周转率(个股分析模板):
+    def output(self):
+        from single_factor import InventoryTurnRatio
+        factor_list = [InventoryTurnRatio]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        last_year = self._get_last_year_date(self.date)
+        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
+        growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
+        text = '\0\0存货周转率分析（数据截止' + self.date + '）：'
+        para_1 = rl_text(text)
+        text = '存货周转率为%.2f次；上年同期为%.2f次；同比增长为%.2f%%。'
+        text = text % (df.iloc[:, 0].values, df_last_year.iloc[:, 0], growth * 100.0)
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+
+class 资产负债率分析(个股分析模板):
+    def output(self):
+        from single_factor import DebetToAsset, TotalAsset
+        factor_list = [DebetToAsset, TotalAsset]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        last_year = self._get_last_year_date(self.date)
+        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
+        df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
+        growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
+        text = '\0\0管理层面分析_效率分析（数据截止' + self.date + '）：'
+        para_1 = rl_text(text)
+        text = '总资产规模为%.2f亿元；资产负债率为%.2f%%；上年同期为%.2f%%；同比增长为%.2f%%；'
+        text = text % (df.iloc[:, 1].values / 100000000.0, df.iloc[:, 0].values * 100.0, df_last_year.iloc[:, 0].values * 100.0, growth * 100.0)
+        text_summary = self._get_summary(df)
+        text = text + text_summary
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+    def _get_summary(self, df):
+        da_ratio = df.iloc[:, 0].values
+        if da_ratio > 0.9:
+            text_summary = '公司整体负债率过高，企业来源于债务的资金比较多，公司面临的财务风险水平较高。'
+        elif da_ratio <= 0.9 and da_ratio > 0.7:
+            text_summary = '公司整体负债率偏高，需要进一步从公司资本运作与经营战略中寻找原因'
+        elif da_ratio <= 0.7 and da_ratio > 0.3:
+            text_summary = '公司整体负债水平偏低，总体财务风险可控。'
+        elif da_ratio <=0.3:
+            text_summary = '公司负债水平偏低，一方面说明公司的财务风险很低，另一方面也说明公司不善理财，股东权益占比偏高，导致股东权益资本效率下降'
+        elif np.isnan(da_ratio):
+            text_summary = '缺少数据，无法分析结论。'
+        else:
+            text_summary = 'Warining: recoding is needed!'
+        return text_summary
+
+
+class 短期偿债能力分析(个股分析模板):
+    def output(self):
+        from single_factor import CurrentRatio
+        factor_list = [CurrentRatio]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        last_year = self._get_last_year_date(self.date)
+        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
+        growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
+        text = '\0\0短期偿债能力分析（数据截止' + self.date + '）：'
+        para_1 = rl_text(text)
+        text = '流动比率为%.2f；上年同期为%.2f；同比增长率为%.2f%%；'
+        text = text % (df.iloc[:, 0].values, df_last_year.iloc[:, 0].values, growth * 100.0)
+        text_summary = self._get_summary(df)
+        text = text + text_summary
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+    def _get_summary(self, df):
+        ratio = df.iloc[:, 0].values
+        if ratio >= 1.0:
+            text_summary = '\t公司的流动比率水平较好，流动资产高于流动负债，公司短期的偿债能力较强，经营风险较低。'
+        elif ratio <1.0 and ratio > 0.5:
+            text_summary = '\t公司的流动比率水平偏低，流动负债值较高，公司可能会出现短期偿债困难的情况，具有一定的财务风险。'
+        elif ratio <= 0.5 and ratio > 0.0:
+            text_summary = '\t公司的流动比率严重偏低，短期偿债能力弱，公司的举债经营可能正处于财务困境中，未来发生不利于公司经营的市场环境变化可能加剧恶化公司的财务风险。'
+        elif np.isnan(ratio):
+            text_summary = '缺少数据，无法分析结论。'
+        else:
+            text_summary = 'Warining: recoding is needed!'
+        return text_summary
+
+
+class 业绩分析(个股分析模板):
+    def output(self):
+        from single_factor import ROE
+        factor_list = [ROE]
+        code = [self.code]
+        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        last_year = self._get_last_year_date(self.date)
+        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
+        df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
+        growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
+        text =  '\0\0业绩分析（资本回报率ROE）（数据截止' + self.date + '）：'
+        para_1 = rl_text(text)
+        text = '资本回报为ROE%.2f%%；上年同期为%.2f%%；同比增长率为%.2f%%；'
+        text = text % (df.iloc[:, 0].values, df_last_year.iloc[:, 0].values, growth * 100.0)
+        text_summary = self._get_summary(df)
+        text = text + text_summary
+        para_2 = rl_text(text)
+        return [para_1, para_2, rl_text('\0')]
+
+    def _get_summary(self,df):
+        ratio = df.iloc[:, 0].values
+        if ratio >= 20.0:
+            text_summary = 'ROE水平较高，符合主流价值投资选股要求。'
+        elif ratio < 20.0 and ratio > 10.0:
+            text_summary = 'ROE水平良好，需要横向对比行业水平。'
+        elif ratio <= 10.0:
+            text_summary = 'ROE较低。'
+        elif np.isnan(ratio):
+            text_summary = '缺少数据，无法分析结论。'
+        else:
+            text_summary = 'Warining: recoding is needed!'
+        return text_summary
+
+
 if __name__ == '__main__':
     clean_path()
-    code = '600155.SH'
-    date = '2019-01-01'
-    model = 个股主营业务分析_按产品(code, date)
-    output_list = model.output()
-    model = 个股主营业务分析_按地区(code, date)
-    output_list += model.output()
+    code = '600519.SH'
+    date = '2019-05-14'
+    output_list = []
+    Ms = [个股主营业务分析_按产品, 个股主营业务分析_按地区, 个股营收增长分析, 个股净利润增长分析, 经营活动现金流分析,
+          经营理念分析_销售费用, 经营理念分析_研发费用, 资产结构分析, 管理层面分析_效率, 应收账款周转率,
+          存货周转率, 资产负债率分析, 短期偿债能力分析, 业绩分析]
+    for M in Ms:
+        model = M(code, date)
+        output_list += model.output()
     rl_build(output_list)
