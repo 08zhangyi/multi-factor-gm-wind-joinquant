@@ -269,11 +269,11 @@ class 个股营收增长分析(个股分析模板):
         predict = df.iloc[:, 1].values
         diff = real - predict
         diff = diff[0]
-        if diff > 0.05:
+        if diff > 5.0:
             text_summary = "营业收入增速超过最新的一致预期。"
-        elif diff < 0.05 or diff > -0.05:
+        elif diff < 5.0 and diff > -5.0:
             text_summary = "营业收入增速符合最新的一致预期"
-        elif diff < -0.05:
+        elif diff < -5.0:
             text_summary = "营业收入增速未达到最新的一致预期。"
         elif np.isnan(diff):
             text_summary = "暂无分析师对此公司进行营业收入预测，受关注度不高。"
@@ -302,14 +302,14 @@ class 个股净利润增长分析(个股分析模板):
 
     @staticmethod
     def _get_summary(df):
-        real = df.iloc[:, 0].values
-        predict = df.iloc[:, 1].values
+        real = df.iloc[:, 1].values
+        predict = df.iloc[:, 2].values
         diff = (real - predict)
-        if diff > 0.05:
+        if diff > 5.0:
             text_summary = "净利润增速超过最新的一致预期。"
-        elif diff < 0.05 or diff > -0.05:
+        elif diff < 5.0 and diff > -5.0:
             text_summary = "净利润增速符合最新的一致预期。"
-        elif diff < -0.05:
+        elif diff < -5.0:
             text_summary = "净利润增速未达到最新的一致预期。"
         elif np.isnan(diff):
             text_summary = "暂无分析师对此公司进行评级预测，受关注度不高。"
@@ -389,7 +389,7 @@ class 经营理念分析_销售费用(个股分析模板):
             text_summary = "销售费用的增长慢于销售收入增长，预期公司毛利率具有一定的增长潜力。"
         elif diff < -0.03:
             text_summary = "销售费用的增长快于销售收入增长，预期公司毛利率增长不乐观。"
-        elif diff < 0.03 or diff > -0.03:
+        elif diff < 0.03 and diff > -0.03:
             text_summary = "销售费用的增长与销售收入增长基本持平，预期公司经营稳定。"
         elif np.isnan(diff):
             text_summary = "公司缺失相关数据，无法分析。"
@@ -645,7 +645,7 @@ class 业绩分析(个股分析模板):
 
 if __name__ == '__main__':
     clean_path()
-    code = '600519.SH'
+    code = '600518.SH'
     date = '2019-05-14'
     output_list = []
     Ms = [个股主营业务分析_按产品, 个股主营业务分析_按地区, 个股营收增长分析, 个股净利润增长分析, 经营活动现金流分析,
