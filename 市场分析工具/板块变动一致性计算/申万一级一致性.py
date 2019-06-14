@@ -35,7 +35,10 @@ SW1 = {'801010.SI': 'a',
 def get_history(date_end, T):
     w.start()
     print('获取指数历史数据......')
-    date_start = w.tdaysoffset(-T, date_end, '').Data[0][0].strftime('%Y-%m-%d')
+    if type(T) == int:
+        date_start = w.tdaysoffset(-T, date_end, '').Data[0][0].strftime('%Y-%m-%d')
+    else:
+        date_start = T
     Data = w.wsd(list(SW1.keys()), "pct_chg", date_start, date_end, "")
     return_d = np.array(Data.Data)
     date_list = Data.Times
@@ -63,18 +66,23 @@ def calculate_Jaro_distance_list(return_d, date_list):
         d2 = return_d[:, i+1]
         d = calculate_Jaro_distance(d1, d2)
         date = date_list[i+1]
-        print(date + '日相对前一日指数排序变动值为：%.4f' % d)
+        print(date + '日相对前一日指数排序变动值为：%.8f' % d)
         result_list.append(d)
     result_mean = np.mean(result_list)
-    print('从'+date_list[0]+'日到'+date_list[-1]+'日变动均值为：%.4f' % result_mean)
+    print('从'+date_list[0]+'日到'+date_list[-1]+'日变动均值为：%.8f' % result_mean)
     return result_list, result_mean
 
 
 def main():
+    # date_end = '2019-01-31'
+    # T = 20
+    # return_d, date_list = get_history(date_end, T)
+
+    date_start = '2018-12-28'
     date_end = '2019-01-31'
-    T = 20
-    return_d, date_list = get_history(date_end, T)
+    return_d, date_list = get_history(date_end, date_start)
     calculate_Jaro_distance_list(return_d, date_list)
+    print(len(date_list)-1)  # 输出交易日个数
 
 
 main()
