@@ -47,6 +47,7 @@ def get_history(date_end, T):
     return return_d, date_list
 
 
+# 距离计算代码：Jaro，取全部
 def calculate_Jaro_distance(d1, d2):
     SW1_list = np.array(list(SW1.keys()))
     SW1_list1 = SW1_list[np.argsort(d1)]
@@ -58,13 +59,28 @@ def calculate_Jaro_distance(d1, d2):
     return d
 
 
+# 距离计算代码：Levenshtein，取前N
+def calculate_Levenshtein_distance(d1, d2):
+    N = 10
+    SW1_list = np.array(list(SW1.keys()))
+    SW1_list1 = SW1_list[np.argsort(d1)][-N:]
+    SW1_list2 = SW1_list[np.argsort(d2)][-N:]
+    SW1_list1 = ''.join([SW1[t] for t in SW1_list1])
+    SW1_list2 = ''.join([SW1[t] for t in SW1_list2])
+    print('计算距离......')
+    d = textdistance.Levenshtein().distance(SW1_list1, SW1_list2)
+    d = textdistance.Jaro().distance(SW1_list1, SW1_list2)
+    return d
+
+
 def calculate_Jaro_distance_list(return_d, date_list):
     I = return_d.shape[1]
     result_list = []
     for i in range(I-1):
         d1 = return_d[:,  i]
         d2 = return_d[:, i+1]
-        d = calculate_Jaro_distance(d1, d2)
+        #d = calculate_Jaro_distance(d1, d2)
+        d = calculate_Levenshtein_distance(d1, d2)
         date = date_list[i+1]
         print(date + '日相对前一日指数排序变动值为：%.8f' % d)
         result_list.append(d)
