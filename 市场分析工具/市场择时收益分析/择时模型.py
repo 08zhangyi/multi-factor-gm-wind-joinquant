@@ -461,6 +461,67 @@ class 单向波动差_国信(SelectTimeIndexBacktest):
         return date_list, index_list, signal_list
 
 
+class 北上资金择时_LLT(SelectTimeIndexBacktest):
+    # LLT择时基本版模型
+    # 计算index_code的收盘指数的择时信号，并做回测
+    def __init__(self, backtest_start_date, backtest_end_date, index_code, llt_d, llt_cal_history=100, llt_threshold=0.0):
+        '''
+        :param llt_d: 沪深300适合20,25
+        :param llt_cal_history:
+        :param llt_threshold:
+        '''
+        w.start()
+        llt_start_date = get_trading_date_from_now(backtest_start_date, -llt_cal_history, ql.Days)
+        data_std = w.wsd(index_code, "close", llt_start_date, backtest_end_date, "")  # 指数收盘价数据
+        # 提取北上资金净流入数据
+        sh_data_base = w.wset("shhktransactionstatistics", "startdate=" + llt_start_date + ";enddate=" + backtest_end_date + ";cycle=day;currency=cny;field=date,sh_net_purchases")
+        sh_data = sh_data_base.Data[1]
+        sh_data_list = np.array([np.nan if i==None else i for i in sh_data])
+        sz_data = w.wset("szhktransactionstatistics", "startdate=" + llt_start_date + ";enddate=" + backtest_end_date + ";cycle=day;currency=cny;field=sz_net_purchases").Data[0]
+        sz_data_list = np.array([np.nan if i==None else i for i in sz_data])
+        sum_list = sh_data_list + sz_data_list  # 北上资金合计
+        # 整理北上资金净流入为pandas数据
+        df_sum_index = [t.strftime('%Y-%m-%d') for t in sh_data_base.Data[0]]
+        df_sum_index.reverse()  # w.wset和w.wss日期序列顺序是反的 此处做倒叙处理
+        df_sum = pd.DataFrame(data=sum_list, index=df_sum_index, columns=['total'])
+        df_std_index = [t.strftime('%Y-%m-%d') for t in data_std.Times]
+        df_std = pd.DataFrame(data=np.random.rand((len(df_std_index))), index=df_std_index, columns=['std'])
+        target = pd.concat([df_std, df_sum], axis=1, ignore_index=True, sort=True) #按照w.wss的index拼接df
+        target = target.fillna(0)
+        # 计算择时信号
+        self.llt_times = [t.strftime('%Y-%m-%d') for t in data_std.Times]
+        self.llt_data = list(target[1].values)
+        self.close_data = data_std.Data[0]
+        self.llt_d = llt_d
+        self.llt_threshold = llt_threshold
+        self.llt_cal_history = llt_cal_history  # LLT信号计算的历史长度
+        self.backtest_start_date = backtest_start_date
+        super().__init__(backtest_start_date, backtest_end_date, index_code)
+
+    def _get_signal(self, date_now):
+        llt_index = self.llt_times.index(date_now) + 1
+        price_list = self.llt_data[llt_index - self.llt_cal_history:llt_index]
+        llt_value = self._LLT(price_list)
+        return llt_value
+
+    def _get_data(self):
+        start_date_index = self.llt_times.index(self.backtest_start_date)
+        date_list = self.llt_times[start_date_index:]
+        index_list = self.close_data[start_date_index:]
+        signal_list = [self._get_signal(date) for date in date_list]
+        print('北上资金LLT择时信号为：%i' % (signal_list[-1]))
+        return date_list, index_list, signal_list
+
+    def _LLT(self, price_list):
+        a = 2 / (self.llt_d + 1)  # LLT的参数
+        LLT_list = [price_list[0], price_list[1]]  # 记录LLT值列表的初始化序列
+        for t in range(2, len(price_list)):
+            LLT_value = (a - (a ** 2 / 4)) * price_list[t] + (a ** 2 / 2) * price_list[t - 1] - (a - (3 * a ** 2 / 4)) * \
+                        price_list[t - 2] + 2 * (1 - a) * LLT_list[-1] - (1 - a) ** 2 * LLT_list[-2]
+            LLT_list.append(LLT_value)
+        return 1 if (((LLT_list[-1] - LLT_list[-2]) / price_list[-1]) > self.llt_threshold) else -1
+
+
 def 使用模板1():
     N = 18
     M = 600
@@ -485,8 +546,17 @@ def 使用模板4():
     model.plot_return('2')
 
 
+def 使用模板5():
+    backtest_start_date = '2018-07-03'
+    backtest_end_date = '2019-06-21'
+    index_code = '000300.SH'
+    llt_d = 20
+    model = 北上资金择时_LLT(backtest_start_date, backtest_end_date, index_code, llt_d, llt_cal_history=60, llt_threshold=0.0)
+    model.plot_return(str(llt_d))
+
+
 def 发布报告的模板1():
-    end_date = '2019-06-13'
+    end_date = '2019-06-21'
     start_date = get_trading_date_from_now(end_date, -100, ql.Days)
     # RSRS模型
     N = 18
@@ -496,6 +566,8 @@ def 发布报告的模板1():
     model = 脉冲比_银河(start_date, end_date, '000001.SH')
     # 单向波动差模型
     model = 单向波动差_国信(start_date, end_date, '000300.SH')
+    # 北上资金LLT择时
+    model = 北上资金择时_LLT(start_date, end_date, '000300.SH', llt_d=20, llt_cal_history=60, llt_threshold=0.0)
 
 
 if __name__ == '__main__':
