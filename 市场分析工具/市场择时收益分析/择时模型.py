@@ -480,13 +480,14 @@ class 北上资金择时_LLT(SelectTimeIndexBacktest):
         sz_data = w.wset("szhktransactionstatistics", "startdate=" + llt_start_date + ";enddate=" + backtest_end_date + ";cycle=day;currency=cny;field=sz_net_purchases").Data[0]
         sz_data_list = np.array([np.nan if i==None else i for i in sz_data])
         sum_list = sh_data_list + sz_data_list  # 北上资金合计
+        sum_list = sum_list[::-1]  # 数据倒序
         # 整理北上资金净流入为pandas数据
         df_sum_index = [t.strftime('%Y-%m-%d') for t in sh_data_base.Data[0]]
         df_sum_index.reverse()  # w.wset和w.wss日期序列顺序是反的 此处做倒叙处理
         df_sum = pd.DataFrame(data=sum_list, index=df_sum_index, columns=['total'])
         df_std_index = [t.strftime('%Y-%m-%d') for t in data_std.Times]
         df_std = pd.DataFrame(data=np.random.rand((len(df_std_index))), index=df_std_index, columns=['std'])
-        target = pd.concat([df_std, df_sum], axis=1, ignore_index=True, sort=True) #按照w.wss的index拼接df
+        target = pd.concat([df_std, df_sum], axis=1, ignore_index=True, sort=True) # 按照w.wss的index拼接df
         target = target.fillna(0)
         # 计算择时信号
         self.llt_times = [t.strftime('%Y-%m-%d') for t in data_std.Times]
@@ -547,11 +548,12 @@ def 使用模板4():
 
 
 def 使用模板5():
-    backtest_start_date = '2018-07-03'
+    backtest_start_date = '2018-01-04'
+    # backtest_start_date = '2018-07-03'
     backtest_end_date = '2019-06-21'
     index_code = '000300.SH'
-    llt_d = 20
-    model = 北上资金择时_LLT(backtest_start_date, backtest_end_date, index_code, llt_d, llt_cal_history=60, llt_threshold=0.0)
+    llt_d = 30
+    model = 北上资金择时_LLT(backtest_start_date, backtest_end_date, index_code, llt_d, llt_cal_history=30, llt_threshold=0.0)
     model.plot_return(str(llt_d))
 
 
@@ -567,8 +569,9 @@ def 发布报告的模板1():
     # 单向波动差模型
     model = 单向波动差_国信(start_date, end_date, '000300.SH')
     # 北上资金LLT择时
-    model = 北上资金择时_LLT(start_date, end_date, '000300.SH', llt_d=20, llt_cal_history=60, llt_threshold=0.0)
+    model = 北上资金择时_LLT(start_date, end_date, '000300.SH', llt_d=20, llt_cal_history=30, llt_threshold=0.0)
 
 
 if __name__ == '__main__':
-    发布报告的模板1()
+    # 发布报告的模板1()
+    使用模板5()
