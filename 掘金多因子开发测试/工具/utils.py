@@ -18,6 +18,10 @@ SW1_INDEX = [['801010.SI', '农林牧渔'], ['801020.SI', '采掘'], ['801030.SI
 
 # 计算不同交易日的函数
 def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
+    if period==ql.Days:
+        w.start()
+        date_diff = w.tdaysoffset(diff_periods, date_now, '').Data[0][0].strftime('%Y-%m-%d')
+        return date_diff
     calculation_date = ql.Date(int(date_now.split('-')[2]), int(date_now.split('-')[1]), int(date_now.split('-')[0]))
     calendar = ql.China()
     date_diff = calendar.advance(calculation_date, diff_periods, period).to_date().strftime('%Y-%m-%d')
