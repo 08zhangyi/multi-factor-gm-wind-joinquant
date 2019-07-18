@@ -12,7 +12,7 @@ w.start()
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2019-01-15'  # 回测开始日期
-BACKTEST_END_DATE = '2019-07-01'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2019-07-18'  # 回测结束日期，测试结束日期不运用算法
 INCLUDED_INDEX = ['510050.SH', '513100.SH', '159928.SZ', '513500.SH', '510500.SH', '511010.SH', '518880.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
 TRADING_DATE = '15'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
@@ -24,6 +24,7 @@ stock_dict = {}
 trading_date_list = []  # 记录调仓日期的列表
 i = 0
 while True:
+    print('处理日期：'+str(i))
     date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
     date_trading = get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
     if date_now == date_trading:
