@@ -24,18 +24,21 @@ stock_dict = {}
 
 # 根据回测阶段选取好调仓日期
 trading_date_list = []  # 记录调仓日期的列表
-i = 0
-while True:
-    date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
-    date_trading = get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
-    if date_now == date_trading:
-        trading_date_list.append(date_now)
-    i += 1
-    if date_now == BACKTEST_END_DATE:
-        break
 
 
 def init(context):
+    global date_trading  # 调仓日期获取
+    i = 0
+    while True:
+        print('处理日期：' + str(i))
+        date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
+        date_trading = get_trading_date_from_now(
+            date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
+        if date_now == date_trading:
+            trading_date_list.append(date_now)
+        i += 1
+        if date_now == BACKTEST_END_DATE:
+            break
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 
