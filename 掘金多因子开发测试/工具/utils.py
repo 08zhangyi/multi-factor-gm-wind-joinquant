@@ -3,9 +3,7 @@ import QuantLib as ql
 import pandas as pd
 from WindPy import w
 import os
-import numpy as np
-import jqdatasdk
-from sqlalchemy.orm.query import Query
+import datetime
 
 # 申万1级行业列表
 SW1_INDEX = [['801010.SI', '农林牧渔'], ['801020.SI', '采掘'], ['801030.SI', '化工'], ['801040.SI', '钢铁'], ['801050.SI', '有色金属'],
@@ -21,7 +19,13 @@ def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
     if period==ql.Days:
         w.start()
         date_diff = w.tdaysoffset(diff_periods, date_now, '').Data[0][0].strftime('%Y-%m-%d')
+        if diff_periods == 0:
+            date_now_date = datetime.date.fromisoformat(date_now)
+            date_diff_date = datetime.date.fromisoformat(date_diff)
+            if date_diff_date < date_now_date:
+                date_diff = w.tdaysoffset(1, date_now, '').Data[0][0].strftime('%Y-%m-%d')
         return date_diff
+    # 未改善代码
     calculation_date = ql.Date(int(date_now.split('-')[2]), int(date_now.split('-')[1]), int(date_now.split('-')[0]))
     calendar = ql.China()
     date_diff = calendar.advance(calculation_date, diff_periods, period).to_date().strftime('%Y-%m-%d')
@@ -119,4 +123,4 @@ def get_SW1_industry(date, code_list):
 
 
 if __name__ == '__main__':
-    print(get_trading_date_from_now('2018-01-02', -1))
+    print(get_trading_date_from_now('2019-01-05', 0))

@@ -11,11 +11,11 @@ from 持仓配置 import 风险平价组合_迭代求解基本版 as WEIGHTS
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2019-04-15'  # 回测开始日期
+BACKTEST_START_DATE = '2019-03-05'  # 回测开始日期
 BACKTEST_END_DATE = '2019-07-29'  # 回测结束日期，测试结束日期不运用算法
 INCLUDED_INDEX = ['510050.SH', '513100.SH', '159928.SZ', '513500.SH', '510500.SH', '511010.SH', '518880.SH', '510230.SH', '159949.SZ']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
-TRADING_DATE = '15'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
+TRADING_DATE = '05'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
 # 用于记录调仓信息的字典
 stock_dict = {}
