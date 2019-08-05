@@ -24,7 +24,7 @@ BACKTEST_END_DATE = '2018-11-22'  # 回测结束日期，测试结束日期不�
 INCLUDED_INDEX = ['000300.SH', '000016.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = ['801780.SI']  # 剔除的股票代码
 FACTOR_LIST = [RSI, PE]  # 需要获取的因子列表，用单因子研究中得模块
-TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
+TRADING_DATES_LIST = ['10']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 3  # 取得的历史样本的周期数
 # 选股策略的参数
 SELECT_NUMBER = 10  # 选股数量
@@ -51,9 +51,9 @@ def init(context):
     while True:
         print('处理日期：' + str(i))
         date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
-        date_trading = get_trading_date_from_now(
-            date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
-        if date_now == date_trading:
+        dates_trading = [get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
+                        for TRADING_DATE in TRADING_DATES_LIST]
+        if date_now in dates_trading:
             trading_date_list.append(date_now)
         i += 1
         if date_now == BACKTEST_END_DATE:
