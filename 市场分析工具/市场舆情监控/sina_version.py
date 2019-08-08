@@ -1,7 +1,8 @@
 import tushare as ts
 from aip import AipNlp
 import time
-import pyecharts
+from pyecharts.charts import WordCloud
+from pyecharts.options import InitOpts
 import math
 
 start_date = '2019-07-15 15:00:00'
@@ -89,7 +90,8 @@ for w in delete_words:
 sorted_words_score = sorted(words_score_dict.items(), key=lambda d: d[1], reverse=True)
 print(sorted_words_score)
 words, scores = zip(*sorted_words_score)
-word_cloud = pyecharts.WordCloud(width=1600, height=1000)
+word_cloud = WordCloud(InitOpts(width="1600px", height="1000px"))
 scores = [math.sqrt(score) for score in scores]  # 调整权重以画图显示的更好
-word_cloud.add("", words, scores, shape="circle")
+words = list(zip(words, scores))
+word_cloud.add("", words, shape="circle")
 word_cloud.render('data\\'+end_date[:10]+'舆情晨报词云.html')  # 保存文件
