@@ -6,6 +6,7 @@ import datetime
 import QuantLib as ql
 import abc
 from sklearn.linear_model import LinearRegression
+
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import get_trading_date_from_now, SW1_INDEX
@@ -15,7 +16,7 @@ from utils import get_trading_date_from_now, SW1_INDEX
 # 三级继承结构
 # 第一级：SingleFactorReasearch，基本功能，抽象类
 # 第二级：带有多参数的因子类，抽象类
-# 第三级：统一为date和code_list接口的因子类，实际使用的类（部分类无二级继承结构，三级直接从一级继承）
+# 第三级：统一为date和code_list接口的因子类，实际使用的类（部分类无二级继承结构，三级直接从一级继承），三级对二级的参数进行固化
 # 抽象类的标志为__init__带有abc.abstractmethod修饰
 class SingleFactorReasearch():
     @abc.abstractmethod
