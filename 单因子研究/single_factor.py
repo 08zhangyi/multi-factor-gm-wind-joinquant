@@ -12,6 +12,11 @@ from utils import get_trading_date_from_now, SW1_INDEX
 
 
 # 基类，需继承
+# 三级继承结构
+# 第一级：SingleFactorReasearch，基本功能，抽象类
+# 第二级：带有多参数的因子类，抽象类
+# 第三级：统一为date和code_list接口的因子类，实际使用的类（部分类无二级继承结构，三级直接从一级继承）
+# 抽象类的标志为__init__带有abc.abstractmethod修饰
 class SingleFactorReasearch():
     @abc.abstractmethod
     def __init__(self, date, code_list, factor_name):
