@@ -5,8 +5,8 @@ import pandas as pd
 import datetime
 import QuantLib as ql
 import abc
-import sys
 from sklearn.linear_model import LinearRegression
+import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import get_trading_date_from_now, SW1_INDEX
 
