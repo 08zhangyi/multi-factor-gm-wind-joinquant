@@ -6,7 +6,7 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
-from master_strategy import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
+from 大师选股 import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
 from 持仓配置 import 方差极小化权重_基本版 as WEIGHTS
 from 候选股票 import SelectedStockPoolFromListV1
 
