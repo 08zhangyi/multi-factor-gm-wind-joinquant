@@ -120,6 +120,7 @@ class 霍华罗斯曼审慎致富投资法(MasterStrategy):
         return df
 
     def select_code(self):
+        df = self._get_data()
         df = df[df['对数市值'] >= df['对数市值'].median()]
         df = df[df['流动比率'] >= df['流动比率'].median()]
         df = df[df['权益回报率ROE'] >= df['权益回报率ROE'].median()]
@@ -139,8 +140,8 @@ class 麦克贝利222选股法则(MasterStrategy):
 2.公司预期盈利成长率大于市场平均预估盈利成长率的“2”分之一（公司的未来具备较高的盈利成长能力）
 3.股票的市净率小于“2"（青睐重资产行业）'''
     def _get_data(self):
-        from single_factor import EstimatePEFY1, EstimateNetProfitGrowRateFY16M, PB
-        factor_list = [EstimatePEFY1, EstimateNetProfitGrowRateFY16M, PB]
+        from single_factor import EstimatePEFY1, EstimateNetProfitGrowRateFY1_6M, PB
+        factor_list = [EstimatePEFY1, EstimateNetProfitGrowRateFY1_6M, PB]
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
         df = df.dropna()
         return df
@@ -160,9 +161,7 @@ class 本杰明格雷厄姆成长股内在价值投资法(MasterStrategy):
 注：ExpectedReturn=0.05'''
     def __init__(self, code_list, date, N):
         super().__init__(code_list, date)
-        from single_factor import DilutedEPS, ForecastEarningGrowth_FY1_3M
-        self.factor_list = [DilutedEPS, ForecastEarningGrowth_FY1_3M]
-        self.N = N
+        self.N = N  # 取对应分位数排名
 
     def _get_data(self):
         from single_factor import DilutedEPS, ForecastEarningGrowth_FY1_3M
@@ -187,11 +186,11 @@ class 本杰明格雷厄姆成长股内在价值投资法v2(MasterStrategy):
 注：ExpectedReturn=5.0'''
     def __init__(self, code_list, date, N):
         super().__init__(code_list, date)
-        self.N = N
+        self.N = N  # 取对应分位数排名
 
     def _get_data(self):
-        from single_factor import DilutedEPS, EstimateNetProfitGrowRateFY16M
-        factor_list = [DilutedEPS, EstimateNetProfitGrowRateFY16M]
+        from single_factor import DilutedEPS, EstimateNetProfitGrowRateFY1_6M
+        factor_list = [DilutedEPS, EstimateNetProfitGrowRateFY1_6M]
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
         df = df.dropna()
         return df
@@ -257,7 +256,7 @@ class 戴维斯双击v2(MasterStrategy):
         self.N = N  # N为选股的个数，默认为25个
 
     def _get_data(self):
-        from single_factor import NetProfitGrowRateV2, NetProfit, Revenue,PE
+        from single_factor import NetProfitGrowRateV2, NetProfit, Revenue, PE
         factor_list = [NetProfitGrowRateV2, NetProfit, PE]
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
         date_temp = get_trading_date_from_now(self.date, -3, ql.Months)
@@ -297,7 +296,7 @@ class 戴维斯双击v3(MasterStrategy):
         self.N = N  # N为选股的个数，默认为25个
 
     def _get_data(self):
-        from single_factor import NetProfitGrowRateV2, NetProfit, Revenue,PE
+        from single_factor import NetProfitGrowRateV2, NetProfit, Revenue, PE
         factor_list = [NetProfitGrowRateV2, NetProfit,PE]
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
         date_temp = get_trading_date_from_now(self.date, -3, ql.Months)
@@ -337,7 +336,7 @@ class 戴维斯双击v4(MasterStrategy):
         self.N = N  # N为选股的个数，默认为25个
 
     def _get_data(self):
-        from single_factor import NetProfitGrowRateV2, NetProfit, Revenue,PE
+        from single_factor import NetProfitGrowRateV2, NetProfit, Revenue, PE
         factor_list = [NetProfitGrowRateV2, NetProfit,PE]
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
         date_temp = get_trading_date_from_now(self.date, -3, ql.Months)
@@ -393,7 +392,7 @@ class 本杰明格雷厄姆经典价值投资法(MasterStrategy):
         self.N = N
 
     def _get_data(self):
-        from single_factor import ClosePrice, PE, DividendYield, NetTangibleAssetPerShare, NetLiquidAssetPerShare, TotalLiability, NetLiquidAsset, NetTangibleAsset, CurrentRatio, NetProfitGrowRateV2, PE_MAX
+        from single_factor import ClosePrice, PE, DividendYield, NetTangibleAssetPerShare, NetLiquidAssetPerShare, TotalLiability, NetLiquidAsset, NetTangibleAsset, CurrentRatio, NetProfitGrowRateV2
         factor_list = [ClosePrice, PE, DividendYield, NetTangibleAssetPerShare, NetLiquidAssetPerShare, TotalLiability, NetLiquidAsset, NetTangibleAsset, CurrentRatio, NetProfitGrowRateV2]
         # factor_list = [PE_MAX] # 待添加到上述列表，条件筛选不完整
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
@@ -433,8 +432,8 @@ class 柯林麦克连成长价值优势投资法(MasterStrategy):
         super().__init__(code_list, date, )
 
     def _get_data(self):
-        from single_factor import OperationRevenueGrowth, EstimateNetRevenueGrowRateFY16M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate, PS
-        factor_list = [OperationRevenueGrowth, EstimateNetRevenueGrowRateFY16M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate, PS]
+        from single_factor import OperationRevenueGrowth, EstimateNetRevenueGrowRateFY1_6M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate, PS
+        factor_list = [OperationRevenueGrowth, EstimateNetRevenueGrowRateFY1_6M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate, PS]
         date_one_year = get_trading_date_from_now(self.date, -1, ql.Years)
         date_two_year = get_trading_date_from_now(self.date, -2, ql.Years)
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
@@ -473,7 +472,7 @@ class 必要消费(MasterStrategy):
         super().__init__(code_list, date, )
 
     def _get_data(self):
-        from single_factor import SteadyProfitAcc, InventoryTurnRatio,PB
+        from single_factor import SteadyProfitAcc, InventoryTurnRatio, PB
         factor_list = [SteadyProfitAcc, InventoryTurnRatio, PB]
         df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
         df = df.dropna()

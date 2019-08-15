@@ -179,7 +179,7 @@ class SteadyProfitAcc_8(SteadyProfitAcc):
 
 
 # 一致预测净利润增长率（6个月数据计算）
-class EstimateNetProfitGrowRateFY16M(SingleFactorReasearch):
+class EstimateNetProfitGrowRateFY1_6M(SingleFactorReasearch):
     def __init__(self, date, code_list):
         factor_name = '一致预测净利润增长率（6个月数据计算）'
         super().__init__(date, code_list, factor_name)
@@ -738,7 +738,7 @@ class OperationRevenueGrowth(SingleFactorReasearch):
 
 
 # 一致预测营业收入增长率（6个月数据计算）
-class EstimateNetRevenueGrowRateFY16M(SingleFactorReasearch):
+class EstimateNetRevenueGrowRateFY1_6M(SingleFactorReasearch):
     def __init__(self, date, code_list):
         factor_name = '一致预测营业收入增长率（6个月数据计算）'
         super().__init__(date, code_list, factor_name)
@@ -814,7 +814,7 @@ class ForecastEarningGrowth_FY1_3M(SingleFactorReasearch):
 
     def _calculate_factor(self):
         date_list = self.date
-        Forecast_data = np.array(w.wss(self.code_list, "west_netprofit_fy1_3m","tradeDate=" + "".join(date_list)).Data[0])
+        Forecast_data = np.array(w.wss(self.code_list, "west_netprofit_fy1_3m", "tradeDate=" + "".join(date_list)).Data[0])
         ForecastEarningGrowth = pd.DataFrame(data=Forecast_data, index=self.code_list, columns=[self.factor_name])
         return ForecastEarningGrowth
 
