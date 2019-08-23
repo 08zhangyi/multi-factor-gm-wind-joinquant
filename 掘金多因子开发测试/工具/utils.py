@@ -16,26 +16,21 @@ SW1_INDEX = [['801010.SI', '农林牧渔'], ['801020.SI', '采掘'], ['801030.SI
 
 # 计算不同交易日的函数
 def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
-    if period==ql.Days:
-        w.start()
-        date_diff = w.tdaysoffset(diff_periods, date_now, '').Data[0][0].strftime('%Y-%m-%d')
-        if diff_periods == 0:  # 非交易日顺延到下一个交易日
-            date_now_date = datetime.date.fromisoformat(date_now)
-            date_diff_date = datetime.date.fromisoformat(date_diff)
-            if date_diff_date < date_now_date:
-                date_diff = w.tdaysoffset(1, date_now, '').Data[0][0].strftime('%Y-%m-%d')
-        return date_diff
-    # 未改善代码
-    calculation_date = ql.Date(int(date_now.split('-')[2]), int(date_now.split('-')[1]), int(date_now.split('-')[0]))
-    calendar = ql.China()
-    date_diff = calendar.advance(calculation_date, diff_periods, period).to_date().strftime('%Y-%m-%d')
-    # 临时修正错误，是包QuantLib的错误，节假日问题
-    if date_now == '2019-01-02' and diff_periods == -1 and period == ql.Days:
-        return '2018-12-28'
-    if (date_now == '2019-02-08' or date_now == '2019-02-09' or date_now == '2019-02-10' or date_now == '2019-02-11') and diff_periods == -1 and period == ql.Days:
-        return '2019-02-01'
-    if (date_now == '2019-05-06' or date_now == '2019-05-02' or date_now == '2019-05-03' or date_now == '2019-05-04') and diff_periods == -1 and period == ql.Days:
-        return '2019-04-30'
+    always_using_ql = True  # 是否全部使用quantlib处理日期，否则只在某些情形使用quantlib处理日期
+    if (int(date_now.split('-')[0]) <= 2018 and diff_periods <= 1) or always_using_ql:
+        calculation_date = ql.Date(int(date_now.split('-')[2]), int(date_now.split('-')[1]),
+                                   int(date_now.split('-')[0]))
+        calendar = ql.China()
+        date_diff = calendar.advance(calculation_date, diff_periods, period).to_date().strftime('%Y-%m-%d')
+    else:  # 其余日子用wind处理
+        if period==ql.Days:
+            w.start()
+            date_diff = w.tdaysoffset(diff_periods, date_now, '').Data[0][0].strftime('%Y-%m-%d')
+            if diff_periods == 0:  # 非交易日顺延到下一个交易日
+                date_now_date = datetime.date.fromisoformat(date_now)
+                date_diff_date = datetime.date.fromisoformat(date_diff)
+                if date_diff_date < date_now_date:
+                    date_diff = w.tdaysoffset(1, date_now, '').Data[0][0].strftime('%Y-%m-%d')
     return date_diff
 
 

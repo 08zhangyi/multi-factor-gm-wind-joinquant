@@ -33,7 +33,7 @@ def init(context):
     print('回测开始日期：' + BACKTEST_START_DATE + '，结束日期：' + BACKTEST_END_DATE)
     while True:
         date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
-        print(('处理日期第%i个：' + date_now) % (i+1))
+        print(('处理日期第%i个：' + date_now) % (i + 1))
         dates_trading = [get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
                         for TRADING_DATE in TRADING_DATES_LIST]
         if date_now in dates_trading:

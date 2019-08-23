@@ -12,7 +12,7 @@ w.start()
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2015-01-15'  # 回测开始日期
-BACKTEST_END_DATE = '2019-01-29'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2019-08-22'  # 回测结束日期，测试结束日期不运用算法
 INCLUDED_INDEX = ['510050.SH', '513100.SH', '159928.SZ', '513500.SH', '510500.SH', '511010.SH', '518880.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
 TRADING_DATES_LIST = ['15']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
@@ -25,11 +25,12 @@ trading_date_list = []  # 记录调仓日期的列表
 
 
 def init(context):
-    global date_trading  # 调仓日期获取
+    global trading_date_list  # 调仓日期获取
     i = 0
+    print('回测开始日期：' + BACKTEST_START_DATE + '，结束日期：' + BACKTEST_END_DATE)
     while True:
-        print('处理日期：' + str(i))
         date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
+        print(('处理日期第%i个：' + date_now) % (i + 1))
         dates_trading = [get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
                         for TRADING_DATE in TRADING_DATES_LIST]
         if date_now in dates_trading:
@@ -37,6 +38,7 @@ def init(context):
         i += 1
         if date_now == BACKTEST_END_DATE:
             break
+    print('时间列表整理完毕\n-----------------------------------------------\n')
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 
@@ -68,7 +70,7 @@ def on_backtest_finished(context, indicator):
 
 if __name__ == '__main__':
     run(strategy_id='4d2f6b1c-8f0a-11e8-af59-305a3a77b8c5',
-        filename='大类资产轮动_V0.py',
+        filename='大类资产轮动_回测.py',
         mode=MODE_BACKTEST,
         token='d7b08e7e21dd0315a510926e5a53ade8c01f9aaa',
         backtest_initial_cash=10000000,
