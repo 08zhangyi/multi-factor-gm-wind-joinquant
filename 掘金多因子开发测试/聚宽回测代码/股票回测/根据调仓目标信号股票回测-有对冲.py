@@ -28,11 +28,13 @@ def initialize(context):
     context.index_future = 'IF'  # 对冲品种的设置
     set_option('futures_margin_rate', 0.0000000000001)  # 期货合约保证金设置
     init_cash = context.portfolio.starting_cash
-    # 账户1交易stock，账户2交易future
+    # 账户1交易stock，账户2交易future，两个账户初始资金一致
     set_subportfolios([SubPortfolioConfig(cash=init_cash, type='stock'),
                        SubPortfolioConfig(cash=init_cash, type='futures')])
     index_information = {'IF': (300, '000300.XSHG'), 'IH': (300, '000016.XSHG'), 'IC': (200, '000905.XSHG')}  # 未完成
     context.index_information = index_information[context.index_future]
+    # 确定对冲比例
+    context.hedging_ratio = 1.0
     # 确定是否用股指期货对冲，1为开启对冲模式，2为开启择时对冲模式，0为无对冲基准模式
     context.hedging_mode = 1
 
@@ -88,7 +90,7 @@ def algo(context):
             positions_value = context.subportfolios[0].positions_value  # 提取股票账户总股票市值
             current_data = get_current_data()
             index_price = current_data[context.index_information[1]].last_price
-            contract_number = int(future_round(positions_value / (index_price * context.index_information[0])))
+            contract_number = int(context.hedging_ratio*future_round(positions_value / (index_price * context.index_information[0])))
         else:  # 其他情况，暂时不对冲
             contract_number = 0
     else:  # 不对冲的基准模式
