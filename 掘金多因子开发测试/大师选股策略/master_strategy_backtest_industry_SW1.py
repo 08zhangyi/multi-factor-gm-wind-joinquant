@@ -34,7 +34,7 @@ trading_date_list = []  # 记录调仓日期的列表
 
 
 def init(context):
-    global date_trading  # 调仓日期获取
+    global trading_date_list
     i = 0
     print('回测开始日期：' + BACKTEST_START_DATE + '，结束日期：' + BACKTEST_END_DATE)
     while True:

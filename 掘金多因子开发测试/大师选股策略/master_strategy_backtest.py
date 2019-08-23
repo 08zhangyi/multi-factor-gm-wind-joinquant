@@ -14,7 +14,7 @@ from 候选股票 import SelectedStockPoolFromListV1
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2019-03-04'  # 回测开始日期，开始日期与结束日期都是交易日，从开始日期开盘回测到结束日期收盘，与回测软件一直
+BACKTEST_START_DATE = '2019-07-04'  # 回测开始日期，开始日期与结束日期都是交易日，从开始日期开盘回测到结束日期收盘，与回测软件一直
 BACKTEST_END_DATE = '2019-08-20'  # 回测结束日期
 INCLUDED_INDEX = ['000300.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
@@ -28,7 +28,7 @@ trading_date_list = []  # 记录调仓日期的列表
 
 
 def init(context):
-    global date_trading  # 调仓日期获取
+    global trading_date_list
     i = 0
     print('回测开始日期：' + BACKTEST_START_DATE + '，结束日期：' + BACKTEST_END_DATE)
     while True:
