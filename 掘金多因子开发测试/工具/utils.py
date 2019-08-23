@@ -19,7 +19,7 @@ def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
     if period==ql.Days:
         w.start()
         date_diff = w.tdaysoffset(diff_periods, date_now, '').Data[0][0].strftime('%Y-%m-%d')
-        if diff_periods == 0:
+        if diff_periods == 0:  # 非交易日顺延到下一个交易日
             date_now_date = datetime.date.fromisoformat(date_now)
             date_diff_date = datetime.date.fromisoformat(date_diff)
             if date_diff_date < date_now_date:
@@ -80,7 +80,7 @@ def get_factor_from_wind(code_list, factor_list, date):
 
 
 # 无缓存版本
-def get_factor_from_wind_v2(code_list, factor_list, date):
+def get_factor_from_wind_without_cache(code_list, factor_list, date):
     # 用单因子研究\single_factor.py中的因子类直接获取数据
     factors_dfs = []
     for factor in factor_list:

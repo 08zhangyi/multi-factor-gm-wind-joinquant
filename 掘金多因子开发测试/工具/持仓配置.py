@@ -9,7 +9,7 @@ from utils import list_wind2jq, list_jq2wind, SW1_INDEX
 
 class WeightsAllocation(object):
     def __init__(self, code_list, date):
-        self.code_list = code_list  # code_list用掘金的格式
+        self.code_list = code_list  # code_list用聚宽的格式
         self.date = date  # date日收盘后计算配置比例
 
     def get_weights(self):

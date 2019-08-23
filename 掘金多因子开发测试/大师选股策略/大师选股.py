@@ -5,7 +5,7 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
-from utils import get_factor_from_wind_v2, get_trading_date_from_now
+from utils import get_factor_from_wind_without_cache, get_trading_date_from_now
 
 
 class MasterStrategy(object):
@@ -41,11 +41,11 @@ class 彼得林奇基层调查选股策略说明(MasterStrategy):
         factor_InvTurn_now = [InventoryTurnRatio]
         factor_InvTurn_one_year = [InventoryTurnRatio]
         date_one_year = get_trading_date_from_now(self.date, -1, ql.Years)
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         # 存货增长率与营收增长率的比较判断数据，使用存货周转率判断
-        df_invturn_now = get_factor_from_wind_v2(self.code_list, factor_InvTurn_now, self.date)
+        df_invturn_now = get_factor_from_wind_without_cache(self.code_list, factor_InvTurn_now, self.date)
         df_invturn_now.rename(columns={'存货周转率': '存货周转率_今年'}, inplace=True)
-        df_invturn_one_year = get_factor_from_wind_v2(self.code_list, factor_InvTurn_one_year, date_one_year)
+        df_invturn_one_year = get_factor_from_wind_without_cache(self.code_list, factor_InvTurn_one_year, date_one_year)
         df_invturn_one_year.rename(columns={'存货周转率': '存货周转率_去年'}, inplace=True)
         df = pd.concat([df, df_invturn_now, df_invturn_one_year], axis=1)
         df = df.dropna()
@@ -72,12 +72,12 @@ class 史蒂夫路佛价值选股法(MasterStrategy):
     def _get_data(self):
         from single_factor import PB, PE, DividendYield, PriceFreeCashFlowPerShare, LongTermLiabilityToWorkCapital
         factor_list = [PB, DividendYield, PriceFreeCashFlowPerShare, LongTermLiabilityToWorkCapital]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         # 五年PE值获取
         df_PE = []
         for i in range(5):
             date_temp = get_trading_date_from_now(self.date, -i, ql.Years)
-            df_temp = get_factor_from_wind_v2(self.code_list, [PE], date_temp)
+            df_temp = get_factor_from_wind_without_cache(self.code_list, [PE], date_temp)
             df_temp.rename(columns={'市盈率PE': '市盈率_'+str(i)}, inplace=True)
             df_PE.append(df_temp)
         df = pd.concat([df]+df_PE, axis=1)
@@ -107,12 +107,12 @@ class 霍华罗斯曼审慎致富投资法(MasterStrategy):
     def _get_data(self):
         from single_factor import LCap, CurrentRatio, ROE, FreeCashFlowPerShare, OperationRevenueGrowth, NetProfitGrowRateV2
         factor_list = [LCap, CurrentRatio, ROE, OperationRevenueGrowth, NetProfitGrowRateV2]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         # 五年自由现金流量
         df_PE = []
         for i in range(5):
             date_temp = get_trading_date_from_now(self.date, -i, ql.Years)
-            df_temp = get_factor_from_wind_v2(self.code_list, [FreeCashFlowPerShare], date_temp)
+            df_temp = get_factor_from_wind_without_cache(self.code_list, [FreeCashFlowPerShare], date_temp)
             df_temp.rename(columns={'每股企业自由现金流指标': '每股企业自由现金流指标_' + str(i)}, inplace=True)
             df_PE.append(df_temp)
         df = pd.concat([df] + df_PE, axis=1)
@@ -142,7 +142,7 @@ class 麦克贝利222选股法则(MasterStrategy):
     def _get_data(self):
         from single_factor import EstimatePEFY1, EstimateNetProfitGrowRateFY1_6M, PB
         factor_list = [EstimatePEFY1, EstimateNetProfitGrowRateFY1_6M, PB]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         df = df.dropna()
         return df
 
@@ -166,7 +166,7 @@ class 本杰明格雷厄姆成长股内在价值投资法(MasterStrategy):
     def _get_data(self):
         from single_factor import DilutedEPS, ForecastEarningGrowth_FY1_3M
         factor_list = [DilutedEPS, ForecastEarningGrowth_FY1_3M]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         df = df.dropna()
         return df
 
@@ -191,7 +191,7 @@ class 本杰明格雷厄姆成长股内在价值投资法v2(MasterStrategy):
     def _get_data(self):
         from single_factor import DilutedEPS, EstimateNetProfitGrowRateFY1_6M
         factor_list = [DilutedEPS, EstimateNetProfitGrowRateFY1_6M]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         df = df.dropna()
         return df
 
@@ -219,9 +219,9 @@ class 戴维斯双击v1(MasterStrategy):
     def _get_data(self):
         from single_factor import NetProfitGrowRateV2, NetProfit, Revenue
         factor_list = [NetProfitGrowRateV2, NetProfit]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         date_temp = get_trading_date_from_now(self.date, -3, ql.Months)
-        df_temp = get_factor_from_wind_v2(self.code_list, [NetProfitGrowRateV2, Revenue], date_temp)
+        df_temp = get_factor_from_wind_without_cache(self.code_list, [NetProfitGrowRateV2, Revenue], date_temp)
         df_temp.rename(columns={'净利润增长率': '净利润增长率_3个月前'}, inplace=True)
         df_temp_1 = df['净利润增长率'] - df_temp['净利润增长率_3个月前']
         df = pd.concat([df, df_temp, df_temp_1], axis=1)
@@ -258,9 +258,9 @@ class 戴维斯双击v2(MasterStrategy):
     def _get_data(self):
         from single_factor import NetProfitGrowRateV2, NetProfit, Revenue, PE
         factor_list = [NetProfitGrowRateV2, NetProfit, PE]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         date_temp = get_trading_date_from_now(self.date, -3, ql.Months)
-        df_temp = get_factor_from_wind_v2(self.code_list, [NetProfitGrowRateV2, Revenue], date_temp)
+        df_temp = get_factor_from_wind_without_cache(self.code_list, [NetProfitGrowRateV2, Revenue], date_temp)
         df_temp.rename(columns={'净利润增长率': '净利润增长率_3个月前'}, inplace=True)
         df_temp_1 = df['净利润增长率'] - df_temp['净利润增长率_3个月前']
         df = pd.concat([df, df_temp, df_temp_1], axis=1)
@@ -298,9 +298,9 @@ class 戴维斯双击v3(MasterStrategy):
     def _get_data(self):
         from single_factor import NetProfitGrowRateV2, NetProfit, Revenue, PE
         factor_list = [NetProfitGrowRateV2, NetProfit,PE]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         date_temp = get_trading_date_from_now(self.date, -3, ql.Months)
-        df_temp = get_factor_from_wind_v2(self.code_list, [NetProfitGrowRateV2, Revenue], date_temp)
+        df_temp = get_factor_from_wind_without_cache(self.code_list, [NetProfitGrowRateV2, Revenue], date_temp)
         df_temp.rename(columns={'净利润增长率': '净利润增长率_3个月前'}, inplace=True)
         df_temp_1 = df['净利润增长率'] - df_temp['净利润增长率_3个月前']
         df = pd.concat([df, df_temp, df_temp_1], axis=1)
@@ -338,9 +338,9 @@ class 戴维斯双击v4(MasterStrategy):
     def _get_data(self):
         from single_factor import NetProfitGrowRateV2, NetProfit, Revenue, PE
         factor_list = [NetProfitGrowRateV2, NetProfit,PE]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         date_temp = get_trading_date_from_now(self.date, -3, ql.Months)
-        df_temp = get_factor_from_wind_v2(self.code_list, [NetProfitGrowRateV2, Revenue], date_temp)
+        df_temp = get_factor_from_wind_without_cache(self.code_list, [NetProfitGrowRateV2, Revenue], date_temp)
         df_temp.rename(columns={'净利润增长率': '净利润增长率_3个月前'}, inplace=True)
         df_temp_1 = df['净利润增长率'] - df_temp['净利润增长率_3个月前']
         df = pd.concat([df, df_temp, df_temp_1], axis=1)
@@ -395,7 +395,7 @@ class 本杰明格雷厄姆经典价值投资法(MasterStrategy):
         from single_factor import ClosePrice, PE, DividendYield, NetTangibleAssetPerShare, NetLiquidAssetPerShare, TotalLiability, NetLiquidAsset, NetTangibleAsset, CurrentRatio, NetProfitGrowRateV2
         factor_list = [ClosePrice, PE, DividendYield, NetTangibleAssetPerShare, NetLiquidAssetPerShare, TotalLiability, NetLiquidAsset, NetTangibleAsset, CurrentRatio, NetProfitGrowRateV2]
         # factor_list = [PE_MAX] # 待添加到上述列表，条件筛选不完整
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         date_temp_1 = get_trading_date_from_now(self.date, -3, ql.Days)  # 取3天前国债收益率
         yield_data = w.wss("TB" + str(self.N) + "Y.WI", "close", "tradeDate=" + str(date_temp_1) + ";priceAdj=U;cycle=D").Data[0][0]
         df = df.dropna()
@@ -436,12 +436,12 @@ class 柯林麦克连成长价值优势投资法(MasterStrategy):
         factor_list = [OperationRevenueGrowth, EstimateNetRevenueGrowRateFY1_6M, FreeCashFlowPerShare, GrossIncomeRatio, ROC, EffectiveTaxRate, PS]
         date_one_year = get_trading_date_from_now(self.date, -1, ql.Years)
         date_two_year = get_trading_date_from_now(self.date, -2, ql.Years)
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
-        df_Revenue_growth_one_year = get_factor_from_wind_v2(self.code_list, [OperationRevenueGrowth], date_one_year)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
+        df_Revenue_growth_one_year = get_factor_from_wind_without_cache(self.code_list, [OperationRevenueGrowth], date_one_year)
         df_Revenue_growth_one_year.rename(columns={'营业收入增长率': '营业收入增长率_去年'}, inplace=True)
-        df_FreeCashFlowPerShare_one_year = get_factor_from_wind_v2(self.code_list, [FreeCashFlowPerShare], date_one_year)
+        df_FreeCashFlowPerShare_one_year = get_factor_from_wind_without_cache(self.code_list, [FreeCashFlowPerShare], date_one_year)
         df_FreeCashFlowPerShare_one_year.rename(columns={'每股企业自由现金流': '每股企业自由现金流_去年'}, inplace=True)
-        df_FreeCashFlowPerShare_two_year = get_factor_from_wind_v2(self.code_list, [FreeCashFlowPerShare], date_two_year)
+        df_FreeCashFlowPerShare_two_year = get_factor_from_wind_without_cache(self.code_list, [FreeCashFlowPerShare], date_two_year)
         df_FreeCashFlowPerShare_two_year.rename(columns={'每股企业自由现金流': '每股企业自由现金流_前年'}, inplace=True)
         df_temp = df['市销率'] * df['销售毛利率'] * 10.0  # 边际获利乘数即：销售毛利率*10
 
@@ -474,7 +474,7 @@ class 必要消费(MasterStrategy):
     def _get_data(self):
         from single_factor import SteadyProfitAcc, InventoryTurnRatio, PB
         factor_list = [SteadyProfitAcc, InventoryTurnRatio, PB]
-        df = get_factor_from_wind_v2(self.code_list, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
         df = df.dropna()
         return df
 
