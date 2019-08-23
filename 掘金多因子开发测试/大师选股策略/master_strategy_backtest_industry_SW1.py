@@ -2,20 +2,21 @@ from gm.api import *
 import QuantLib as ql
 from WindPy import w
 import json
+
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, get_SW1_industry, SW1_INDEX
 from 行业轮动SW1 import RSRS_standardization
-from master_strategy import AllCode as STRATEGY
+from 大师选股 import AllCode as STRATEGY
 from 持仓配置 import 等权持仓 as WEIGHTS
 from 候选股票 import SelectedStockPoolFromListV1
 
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2016-02-02'  # 回测开始日期
-BACKTEST_END_DATE = '2018-10-17'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_START_DATE = '2019-07-04'  # 回测开始日期，开始日期与结束日期都是交易日，从开始日期开盘回测到结束日期收盘，与回测软件一直
+BACKTEST_END_DATE = '2019-08-20'  # 回测结束日期
 INCLUDED_INDEX = ['000300.SH', '000016.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = ['801780.SI']  # 剔除的股票代码
 TRADING_DATES_LIST = ['10']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
@@ -35,9 +36,10 @@ trading_date_list = []  # 记录调仓日期的列表
 def init(context):
     global date_trading  # 调仓日期获取
     i = 0
+    print('回测开始日期：' + BACKTEST_START_DATE + '，结束日期：' + BACKTEST_END_DATE)
     while True:
-        print('处理日期：' + str(i))
         date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
+        print(('处理日期第%i个：' + date_now) % (i + 1))
         dates_trading = [get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
                         for TRADING_DATE in TRADING_DATES_LIST]
         if date_now in dates_trading:
@@ -45,6 +47,7 @@ def init(context):
         i += 1
         if date_now == BACKTEST_END_DATE:
             break
+    print('时间列表整理完毕\n-----------------------------------------------\n')
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 
@@ -57,12 +60,13 @@ def algo(context):
     if date_now not in trading_date_list:  # 非调仓日
         pass  # 预留非调仓日的微调空间
     else:  # 调仓日执行算法
+        print(date_now + '日回测程序执行中...')
         # 根据指数获取股票候选池的代码
         code_list = SelectedStockPoolFromListV1(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous).get_stock_pool()
         strategy = STRATEGY(code_list, date_previous)
         candidate_stock = strategy.select_code()  # 调仓日定期调节候选的股票池更新，非调仓日使用旧股票池
-    sw1_industry = get_SW1_industry(date_now, candidate_stock)
-    industry_wm_result = industry_wheel_movement[date_now]
+    sw1_industry = get_SW1_industry(date_previous, candidate_stock)  # 获取股票的申万一级行业信息字典
+    industry_wm_result = industry_wheel_movement[date_now]  # 行业轮动内部自动替换为前一交易日
     candidate_selected_stock = [stock for stock in candidate_stock if sw1_industry[stock] is not None and industry_wm_result[sw1_industry[stock]] == 1]  # 忽略无行业信息的股票并根据行业择时信号选择候选股票
 
     if candidate_selected_stock == selected_stock:  # 候选股状态与之前一样，不用任何操作
