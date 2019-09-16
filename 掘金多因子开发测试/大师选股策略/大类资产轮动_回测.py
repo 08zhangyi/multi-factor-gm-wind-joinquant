@@ -7,13 +7,14 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
 from 持仓配置 import 高阶矩优化配置策略_V0 as WEIGHTS
+# from 持仓配置 import 风险平价组合_迭代求解基本版 as WEIGHTS
 
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2015-01-15'  # 回测开始日期
+BACKTEST_START_DATE = '2014-05-15'  # 回测开始日期
 BACKTEST_END_DATE = '2019-08-22'  # 回测结束日期，测试结束日期不运用算法
-INCLUDED_INDEX = ['510050.SH', '513100.SH', '159928.SZ', '513500.SH', '510500.SH', '511010.SH', '518880.SH']  # 股票池代码，用Wind代码
+INCLUDED_INDEX = ['510050.SH', '513100.SH', '159928.SZ', '513500.SH', '510500.SH', '511010.SH', '518880.SH', '511880.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
 TRADING_DATES_LIST = ['15']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
