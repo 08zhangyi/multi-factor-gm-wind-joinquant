@@ -6,7 +6,7 @@ import random
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
-from utils import get_factor_from_wind_v2
+from utils import get_factor_from_wind_without_cache
 from utils_rl import rl_build, rl_text, rl_table, rl_pie_chart, clean_path
 TS_TOKEN = 'fcd3ee99a7d5f0e27c546d074a001f0b3eae01312c4dd8354415fba1'
 MAX_RANDOM = 10000000
@@ -248,10 +248,10 @@ class 个股主营业务分析_按地区(个股分析模板):
 
 class 个股营收增长分析(个股分析模板):
     def output(self):
-        from single_factor import RevenueGrowthRate, EstimateNetRevenueGrowRateFY16M
-        factor_list = [RevenueGrowthRate, EstimateNetRevenueGrowRateFY16M]
+        from single_factor import RevenueGrowthRate, EstimateNetRevenueGrowRateFY1_6M
+        factor_list = [RevenueGrowthRate, EstimateNetRevenueGrowRateFY1_6M]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
         text = '\0\0营业收入分析（数据截止' + self.date + '）：'
         para_1 = rl_text(text)
@@ -284,10 +284,10 @@ class 个股营收增长分析(个股分析模板):
 
 class 个股净利润增长分析(个股分析模板):
     def output(self):
-        from single_factor import NetProfit, NetProfitGrowRateV2, EstimateNetProfitGrowRateFY16M
-        factor_list = [NetProfit, NetProfitGrowRateV2, EstimateNetProfitGrowRateFY16M]
+        from single_factor import NetProfit, NetProfitGrowRateV2, EstimateNetProfitGrowRateFY1_6M
+        factor_list = [NetProfit, NetProfitGrowRateV2, EstimateNetProfitGrowRateFY1_6M]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
         df.iloc[:, 2] = pd.to_numeric(df.iloc[:, 2])
@@ -323,7 +323,7 @@ class 经营活动现金流分析(个股分析模板):
         from single_factor import OperateCashFlow, CashFlowCoverRatio
         factor_list = [OperateCashFlow, CashFlowCoverRatio]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
         text = '\0\0现金流分析（数据截止' + self.date + '）：'
@@ -339,7 +339,7 @@ class 经营活动现金流分析(个股分析模板):
         from single_factor import NetProfit
         factor_list = [NetProfit]
         code = [self.code]
-        netprofit = get_factor_from_wind_v2(code, factor_list, self.date).iloc[:, 0].values
+        netprofit = get_factor_from_wind_without_cache(code, factor_list, self.date).iloc[:, 0].values
         if df.iloc[:, 0].values < 0.0 and netprofit < 0.0:
             text_summary = "此时利润现金保障倍数无实际含义，公司目前整体亏损，公司主营业务经营活动并无现金流入，整体现金流情况较差。"
         elif df.iloc[:, 0].values < 0.0 and netprofit > 0.0:
@@ -365,7 +365,7 @@ class 经营理念分析_销售费用(个股分析模板):
         from single_factor import SellExpense, SellExpenseRevenue, SellExpenseGrowth
         factor_list = [SellExpense, SellExpenseRevenue, SellExpenseGrowth]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
         df.iloc[:, 2] = pd.to_numeric(df.iloc[:, 2])
@@ -382,7 +382,7 @@ class 经营理念分析_销售费用(个股分析模板):
         from single_factor import RevenueGrowthRate
         factor_list = [RevenueGrowthRate]
         code = [self.code]
-        rev_growth = get_factor_from_wind_v2(code, factor_list, self.date).iloc[:, 0].values/100.0
+        rev_growth = get_factor_from_wind_without_cache(code, factor_list, self.date).iloc[:, 0].values/100.0
         sellexp_growth = df.iloc[:, 2]
         diff = (rev_growth - sellexp_growth)[0]
         if diff >= 0.03:
@@ -404,7 +404,7 @@ class 经营理念分析_研发费用(个股分析模板):
         factor_list = [RDExpense, RDExpenseRevenue]
         code = [self.code]
         date = self._get_last_year_end(self.date)
-        df = get_factor_from_wind_v2(code, factor_list, date)
+        df = get_factor_from_wind_without_cache(code, factor_list, date)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
         text = '\0\0经营理念分析——研发费用（数据截止' + date + '）：'
@@ -424,9 +424,9 @@ class 资产结构分析(个股分析模板):
         from single_factor import NonCurrentAssetRatio
         factor_list = [NonCurrentAssetRatio]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         date_last = self._get_last_year_date(self.date)
-        df_last_year = get_factor_from_wind_v2(code, factor_list, date_last)
+        df_last_year = get_factor_from_wind_without_cache(code, factor_list, date_last)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
         growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
@@ -460,9 +460,9 @@ class 管理层面分析_效率(个股分析模板):
         from single_factor import AssetTurnoverRatio
         factor_list = [AssetTurnoverRatio]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         last_year = self._get_last_year_date(self.date)
-        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df_last_year = get_factor_from_wind_without_cache(code, factor_list, last_year)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
         growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
@@ -502,9 +502,9 @@ class 应收账款周转率(个股分析模板):
         factor_list = [AccRecTurnRatioV2]
         code = [self.code]
         date = self._get_last_year_end(self.date)
-        df = get_factor_from_wind_v2(code, factor_list, date)
+        df = get_factor_from_wind_without_cache(code, factor_list, date)
         date_last = self._get_last_year_date(date)
-        df_last_year = get_factor_from_wind_v2(code, factor_list, date_last)
+        df_last_year = get_factor_from_wind_without_cache(code, factor_list, date_last)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
         growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
@@ -521,9 +521,9 @@ class 存货周转率(个股分析模板):
         from single_factor import InventoryTurnRatio
         factor_list = [InventoryTurnRatio]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         last_year = self._get_last_year_date(self.date)
-        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df_last_year = get_factor_from_wind_without_cache(code, factor_list, last_year)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
         growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
@@ -540,9 +540,9 @@ class 资产负债率分析(个股分析模板):
         from single_factor import DebetToAsset, TotalAsset
         factor_list = [DebetToAsset, TotalAsset]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         last_year = self._get_last_year_date(self.date)
-        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df_last_year = get_factor_from_wind_without_cache(code, factor_list, last_year)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df.iloc[:, 1] = pd.to_numeric(df.iloc[:, 1])
         df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
@@ -578,9 +578,9 @@ class 短期偿债能力分析(个股分析模板):
         from single_factor import CurrentRatio
         factor_list = [CurrentRatio]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         last_year = self._get_last_year_date(self.date)
-        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df_last_year = get_factor_from_wind_without_cache(code, factor_list, last_year)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
         growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
@@ -613,9 +613,9 @@ class 业绩分析(个股分析模板):
         from single_factor import ROE
         factor_list = [ROE]
         code = [self.code]
-        df = get_factor_from_wind_v2(code, factor_list, self.date)
+        df = get_factor_from_wind_without_cache(code, factor_list, self.date)
         last_year = self._get_last_year_date(self.date)
-        df_last_year = get_factor_from_wind_v2(code, factor_list, last_year)
+        df_last_year = get_factor_from_wind_without_cache(code, factor_list, last_year)
         df.iloc[:, 0] = pd.to_numeric(df.iloc[:, 0])
         df_last_year.iloc[:, 0] = pd.to_numeric(df_last_year.iloc[:, 0])
         growth = (df.iloc[:, 0].values - df_last_year.iloc[:, 0].values) / df_last_year.iloc[:, 0].values
@@ -645,8 +645,8 @@ class 业绩分析(个股分析模板):
 
 if __name__ == '__main__':
     clean_path()
-    code = '600518.SH'
-    date = '2019-05-14'
+    code = '002869.SZ'
+    date = '2019-09-16'
     output_list = []
     Ms = [个股主营业务分析_按产品, 个股主营业务分析_按地区, 个股营收增长分析, 个股净利润增长分析, 经营活动现金流分析,
           经营理念分析_销售费用, 经营理念分析_研发费用, 资产结构分析, 管理层面分析_效率, 应收账款周转率,
