@@ -1407,11 +1407,108 @@ class AccRecTurnRatioV2(SingleFactorReasearch):
         return df
 
 
+# 外资持股占流通市值比
+class ForeignCapitalHoldingRatio(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '外资持股占流通市值比'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        data = np.array(w.wss(self.code_list, "share_pct_Ntofreefloat", "tradeDate=" + "".join(date_list)).Data[0])
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 过去N日外资持股比例平均增速，需继承
+class ForeignCapitalHoldingRatioGrowth_Avg(SingleFactorReasearch):
+    @abc.abstractmethod
+    def __init__(self, date, code_list, N=30):
+        factor_name = '过去' + str(N) + '日外资持股比例平均增速'
+        self.N = N
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        temp_date = get_trading_date_from_now("-".join(self.date), -int(3), ql.Days)
+        data_start = np.array(w.wss(self.code_list, "share_pct_Ntofreefloat", "tradeDate=" + str(temp_date)).Data[0])
+        data_end = np.array(w.wss(self.code_list, "share_pct_Ntofreefloat", "tradeDate=" + "".join(self.date)).Data[0])
+        avggrowth = (data_end - data_start) / self.N
+        df = pd.DataFrame(data=avggrowth, index=self.code_list, columns=[self.factor_name])
+        df = df.dropna()
+        return df
+
+
+# 过去N日外资持股比例增速，线性回归法，需继承
+class ForeignCapitalHoldingRatioGrowth_LR(SingleFactorReasearch):
+    @abc.abstractmethod
+    def __init__(self, date, code_list, N=5):
+        factor_name = '过去' + str(N) + '日外资持股比例增速'
+        self.N = N
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        vol_data = []
+        i = 0
+        j = 0
+        while True:
+            temp_date = get_trading_date_from_now("-".join(self.date), -int(i), ql.Days)
+            vol = np.array(w.wss(self.code_list, "share_pct_Ntofreefloat", "tradeDate=" + str(temp_date)).Data[0])
+            i = i + 1
+            if vol[0] is None:  # 判断是否为沪港通交易日，若不是，则继续前推交易日
+                continue
+            j = j + 1
+            vol_data.append(vol)
+            if j == self.N:  # 提取够数据，跳出循环
+                break
+        vol_data.reverse()  # 逆序
+        vol_data = np.array(vol_data)
+        X = np.linspace(0, self.N-1, self.N)[:, np.newaxis]
+        X = np.c_[np.ones((self.N, 1)), X]
+        result = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(vol_data)
+        data = result[1]
+        data = np.array(data).transpose()
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
+# 过去N日外资持股比例增速加速度，线性回归法，需继承
+class ForeignCapitalHoldingRatioGrowth_LR_ACC(SingleFactorReasearch):
+    @abc.abstractmethod
+    def __init__(self, date, code_list, N=6):
+        factor_name = '过去' + str(N) + '日外资持股增速加速度'
+        self.N = N
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        vol_data = []
+        i = 0
+        j = 0
+        while True:
+            temp_date = get_trading_date_from_now("-".join(self.date), -int(i), ql.Days)
+            vol = np.array(w.wss(self.code_list, "share_pct_Ntofreefloat", "tradeDate=" + str(temp_date)).Data[0])
+            i = i + 1
+            if vol[0] is None:  # 判断是否为沪港通交易日，若不是，则继续前推交易日
+                continue
+            j = j + 1
+            vol_data.append(vol)
+            if j == self.N:  # 提取够数据，跳出循环
+                break
+        vol_data.reverse()  # 逆序
+        vol_data = np.array(vol_data)
+        X = np.linspace(0, self.N-1, self.N)[:, np.newaxis]
+        X = np.c_[np.ones((self.N, 1)), X, X*X]
+        result = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(vol_data)
+        data = result[2]
+        data = np.array(data).transpose()
+        df = pd.DataFrame(data=data, index=self.code_list, columns=[self.factor_name])
+        return df
+
+
 if __name__ == '__main__':
     date = '2017-05-09'
     w.start()
     code_list = w.wset("sectorconstituent", "date=" + date + ";windcode=000300.SH").Data[1]  # 沪深300动态股票池
     # code_list = ['000001.SZ', '000002.SZ']
-    factor_model = SW1IndustryOneHot(date, code_list)
+    factor_model = ForeignCapitalHoldingRatioGrowth_LR(date, code_list)
     df = factor_model.get_factor()
     print(df)
