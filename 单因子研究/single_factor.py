@@ -1471,6 +1471,11 @@ class ForeignCapitalHoldingRatioGrowth_LR(SingleFactorReasearch):
         return df
 
 
+class ForeignCapitalHoldingRatioGrowth_LR_10(ForeignCapitalHoldingRatioGrowth_LR):
+    def __init__(self, date, code_list):
+        super().__init__(date, code_list, N=10)
+
+
 # 过去N日外资持股比例增速加速度，线性回归法，需继承
 class ForeignCapitalHoldingRatioGrowth_LR_ACC(SingleFactorReasearch):
     @abc.abstractmethod

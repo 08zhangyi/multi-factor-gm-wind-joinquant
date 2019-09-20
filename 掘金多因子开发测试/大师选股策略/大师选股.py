@@ -485,3 +485,24 @@ class 必要消费(MasterStrategy):
         df = df[df['PB市净率指标'] < df['PB市净率指标'].quantile(1/3)]
         code_list = list(df.index.values)
         return code_list
+
+
+class 北上资金趋势选股V1(MasterStrategy):
+    def __init__(self, code_list, date):
+        super().__init__(code_list, date)
+
+    def _get_data(self):
+        # 10日的策略
+        from single_factor import ForeignCapitalHoldingRatioGrowth_LR_10
+        factor_list = [ForeignCapitalHoldingRatioGrowth_LR_10]
+        df = get_factor_from_wind_without_cache(self.code_list, factor_list, self.date)
+        df = df.dropna()
+        return df
+
+    def select_code(self):
+        df = self._get_data()
+        strf = '过去10日外资持股比例增速'
+        df = df[df[strf] > df[strf].quantile(0.65)]
+        df = df[df[strf] <= df[strf].quantile(0.75)]
+        code_list = list(df.index.values)
+        return code_list

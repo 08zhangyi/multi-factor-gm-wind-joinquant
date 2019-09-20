@@ -7,18 +7,18 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq
-from 大师选股 import 本杰明格雷厄姆成长股内在价值投资法 as STRATEGY
-from 持仓配置 import 方差极小化权重_基本版 as WEIGHTS
+from 大师选股 import 北上资金趋势选股V1 as STRATEGY
+from 持仓配置 import 等权持仓 as WEIGHTS
 from 候选股票 import SelectedStockPoolFromListV1
 
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2019-07-04'  # 回测开始日期，开始日期与结束日期都是交易日，从开始日期开盘回测到结束日期收盘，与回测软件一直
-BACKTEST_END_DATE = '2019-08-20'  # 回测结束日期
-INCLUDED_INDEX = ['000300.SH']  # 股票池代码，用Wind代码
+BACKTEST_START_DATE = '2019-03-01'  # 回测开始日期，开始日期与结束日期都是交易日，从开始日期开盘回测到结束日期收盘，与回测软件一直
+BACKTEST_END_DATE = '2019-09-19'  # 回测结束日期
+INCLUDED_INDEX = ['881001.WI']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
-TRADING_DATES_LIST = ['10']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
+TRADING_DATES_LIST = ['1', '16']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
 # 用于记录调仓信息的字典
 stock_dict = {}
@@ -56,7 +56,7 @@ def algo(context):
         # 根据指数获取股票候选池的代码
         code_list = SelectedStockPoolFromListV1(INCLUDED_INDEX, EXCLUDED_INDEX, date_previous).get_stock_pool()
         # 按照选股策略选股，与选股策略接口保持一致
-        strategy = STRATEGY(code_list, date_previous, 0.9)
+        strategy = STRATEGY(code_list, date_previous)
         select_code_list = list_wind2jq(strategy.select_code())
         if len(select_code_list) > 0:  # 有可选股票时选取合适的股票
             stock_now = WEIGHTS(select_code_list, date_previous).get_weights()
