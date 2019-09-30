@@ -502,7 +502,6 @@ class 北上资金趋势选股V1(MasterStrategy):
     def select_code(self):
         df = self._get_data()
         strf = '过去10日外资持股比例增速'
-        df = df[df[strf] > df[strf].quantile(0.65)]
-        df = df[df[strf] <= df[strf].quantile(0.75)]
+        df = df[(df[strf] > df[strf].quantile(0.65)) & (df[strf] <= df[strf].quantile(0.75))]
         code_list = list(df.index.values)
         return code_list

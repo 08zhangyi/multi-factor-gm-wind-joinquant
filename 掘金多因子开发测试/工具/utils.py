@@ -16,8 +16,8 @@ SW1_INDEX = [['801010.SI', '农林牧渔'], ['801020.SI', '采掘'], ['801030.SI
 
 # 计算不同交易日的函数
 def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
-    always_using_ql = True  # 是否全部使用quantlib处理日期，否则只在某些情形使用quantlib处理日期
-    if (int(date_now.split('-')[0]) <= 2018 and diff_periods <= 1) or always_using_ql:
+    always_using_ql = False  # 是否全部使用quantlib处理日期，否则只在某些情形使用quantlib处理日期
+    if (int(date_now.split('-')[0]) <= 2019 and int(date_now.split('-')[1]) <= 9 and diff_periods <= 1) or (int(date_now.split('-')[0]) <= 2018 and diff_periods <= 1) or always_using_ql:
         calculation_date = ql.Date(int(date_now.split('-')[2]), int(date_now.split('-')[1]),
                                    int(date_now.split('-')[0]))
         calendar = ql.China()
