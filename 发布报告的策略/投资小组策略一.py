@@ -5,14 +5,14 @@ import json
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
+from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, get_trading_date_list_by_day_monthly
 from 持仓配置 import 风险平价组合_迭代求解基本版 as WEIGHTS
 
 w.start()
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2019-08-15'  # 回测开始日期
-BACKTEST_END_DATE = '2019-09-16'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2019-10-15'  # 回测结束日期，测试结束日期不运用算法
 INCLUDED_INDEX = ['510050.SH', '513100.SH', '159928.SZ', '513500.SH', '510500.SH', '511010.SH', '518880.SH', '510880.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
 TRADING_DATES_LIST = ['15']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
@@ -25,18 +25,9 @@ trading_date_list = []  # 记录调仓日期的列表
 
 
 def init(context):
-    global date_trading  # 调仓日期获取
-    i = 0
-    while True:
-        print('处理日期：' + str(i))
-        date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
-        dates_trading = [get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
-                         for TRADING_DATE in TRADING_DATES_LIST]
-        if date_now in dates_trading:
-            trading_date_list.append(date_now)
-        i += 1
-        if date_now == BACKTEST_END_DATE:
-            break
+    # 调仓日期获取
+    global trading_date_list
+    trading_date_list = get_trading_date_list_by_day_monthly(BACKTEST_START_DATE, BACKTEST_END_DATE, TRADING_DATES_LIST)
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 

@@ -11,7 +11,7 @@ sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 from single_factor import PE, PB, ROE, RSI, MA10, AROON
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, list_wind2jq, list_gm2wind, get_SW1_industry
+from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, list_wind2jq, list_gm2wind, get_SW1_industry, get_trading_date_list_by_day_monthly
 from 候选股票 import SelectedStockPoolFromListV1
 # 因子预处理部分包括在了Adaboost算法中，不需要直接调用  # from 因子数据后处理 import ...
 from 择时模型 import Without_select_time
@@ -25,7 +25,7 @@ INCLUDED_INDEX = ['000016.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
 FACTOR_LIST = [PE, PB, ROE, RSI, MA10, AROON]  # 需要获取的因子列表，用单因子研究中得模块
 
-TRADING_DATE = '10'  # 每月的调仓日期，非交易日寻找下一个最近的交易日
+TRADING_DATES_LIST = ['10']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 6  # 取得的历史样本的周期数
 # 选股策略的参数
 SELECT_NUMBER = 10  # 选股数量
@@ -47,18 +47,9 @@ trading_date_list = []  # 记录调仓日期的列表
 
 
 def init(context):
-    global date_trading  # 调仓日期获取
-    i = 0
-    while True:
-        print('处理日期：' + str(i))
-        date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
-        date_trading = get_trading_date_from_now(
-            date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
-        if date_now == date_trading:
-            trading_date_list.append(date_now)
-        i += 1
-        if date_now == BACKTEST_END_DATE:
-            break
+    # 调仓日期获取
+    global trading_date_list
+    trading_date_list = get_trading_date_list_by_day_monthly(BACKTEST_START_DATE, BACKTEST_END_DATE, TRADING_DATES_LIST)
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 

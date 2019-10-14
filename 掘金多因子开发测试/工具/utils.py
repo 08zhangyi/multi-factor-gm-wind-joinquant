@@ -117,5 +117,47 @@ def get_SW1_industry(date, code_list):
     return sw1_result
 
 
+# 每月根据日期整理交易日列表
+def get_trading_date_list_by_day_monthly(BACKTEST_START_DATE, BACKTEST_END_DATE, TRADING_DATES_LIST):
+    trading_date_list = []  # 记录备选交易日列表
+    w.start()
+    date_to_be_selected = w.tdays(BACKTEST_START_DATE, BACKTEST_END_DATE, "").Data[0]  # 获取交易日列表
+    date_to_be_selected = [d.strftime('%Y-%m-%d') for d in date_to_be_selected]
+    i = 0
+    while True:
+        print('处理日期：' + str(i))
+        date_now = date_to_be_selected[i]
+        dates_trading = [get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
+                         for TRADING_DATE in TRADING_DATES_LIST]
+        if date_now in dates_trading:
+            trading_date_list.append(date_now)
+        i += 1
+        if date_now == BACKTEST_END_DATE:
+            break
+    return trading_date_list
+
+
+# 根据月份日期整理交易日列表
+def get_trading_date_list_by_month_by_day(BACKTEST_START_DATE, BACKTEST_END_DATE, MONTHS, TRADING_DATES_LIST):
+    trading_date_list = []  # 记录备选交易日列表
+    w.start()
+    date_to_be_selected = w.tdays(BACKTEST_START_DATE, BACKTEST_END_DATE, "").Data[0]  # 获取交易日列表
+    date_to_be_selected = [d.strftime('%Y-%m-%d') for d in date_to_be_selected]
+    i = 0
+    print('回测开始日期：' + BACKTEST_START_DATE + '，结束日期：' + BACKTEST_END_DATE)
+    while True:
+        print('处理日期：' + str(i))
+        date_now = date_to_be_selected[i]
+        dates_trading = [get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
+                         for TRADING_DATE in TRADING_DATES_LIST]
+        if date_now in dates_trading:
+            trading_date_list.append(date_now)
+        i += 1
+        if date_now == BACKTEST_END_DATE:
+            break
+    trading_date_list = [d for d in trading_date_list if d.split('-')[1] in MONTHS]  # 按照选定的调仓月份进行筛选
+    return trading_date_list
+
+
 if __name__ == '__main__':
     print(get_trading_date_from_now('2019-01-05', 0))

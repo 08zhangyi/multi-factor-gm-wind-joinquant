@@ -6,7 +6,7 @@ import json
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
-from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind
+from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, get_trading_date_list_by_month_by_day
 from 大师选股 import 戴维斯双击v3 as STRATEGY
 from 持仓配置 import 等权持仓 as WEIGHTS
 from 候选股票 import SelectedStockPoolFromListV1
@@ -29,22 +29,10 @@ trading_date_list = []  # 记录调仓日期的列表
 
 
 def init(context):
+    # 调仓日期获取
     global trading_date_list
-    i = 0
-    print('回测开始日期：' + BACKTEST_START_DATE + '，结束日期：' + BACKTEST_END_DATE)
-    while True:
-        date_now = get_trading_date_from_now(BACKTEST_START_DATE, i, ql.Days)  # 遍历每个交易日
-        print(('处理日期第%i个：' + date_now) % (i + 1))
-        dates_trading = [get_trading_date_from_now(date_now.split('-')[0] + '-' + date_now.split('-')[1] + '-' + TRADING_DATE, 0, ql.Days)
-                         for TRADING_DATE in TRADING_DATES_LIST]
-        if date_now in dates_trading:
-            trading_date_list.append(date_now)
-        i += 1
-        if date_now == BACKTEST_END_DATE:
-            break
+    trading_date_list = get_trading_date_list_by_month_by_day(BACKTEST_START_DATE, BACKTEST_END_DATE, MONTHS, TRADING_DATES_LIST)
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
-    print('时间列表整理完毕\n-----------------------------------------------\n')
-    trading_date_list = [d for d in trading_date_list if d.split('-')[1] in MONTHS]  # 按照选定的调仓月份进行筛选
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 
 
