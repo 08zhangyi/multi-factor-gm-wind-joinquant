@@ -72,6 +72,18 @@ def get_standard_deviation_of_return_from_weights_covariances(covariance_matrix,
     return standard_deviation[0][0]
 
 
+# 根据协方差矩阵的权重估计观点的标准差
+def get_standard_deviation_of_views_from_weights_covariances(covariance_matrix, views_matrix):
+    """
+    :param covariance_matrix: (N, N)
+    :param views_matrix: (K, N)，观点组成矩阵，K个观点
+    :return standard_deviation:  (K, )，每条观点对应投资组合的标准差
+    """
+    standard_deviation = np.matmul(views_matrix, np.matmul(covariance_matrix, views_matrix.transpose()))
+    standard_deviation = np.diag(standard_deviation)
+    return standard_deviation
+
+
 if __name__ == '__main__':
     # 例子计算区
 
@@ -100,13 +112,14 @@ if __name__ == '__main__':
     level_of_confidence = np.array([0.5, 0.65, 0.3])  # 对每个观点的置信度，0-100%之间
     calibration_factor = 0.2806/(1/0.5)  # 第一个观点组合的标准差与把握度
     views_cov = np.diag(1.0/level_of_confidence * calibration_factor)
-    print(views_cov)
+    # print(views_cov)
     # tau_value = 0.873  # 论文中对tau值的设定，观点等权下计算的标准差
     tau_value = 1.0
+    views_standard_deviation = get_standard_deviation_of_views_from_weights_covariances(cov, views_matrix)  # 观点的协方差矩阵计算
 
     # 计算后验收益和权重
     posterior_return_vector = get_black_litterman_posterior_return_vector(tau_value, cov, equilibrium_returns, views_matrix, views_vector, views_cov)
-    print(posterior_return_vector + risk_free)
+    # print(posterior_return_vector + risk_free)
     black_litterman_weights = get_unconstrained_weights(cov, posterior_return_vector, delta_value)  # 从后验收益求得权重
-    print(black_litterman_weights)
-    print(black_litterman_weights - market_weights)
+    # print(black_litterman_weights)
+    # print(black_litterman_weights - market_weights)
