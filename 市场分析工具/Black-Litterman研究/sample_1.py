@@ -62,26 +62,26 @@ def get_risk_aversion_delta_value(risk_preminum, standard_deviation_of_return):
 
 
 # 根据协方差矩阵的权重估计组合的标准差
-def get_standard_deviation_of_return_from_weights_covariances(covariance_matrix, weights):
+def get_variance_of_return_from_weights_covariances(covariance_matrix, weights):
     """
     :param covariance_matrix: (N, N)
     :param weights: (N, 1)
     :return standard_deviation:  >0
     """
-    standard_deviation = np.matmul(weights.transpose(), np.matmul(covariance_matrix, weights))
-    return standard_deviation[0][0]
+    variance = np.matmul(weights.transpose(), np.matmul(covariance_matrix, weights))
+    return variance[0][0]
 
 
 # 根据协方差矩阵的权重估计观点的标准差
-def get_standard_deviation_of_views_from_weights_covariances(covariance_matrix, views_matrix):
+def get_variance_of_views_from_weights_covariances(covariance_matrix, views_matrix):
     """
     :param covariance_matrix: (N, N)
     :param views_matrix: (K, N)，观点组成矩阵，K个观点
     :return standard_deviation:  (K, )，每条观点对应投资组合的标准差
     """
-    standard_deviation = np.matmul(views_matrix, np.matmul(covariance_matrix, views_matrix.transpose()))
-    standard_deviation = np.diag(standard_deviation)
-    return standard_deviation
+    variance = np.matmul(views_matrix, np.matmul(covariance_matrix, views_matrix.transpose()))
+    variance = np.diag(variance)
+    return variance
 
 
 if __name__ == '__main__':
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     risk_free = 0.05  # 论文中的无风险利率5%
     standard_deviation_of_return = 0.1825  # 论文中的DJIA波动率18.25%，年化
     # delta_value = get_risk_aversion_delta_value(risk_preminum, standard_deviation_of_return)
-    delta_value = 2.25  # 论文中使用的风险厌恶系数
+    delta_value = 2.0  # 论文中使用的风险厌恶系数
     # print(market_weights)
     # print(cov)
 
@@ -110,16 +110,27 @@ if __name__ == '__main__':
     # print(views_matrix)
     views_vector = np.array([0.1-risk_free, 0.03, 0.015]).reshape((3, 1))  # 观点的收益向量
     level_of_confidence = np.array([0.5, 0.65, 0.3])  # 对每个观点的置信度，0-100%之间
-    calibration_factor = 0.2806/(1/0.5)  # 第一个观点组合的标准差与把握度
+    #  calibration_factor = 0.2806/(1/0.5)  # 第一个观点组合的方差与把握度，论文中取0.2806
+    calibration_factor = 0.2843 / (1 / 0.5)  # 第一个观点组合的方差与把握度，计算中采用views_variance的标准差的均值更加合适
+    # 0.2843 = np.mean(np.sqrt(views_variance))
     views_cov = np.diag(1.0/level_of_confidence * calibration_factor)
-    # print(views_cov)
+    print(views_cov)
     # tau_value = 0.873  # 论文中对tau值的设定，观点等权下计算的标准差
     tau_value = 1.0
-    views_standard_deviation = get_standard_deviation_of_views_from_weights_covariances(cov, views_matrix)  # 观点的协方差矩阵计算
+    views_variance = get_variance_of_views_from_weights_covariances(cov, views_matrix)  # 观点的协方差矩阵计算
+    # print(np.diag(views_cov), np.sqrt(np.diag(views_cov)))
+    print(views_variance, np.sqrt(views_variance))
+    print(np.mean(np.sqrt(views_variance)))
 
     # 计算后验收益和权重
     posterior_return_vector = get_black_litterman_posterior_return_vector(tau_value, cov, equilibrium_returns, views_matrix, views_vector, views_cov)
     # print(posterior_return_vector + risk_free)
     black_litterman_weights = get_unconstrained_weights(cov, posterior_return_vector, delta_value)  # 从后验收益求得权重
-    # print(black_litterman_weights)
+    print(black_litterman_weights)
     # print(black_litterman_weights - market_weights)
+    # print(np.sum(black_litterman_weights), np.sum(market_weights))  # Black-Litterman权重求和不唯一
+
+    # Black-Litterman权重正则化
+    black_litterman_weights = np.maximum(black_litterman_weights, 0.0)  # 去除负权重
+    black_litterman_weights = black_litterman_weights / np.sum(black_litterman_weights)  # 归一化
+    # print(black_litterman_weights)
