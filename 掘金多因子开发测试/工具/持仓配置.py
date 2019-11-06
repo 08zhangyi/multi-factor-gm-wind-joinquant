@@ -110,10 +110,9 @@ class 方差极小化权重_基本版(WeightsAllocation):
         return code_weights
 
     def _get_coef(self, code_list):
-        # 提供_calc_weights需要计算的参数
-        w.start()
-        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
-        return_cov = np.cov(return_value)
+        from 风险评估 import 方差风险_历史数据
+        risk_model = 方差风险_历史数据(code_list, self.date, self.N)
+        return_cov = risk_model.return_cov
         return return_cov
 
     def _calc_weights(self, code_list):
@@ -153,12 +152,9 @@ class 最大分散化组合_基本版(方差极小化权重_基本版):
 
 class 最大分散化组合_基本版_OAS(最大分散化组合_基本版):
     def _get_coef(self, code_list):
-        # 提供_calc_weights需要计算的参数
-        w.start()
-        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
-        from sklearn.covariance import OAS
-        return_cov = OAS().fit(return_value.transpose())
-        return_cov = return_cov.covariance_
+        from 风险评估 import 方差风险_历史数据_OAS
+        risk_model = 方差风险_历史数据_OAS(code_list, self.date, self.N)
+        return_cov = risk_model.return_cov
         return return_cov
 
 
@@ -205,12 +201,9 @@ class 最大分散化组合_行业版(方差极小化权重_行业版):
 
 class 最大分散化组合_行业版_OAS(最大分散化组合_行业版):
     def _get_coef(self, code_list):
-        # 提供_calc_weights需要计算的参数
-        w.start()
-        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
-        from sklearn.covariance import OAS
-        return_cov = OAS().fit(return_value.transpose())
-        return_cov = return_cov.covariance_
+        from 风险评估 import 方差风险_历史数据_OAS
+        risk_model = 方差风险_历史数据_OAS(code_list, self.date, self.N)
+        return_cov = risk_model.return_cov
         return return_cov
 
 
@@ -260,12 +253,9 @@ class 风险平价组合_迭代求解基本版(方差极小化权重_基本版):
 
 class 风险平价组合_迭代求解基本版_OAS(风险平价组合_迭代求解基本版):
     def _get_coef(self, code_list):
-        # 提供_calc_weights需要计算的参数
-        w.start()
-        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
-        from sklearn.covariance import OAS
-        return_cov = OAS().fit(return_value.transpose())
-        return_cov = return_cov.covariance_
+        from 风险评估 import 方差风险_历史数据_OAS
+        risk_model = 方差风险_历史数据_OAS(code_list, self.date, self.N)
+        return_cov = risk_model.return_cov
         return return_cov
 
 
