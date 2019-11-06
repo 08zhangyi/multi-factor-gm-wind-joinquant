@@ -7,6 +7,7 @@ from 持仓配置 import 风险平价组合_迭代求解基本版 as WEIGHTS
 from utils import list_wind2jq
 from sample_1 import get_equilibrium_returns, get_unconstrained_weights, get_black_litterman_posterior_return_vector, \
     get_risk_aversion_delta_value, get_variance_of_return_from_weights_covariances, get_variance_of_views_from_weights_covariances
+from 风险评估 import 方差风险_历史数据
 
 
 def 品种获取(file_path):
@@ -38,15 +39,6 @@ def 观点信息获取(file_path):
     return views_matrix, views_vector, views_cov
 
 
-def get_cov(code_list, date, N=60):
-    # 计算协方差矩阵
-    w.start()
-    return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(N - 1) + "TD", date, "").Data) / 100.0
-    return_cov = np.cov(return_value)
-    return_cov = 240 * return_cov  # 240天的年化协方差
-    return return_cov
-
-
 if __name__ == '__main__':
     # 输入数据
     date = '2019-11-04'
@@ -58,7 +50,7 @@ if __name__ == '__main__':
 
     # 风险平价收益和历史数据估计协方差数据
     rp_weights = [code_weights[code] for code in code_weights]
-    return_cov = get_cov(code_list, date)
+    return_cov = 方差风险_历史数据(code_list, date, 60).return_cov * 240
     # 主观观点标准差与历史估计标准差的比较
     views_variance = get_variance_of_views_from_weights_covariances(return_cov, views_matrix)
     views_std = np.sqrt(views_variance)
