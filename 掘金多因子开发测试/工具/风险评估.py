@@ -82,3 +82,11 @@ class 方差风险_历史数据_软阈值稀疏(方差风险_历史数据_硬阈
         for i in range(len(return_cov_diag)):  # 对角线保持不变
             return_cov[i, i] = return_cov_diag[i]
         return return_cov
+
+
+if __name__ == '__main__':
+    code_list = ['000002.SZ', '600000.SH', '002415.SZ', '601012.SH', '601009.SH']
+    date = '2019-11-06'
+    model = 方差风险_历史数据(code_list, date, N_days=60)
+    return_cov = model.return_cov
+    print(return_cov)

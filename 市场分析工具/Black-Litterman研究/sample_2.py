@@ -1,6 +1,5 @@
 import xlrd
 import numpy as np
-from WindPy import w
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from 持仓配置 import 风险平价组合_迭代求解基本版 as WEIGHTS

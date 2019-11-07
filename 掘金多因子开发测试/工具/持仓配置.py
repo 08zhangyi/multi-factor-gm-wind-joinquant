@@ -304,5 +304,5 @@ class 高阶矩优化配置策略_V0(WeightsAllocation):
 
 
 if __name__ == '__main__':
-    model = 高阶矩优化配置策略_V0(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2018-11-22')
+    model = 风险平价组合_迭代求解基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06')
     print(model.get_weights())
