@@ -6,16 +6,16 @@ import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, list_wind2jq, list_gm2wind, get_trading_date_list_by_day_monthly
-from 持仓配置 import 风险平价组合_迭代求解基本版 as WEIGHTS
+from 持仓配置 import 高阶矩优化配置策略_V0 as WEIGHTS
 
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2019-01-15'  # 回测开始日期
-BACKTEST_END_DATE = '2019-11-07'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_START_DATE = '2019-10-25'  # 回测开始日期
+BACKTEST_END_DATE = '2019-11-06'  # 回测结束日期，测试结束日期不运用算法
 INCLUDED_INDEX = ['510050.SH', '513100.SH', '159928.SZ', '513500.SH', '510500.SH', '511010.SH', '518880.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
-TRADING_DATES_LIST = ['15']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
+TRADING_DATES_LIST = ['25']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 # 实验区-回测的基本参数的设定
 # BACKTEST_START_DATE = '2019-01-07'  # 回测开始日期
 # BACKTEST_END_DATE = '2019-08-01'  # 回测结束日期，测试结束日期不运用算法
@@ -58,14 +58,14 @@ def on_backtest_finished(context, indicator):
     # 输出回测指标
     print(indicator)
     stock_json = json.dumps(stock_dict)
-    stock_file = open('data\\stock_json2.json', 'w')
+    stock_file = open('data\\stock_json3.json', 'w')
     stock_file.write(stock_json)
     stock_file.close()
 
 
 if __name__ == '__main__':
     run(strategy_id='4d2f6b1c-8f0a-11e8-af59-305a3a77b8c5',
-        filename='量化资产配置_风险平价_V1.py',
+        filename='量化资产配置_高阶矩优化_V2.py',
         mode=MODE_BACKTEST,
         token='d7b08e7e21dd0315a510926e5a53ade8c01f9aaa',
         backtest_initial_cash=10000000,
