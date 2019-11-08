@@ -296,7 +296,34 @@ class 风险预算组合_模块求解基本版(方差极小化权重_基本版):
         return weights
 
 
-class 风险平价组合_模块求解基本版_OAS(风险预算组合_模块求解基本版):
+class 风险预算组合_模块求解基本版_OAS(风险预算组合_模块求解基本版):
+    def _get_coef(self, code_list):
+        from 风险评估 import 方差风险_历史数据_OAS
+        risk_model = 方差风险_历史数据_OAS(code_list, self.date, self.N)
+        return_cov = risk_model.return_cov
+        return return_cov
+
+
+class 风险预算组合_模块求解基本版_带约束(方差极小化权重_基本版):
+    def __init__(self, code_list, date, N=60, risk_budget=None, bounds=None):
+        if risk_budget is None:
+            self.risk_budget = np.ones(len(code_list))
+        else:
+            self.risk_budget = risk_budget  # 风险预算，行向量，无需归一化
+        self.bounds = bounds  # 约束界，(n, 2)的np.array，n为品种个数
+        方差极小化权重_基本版.__init__(self, code_list, date, N)
+
+    def _calc_weights(self, code_list):
+        # 风险平价组合，迭代法求解
+        sigma = self._get_coef(code_list)
+        CRB = pyrb.ConstrainedRiskBudgeting(sigma, self.risk_budget, bounds=self.bounds)
+        CRB.solve()
+        print('风险配置比例为：', CRB.get_risk_contributions())
+        weights = CRB.x
+        return weights
+
+
+class 风险预算组合_模块求解基本版_带约束_OAS(风险预算组合_模块求解基本版_带约束):
     def _get_coef(self, code_list):
         from 风险评估 import 方差风险_历史数据_OAS
         risk_model = 方差风险_历史数据_OAS(code_list, self.date, self.N)
