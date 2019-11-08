@@ -2,6 +2,7 @@ import numpy as np
 import scipy.stats, scipy.optimize
 from WindPy import w
 import cvxopt
+import pyrb
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import list_wind2jq, list_jq2wind, SW1_INDEX
@@ -29,7 +30,7 @@ class 指数权重(WeightsAllocation):
     def __init__(self, code_list, date, index_code):
         # 按照index_code的编制权重配置，code_list的股票应为index_code的成分股
         self.index_code = index_code
-        super().__init__(code_list, date)
+        WeightsAllocation.__init__(self, code_list, date)
 
     def get_weights(self):
         w.start()
@@ -98,7 +99,7 @@ class 自由流通市值权重(WeightsAllocation):
 class 方差极小化权重_基本版(WeightsAllocation):
     def __init__(self, code_list, date, N=60):
         self.N = N  # 收益率数据采样的历史大小，默认N=60，为一个季度的数据
-        super().__init__(code_list, date)
+        WeightsAllocation.__init__(self, code_list, date)
 
     def get_weights(self):
         code_list = list_jq2wind(self.code_list)
@@ -259,6 +260,50 @@ class 风险平价组合_迭代求解基本版_OAS(风险平价组合_迭代求�
         return return_cov
 
 
+class 风险平价组合_模块求解基本版(方差极小化权重_基本版):
+    def _calc_weights(self, code_list):
+        # 风险平价组合，迭代法求解
+        sigma = self._get_coef(code_list)
+        ERC = pyrb.EqualRiskContribution(sigma)
+        ERC.solve()
+        weights = ERC.x
+        return weights
+
+
+class 风险平价组合_模块求解基本版_OAS(风险平价组合_模块求解基本版):
+    def _get_coef(self, code_list):
+        from 风险评估 import 方差风险_历史数据_OAS
+        risk_model = 方差风险_历史数据_OAS(code_list, self.date, self.N)
+        return_cov = risk_model.return_cov
+        return return_cov
+
+
+class 风险预算组合_模块求解基本版(方差极小化权重_基本版):
+    def __init__(self, code_list, date, N=60, risk_budget=None):
+        if risk_budget is None:
+            self.risk_budget = np.ones(len(code_list))
+        else:
+            self.risk_budget = risk_budget  # 风险预算，行向量，无需归一化
+        方差极小化权重_基本版.__init__(self, code_list, date, N)
+
+    def _calc_weights(self, code_list):
+        # 风险平价组合，迭代法求解
+        sigma = self._get_coef(code_list)
+        RB = pyrb.RiskBudgeting(sigma, self.risk_budget)
+        RB.solve()
+        print('风险配置比例为：', RB.get_risk_contributions())
+        weights = RB.x
+        return weights
+
+
+class 风险平价组合_模块求解基本版_OAS(风险预算组合_模块求解基本版):
+    def _get_coef(self, code_list):
+        from 风险评估 import 方差风险_历史数据_OAS
+        risk_model = 方差风险_历史数据_OAS(code_list, self.date, self.N)
+        return_cov = risk_model.return_cov
+        return return_cov
+
+
 class 高阶矩优化配置策略_V0(WeightsAllocation):
     def __init__(self, code_list, date, N=60, w2=1.0, w3=1.0, w4=1.0):
         self.N = N  # 收益率数据采样的历史大小，默认N=60，为一个季度的数据
@@ -304,5 +349,5 @@ class 高阶矩优化配置策略_V0(WeightsAllocation):
 
 
 if __name__ == '__main__':
-    model = 风险平价组合_迭代求解基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06')
+    model = 风险预算组合_模块求解基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06', risk_budget=[0.2, 0.3, 0.4, 0.5, 0.6])
     print(model.get_weights())
