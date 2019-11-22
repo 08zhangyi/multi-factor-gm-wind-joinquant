@@ -242,7 +242,7 @@ class 风险平价组合_迭代求解基本版(方差极小化权重_基本版):
         y_n = y_n / np.sum(y_n)  # 和为一
         eps_value = np.sqrt(np.sum((y_n-y_0) * (y_n-y_0)))
         while eps_value > 1e-8:  # 计算精度评价标准
-            print(eps_value)
+            # print(eps_value)
             y_0 = y_n
             y_n = y_0 - np.matmul(J(y_0), F(y_0))
             y_n = np.abs(y_n)
@@ -358,7 +358,7 @@ class 高阶矩优化配置策略_V0(WeightsAllocation):
         x_0 = np.ones((n,)) * 1.0 / n
         bounds = n * ((0.0, None),)  # 权重非负约束条件
         res = scipy.optimize.minimize(optimization_target, x_0, method='SLSQP', bounds=bounds, constraints={'type': 'eq', 'fun': constraint})
-        print(res)
+        # print(res)
         if res.success:  # 优化成功
             x = res.x
         else:  # 优化失败，用等权
