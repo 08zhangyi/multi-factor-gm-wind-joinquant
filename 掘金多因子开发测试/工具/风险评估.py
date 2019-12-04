@@ -21,9 +21,9 @@ class 方差风险_历史数据(风险评估):
     def __init__(self, code_list, date, N_days):
         self.N_days = N_days  # 历史数据的采样天数
         风险评估.__init__(self, code_list, date)
-        self.return_cov = self._get_cov()  # (N, N)矩阵
+        self.return_cov = self.get_cov()  # (N, N)矩阵
 
-    def _get_cov(self):
+    def get_cov(self):
         w.start()
         return_value = np.array(w.wsd(self.code_list, "pct_chg", "ED-" + str(self.N_days - 1) + "TD", self.date, "").Data)
         return_cov = np.cov(return_value)
@@ -48,7 +48,7 @@ class 方差风险_历史数据(风险评估):
 
 
 class 方差风险_历史数据_OAS(方差风险_历史数据):
-    def _get_cov(self):
+    def get_cov(self):
         w.start()
         return_value = np.array(w.wsd(self.code_list, "pct_chg", "ED-" + str(self.N_days - 1) + "TD", self.date, "").Data)
         from sklearn.covariance import OAS
@@ -62,8 +62,8 @@ class 方差风险_历史数据_硬阈值稀疏(方差风险_历史数据):
         self.threshold = threshold
         方差风险_历史数据.__init__(self, code_list, date, N_days)
 
-    def _get_cov(self):
-        return_cov = 方差风险_历史数据._get_cov(self)
+    def get_cov(self):
+        return_cov = 方差风险_历史数据.get_cov(self)
         return_cov_diag = np.diag(return_cov)
         threshold_matrix = np.abs(return_cov) >= self.threshold
         return_cov = threshold_matrix * return_cov
@@ -73,8 +73,8 @@ class 方差风险_历史数据_硬阈值稀疏(方差风险_历史数据):
 
 
 class 方差风险_历史数据_软阈值稀疏(方差风险_历史数据_硬阈值稀疏):
-    def _get_cov(self):
-        return_cov = 方差风险_历史数据._get_cov(self)
+    def get_cov(self):
+        return_cov = 方差风险_历史数据.get_cov(self)
         return_cov_diag = np.diag(return_cov)
         threshold_matrix_pos = ((return_cov <= self.threshold) & (return_cov >= 0)) * self.threshold
         threshold_matrix_nag = ((return_cov >= -self.threshold) & (return_cov <= 0)) * self.threshold
@@ -84,9 +84,26 @@ class 方差风险_历史数据_软阈值稀疏(方差风险_历史数据_硬阈
         return return_cov
 
 
+class 方差风险_历史数据_去基准趋势(方差风险_历史数据):
+    def __init__(self, code_list, date, N_days, bench_mark):
+        self.bench_mark = bench_mark
+        方差风险_历史数据.__init__(self, code_list, date, N_days)
+        self.return_cov = self.get_cov()  # (N, N)矩阵
+
+    def get_cov(self):
+        w.start()
+        return_value = np.array(w.wsd(self.code_list, "pct_chg", "ED-" + str(self.N_days - 1) + "TD", self.date, "").Data)
+        return_value_bench_mark = np.array(w.wsd(self.bench_mark, "pct_chg", "ED-" + str(self.N_days - 1) + "TD", self.date, "").Data)
+        return_value = return_value - return_value_bench_mark
+        return_cov = np.cov(return_value)
+        return return_cov
+
+
 if __name__ == '__main__':
     code_list = ['000002.SZ', '600000.SH', '002415.SZ', '601012.SH', '601009.SH']
-    date = '2019-11-06'
-    model = 方差风险_历史数据(code_list, date, N_days=60)
-    return_cov = model.return_cov
+    date = '2019-12-04'
+    model = 方差风险_历史数据_去基准趋势(code_list, date, N_days=60, bench_mark='000300.SH')
+    return_cov = model.get_cov() * np.sqrt(240)
+    return_corr = model.get_corr()
     print(return_cov)
+    print(return_corr)
