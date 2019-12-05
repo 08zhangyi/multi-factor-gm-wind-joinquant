@@ -21,8 +21,8 @@ print(stock_weights_1)
 # print(stock_weights_1)
 
 # 策略二部分，调仓日每月05日，选股为前一天收盘后
-date_2 = '2019-11-04'
-stock_pool_2 = ['510050.SH', '513100.SH', '513500.SH', '510500.SH', '511010.SH', '518880.SH', '159920.SZ', '159938.SZ']
+date_2 = '2019-12-04'
+stock_pool_2 = ['510050.SH', '513100.SH', '513500.SH', '510500.SH', '511010.SH', '518880.SH', '159920.SZ', '512760.SH']
 stock_pool_2 = list_wind2jq(stock_pool_2)
 stock_weights_2 = 风险平价组合_迭代求解基本版(stock_pool_2, date_2).get_weights()
 print('策略二的选股结果（选股日为' + date_2 + '收盘）：')
