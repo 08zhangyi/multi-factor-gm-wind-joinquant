@@ -350,7 +350,7 @@ class 高阶矩优化配置策略_V0(WeightsAllocation):
             var = np.var(portfolio_return_value)
             skew = scipy.stats.skew(portfolio_return_value)
             kurtosis = scipy.stats.kurtosis(portfolio_return_value)
-            loss = self.w2 * var + self.w3 * skew + self.w4 * kurtosis  # 对方差、偏度、丰度进行优化，期望值最小越好
+            loss = self.w2 * var + self.w3 * skew + self.w4 * kurtosis  # 对方差、偏度、峰度进行优化，期望值最小越好
             return loss
         def constraint(weight_temp):
             return np.sum(weight_temp) - 1.0
