@@ -7,18 +7,29 @@ from 持仓配置 import 风险预算组合_模块求解基本版_带约束
 
 # 策略一部分，调仓日每月15日，选股为前一天收盘后（风险预算模型，等待启用）
 date_1 = '2020-01-14'
-stock_pool_1 = ['161716.SZ', '167501.SZ', '511010.SH', '510050.SH', '159928.SZ', '510500.SH', '515000.SH', '513100.SH', '513500.SH', '518880.SH']
-risk_budget_1 = [0.25, 0.25, 0.7, 1, 1, 1, 1, 0.9, 0.9, 0.95]  # 权重配置
-risk_bounds_1 = np.array([[0.0, 0.09],
-                          [0.0, 0.06],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0]])
+# 国内债券部分配置方案
+stock_pool_1_bond = ['161716.SZ', '167501.SZ', '511010.SH']
+risk_budget_1_bond = [0.25, 0.25, 0.7]  # 候选目标[0.2, 0.8, 0.8]
+risk_bounds_1_bond = np.array([[0.0, 0.09],
+                               [0.0, 0.06],
+                               [0.0, 1.0]])
+# 国内股票部分配置方案
+stock_pool_1_stock = ['510050.SH', '159928.SZ', '510500.SH', '515000.SH']
+risk_budget_1_stock = [1, 1, 1, 1]  # 总权重固定为4个单位
+risk_bounds_1_stock = np.array([[0.0, 1.0],
+                                [0.0, 1.0],
+                                [0.0, 1.0],
+                                [0.0, 1.0]])
+# 国际部分配置方案
+stock_pool_1_global = ['513100.SH', '513500.SH', '518880.SH']
+risk_budget_1_global = [0.9, 0.9, 0.95]  # 最终目标[0.75, 0.75, 0.8]
+risk_bounds_1_global = np.array([[0.0, 1.0],
+                                 [0.0, 1.0],
+                                 [0.0, 1.0]])
+# 合并为整体证券池
+stock_pool_1 = stock_pool_1_bond + stock_pool_1_stock + stock_pool_1_global
+risk_budget_1 = risk_budget_1_bond + risk_budget_1_stock + risk_budget_1_global
+risk_bounds_1 = np.concatenate([risk_bounds_1_bond, risk_bounds_1_stock, risk_bounds_1_global])
 stock_pool_1 = list_wind2jq(stock_pool_1)
 stock_weights_1 = 风险预算组合_模块求解基本版_带约束(stock_pool_1, date_1, risk_budget=risk_budget_1, bounds=risk_bounds_1).get_weights()
 # 输出文字信息
@@ -30,18 +41,29 @@ print(string_output_1)
 
 # 策略二部分，调仓日每月05日，选股为前一天收盘后
 date_2 = '2020-01-03'
-stock_pool_2 = ['161716.SZ', '167501.SZ', '511010.SH', '510050.SH', '510500.SH', '510900.SH', '512760.SH', '513100.SH', '513500.SH', '518880.SH']
-risk_budget_2 = [0.25, 0.25, 0.7, 1, 1, 1, 1, 0.9, 0.9, 0.95]  # 权重配置
-risk_bounds_2 = np.array([[0.0, 0.09],
-                          [0.0, 0.06],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0],
-                          [0.0, 1.0]])
+# 国内债券部分配置方案
+stock_pool_2_bond = ['161716.SZ', '167501.SZ', '511010.SH']
+risk_budget_2_bond = [0.25, 0.25, 0.7]  # 候选目标[0.2, 0.8, 0.8]
+risk_bounds_2_bond = np.array([[0.0, 0.09],
+                               [0.0, 0.06],
+                               [0.0, 1.0]])
+# 国内股票部分配置方案
+stock_pool_2_stock = ['510050.SH', '510500.SH', '510900.SH', '512760.SH']
+risk_budget_2_stock = [1, 1, 1, 1]
+risk_bounds_2_stock = np.array([[0.0, 1.0],
+                                [0.0, 1.0],
+                                [0.0, 1.0],
+                                [0.0, 1.0]])
+# 国际部分配置方案
+stock_pool_2_global = ['513100.SH', '513500.SH', '518880.SH']
+risk_budget_2_global = [0.9, 0.9, 0.95]  # 最终目标[0.75, 0.75, 0.8]
+risk_bounds_2_global = np.array([[0.0, 1.0],
+                                 [0.0, 1.0],
+                                 [0.0, 1.0]])
+# 合并为整体证券池
+stock_pool_2 = stock_pool_2_bond + stock_pool_2_stock + stock_pool_2_global
+risk_budget_2 = risk_budget_2_bond + risk_budget_2_stock + risk_budget_2_global
+risk_bounds_2 = np.concatenate([risk_bounds_2_bond, risk_bounds_2_stock, risk_bounds_2_global])
 stock_pool_2 = list_wind2jq(stock_pool_2)
 stock_weights_2 = 风险预算组合_模块求解基本版_带约束(stock_pool_2, date_2, risk_budget=risk_budget_2, bounds=risk_bounds_2).get_weights()
 # 输出文字信息
