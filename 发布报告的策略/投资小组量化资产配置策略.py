@@ -14,18 +14,13 @@ risk_bounds_1_bond = np.array([[0.0, 0.09],
                                [0.0, 0.06],
                                [0.0, 1.0]])
 # 国内股票部分配置方案
-stock_pool_1_stock = ['510050.SH', '159928.SZ', '510500.SH', '515000.SH']
-risk_budget_1_stock = [1, 1, 1, 1]  # 总权重固定为4个单位
-risk_bounds_1_stock = np.array([[0.0, 1.0],
-                                [0.0, 1.0],
-                                [0.0, 1.0],
-                                [0.0, 1.0]])
+stock_pool_1_stock = ['510050.SH', '159928.SZ', '510500.SH', '515000.SH', '512170.SH']
+risk_budget_1_stock = [1, 0.85, 1, 0.85, 0.3]  # 总权重固定为4个单位
+risk_bounds_1_stock = np.array([[0.0, 1.0]] * len(stock_pool_1_stock))
 # 国际部分配置方案
 stock_pool_1_global = ['513100.SH', '513500.SH', '518880.SH']
 risk_budget_1_global = [0.9, 0.9, 0.95]  # 最终目标[0.75, 0.75, 0.8]
-risk_bounds_1_global = np.array([[0.0, 1.0],
-                                 [0.0, 1.0],
-                                 [0.0, 1.0]])
+risk_bounds_1_global = np.array([[0.0, 1.0]] * len(stock_pool_1_global))
 # 合并为整体证券池
 stock_pool_1 = stock_pool_1_bond + stock_pool_1_stock + stock_pool_1_global
 risk_budget_1 = risk_budget_1_bond + risk_budget_1_stock + risk_budget_1_global
@@ -50,16 +45,11 @@ risk_bounds_2_bond = np.array([[0.0, 0.09],
 # 国内股票部分配置方案
 stock_pool_2_stock = ['510050.SH', '510500.SH', '510900.SH', '512760.SH']
 risk_budget_2_stock = [1, 1, 1, 1]
-risk_bounds_2_stock = np.array([[0.0, 1.0],
-                                [0.0, 1.0],
-                                [0.0, 1.0],
-                                [0.0, 1.0]])
+risk_bounds_2_stock = np.array([[0.0, 1.0]] * len(stock_pool_2_stock))
 # 国际部分配置方案
 stock_pool_2_global = ['513100.SH', '513500.SH', '518880.SH']
 risk_budget_2_global = [0.9, 0.9, 0.95]  # 最终目标[0.75, 0.75, 0.8]
-risk_bounds_2_global = np.array([[0.0, 1.0],
-                                 [0.0, 1.0],
-                                 [0.0, 1.0]])
+risk_bounds_2_global = np.array([[0.0, 1.0]] * len(stock_pool_2_global))
 # 合并为整体证券池
 stock_pool_2 = stock_pool_2_bond + stock_pool_2_stock + stock_pool_2_global
 risk_budget_2 = risk_budget_2_bond + risk_budget_2_stock + risk_budget_2_global
