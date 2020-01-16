@@ -1,8 +1,10 @@
 import numpy as np
+import pandas as pd
 import scipy.stats, scipy.optimize
 from WindPy import w
 import cvxopt
 import pyrb
+from pypfopt.hierarchical_risk_parity import HRPOpt
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import list_wind2jq, list_jq2wind, SW1_INDEX
@@ -375,6 +377,22 @@ class 高阶矩优化配置策略_V0(WeightsAllocation):
         return return_value
 
 
+class 层次风险平价(方差极小化权重_基本版):
+    def get_weights(self):
+        code_list = list_jq2wind(self.code_list)
+        w.start()
+        return_value = np.array(w.wsd(code_list, "pct_chg", "ED-" + str(self.N - 1) + "TD", self.date, "").Data)
+        return_value = return_value.transpose()
+        return_value = pd.DataFrame(return_value, columns=code_list)
+        optimizer = HRPOpt(return_value)
+        hrp_portfolio = optimizer.hrp_portfolio()
+        hrp_portfolio = dict(zip(list_wind2jq(list(hrp_portfolio.keys())), hrp_portfolio.values()))
+        return hrp_portfolio
+
+
 if __name__ == '__main__':
     model = 风险预算组合_模块求解基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06', risk_budget=[0.2, 0.3, 0.4, 0.5, 0.6])
+    print(model.get_weights())
+
+    model = 层次风险平价(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06', N=60)
     print(model.get_weights())
