@@ -33,7 +33,6 @@ string_output_1 += str(dict(zip(stock_pool_1, risk_budget_1))) + '\n'
 string_output_1 += '策略一的选股结果（选股日为 ' + date_1 + ' 收盘）：\n'
 string_output_1 += str(stock_weights_1) + '\n'
 print(string_output_1)
-raise Exception
 
 # 策略二部分，调仓日每月05日，选股为前一天收盘后
 date_2 = '2020-01-03'

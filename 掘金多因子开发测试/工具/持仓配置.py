@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats, scipy.optimize
 from WindPy import w
-import cvxopt
+# import cvxopt
 import pyrb
 from pypfopt.hierarchical_risk_parity import HRPOpt
 import sys
