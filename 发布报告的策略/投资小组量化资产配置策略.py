@@ -33,6 +33,7 @@ string_output_1 += str(dict(zip(stock_pool_1, risk_budget_1))) + '\n'
 string_output_1 += '策略一的选股结果（选股日为 ' + date_1 + ' 收盘）：\n'
 string_output_1 += str(stock_weights_1) + '\n'
 print(string_output_1)
+raise Exception
 
 # 策略二部分，调仓日每月05日，选股为前一天收盘后
 date_2 = '2020-01-03'
@@ -72,12 +73,12 @@ risk_bounds_3_bond = np.array([[0.0, 0.09],
                                [0.0, 0.06],
                                [0.0, 1.0]])
 # 国内股票部分配置方案
-stock_pool_3_stock = ['159928.SZ', '510050.SH', '510500.SH', '510900.SH', '512170.SH', '512760.SH', '515000.SH']
-risk_budget_3_stock = [0.425, 1, 1, 0.5, 0.15, 0.5, 0.425]
+stock_pool_3_stock = ['159938.SZ', '510050.SH', '510300.SH', '510500.SH', '512170.SH', '512930.SH']
+risk_budget_3_stock = [0.5, 1, 0.6, 1, 0.4, 0.5]
 risk_bounds_3_stock = np.array([[0.0, 1.0]] * len(stock_pool_3_stock))
 # 国际部分配置方案
 stock_pool_3_global = ['513100.SH', '513500.SH', '518880.SH']
-risk_budget_3_global = [0.9, 0.9, 0.95]  # 最终目标[0.75, 0.75, 0.8]
+risk_budget_3_global = [0.75, 0.75, 0.8]  # 最终目标[0.75, 0.75, 0.8]
 risk_bounds_3_global = np.array([[0.0, 1.0]] * len(stock_pool_3_global))
 # 合并为整体证券池
 stock_pool_3 = stock_pool_3_bond + stock_pool_3_stock + stock_pool_3_global
@@ -86,9 +87,9 @@ risk_bounds_3 = np.concatenate([risk_bounds_3_bond, risk_bounds_3_stock, risk_bo
 stock_pool_3 = list_wind2jq(stock_pool_3)
 stock_weights_3 = 风险预算组合_模块求解基本版_带约束(stock_pool_3, date_3, risk_budget=risk_budget_3, bounds=risk_bounds_3).get_weights()
 # 输出文字信息
-string_output_3 = '策略二的风险预算权重为：\n'
+string_output_3 = '策略三的风险预算权重为：\n'
 string_output_3 += str(dict(zip(stock_pool_3, risk_budget_3))) + '\n'
-string_output_3 += '策略二的选股结果（选股日为 ' + date_3 + ' 收盘）：\n'
+string_output_3 += '策略三的选股结果（选股日为 ' + date_3 + ' 收盘）：\n'
 string_output_3 += str(stock_weights_3) + '\n'
 print(string_output_3)
 
