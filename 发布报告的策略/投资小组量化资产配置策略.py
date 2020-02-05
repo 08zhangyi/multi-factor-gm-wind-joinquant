@@ -35,7 +35,7 @@ string_output_1 += str(stock_weights_1) + '\n'
 print(string_output_1)
 
 # 策略二部分，调仓日每月05日，选股为前一天收盘后
-date_2 = '2020-02-04'
+date_2 = '2020-02-05'
 # 国内债券部分配置方案
 stock_pool_2_bond = ['161716.SZ', '167501.SZ', '511010.SH']
 risk_budget_2_bond = [0.25, 0.25, 0.7]  # 候选目标[0.2, 0.8, 0.8]
