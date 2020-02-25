@@ -35,25 +35,25 @@ def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
 
 
 def list_gm2wind(list_gm):
-    gm2wind_dict = {'SHSE': 'SH', 'SZSE': 'SZ', 'CFFEX': 'CFE', 'SHFE': 'SHF', 'DCE': 'DCE', 'CZCE': 'CZC', 'INE': 'INE'}
+    gm2wind_dict = {'SHSE': 'SH', 'SZSE': 'SZ', 'CFFEX': 'CFE', 'SHFE': 'SHF', 'DCE': 'DCE', 'CZCE': 'CZC', 'INE': 'INE', 'CSI': 'CSI'}
     list_wind = [temp.split('.')[1]+'.'+gm2wind_dict[temp.split('.')[0]] for temp in list_gm]
     return list_wind
 
 
 def list_wind2gm(list_wind):
-    wind2gm_dict = {'SH': 'SHSE', 'SZ': 'SZSE', 'CFE': 'CFFEX', 'SHF': 'SHFE', 'DCE': 'DCE', 'CZC': 'CZCE', 'INE': 'INE'}
+    wind2gm_dict = {'SH': 'SHSE', 'SZ': 'SZSE', 'CFE': 'CFFEX', 'SHF': 'SHFE', 'DCE': 'DCE', 'CZC': 'CZCE', 'INE': 'INE', 'CSI': 'CSI'}
     list_gm = [wind2gm_dict[temp.split('.')[1]]+'.'+temp.split('.')[0] for temp in list_wind]
     return list_gm
 
 
 def list_wind2jq(list_wind):
-    wind2jq_dict = {'SH': 'XSHG', 'SZ': 'XSHE', 'CFE': 'CCFX', 'SHF': 'XSGE', 'DCE': 'XDCE', 'CZC': 'XZCE', 'INE': 'XINE'}
+    wind2jq_dict = {'SH': 'XSHG', 'SZ': 'XSHE', 'CFE': 'CCFX', 'SHF': 'XSGE', 'DCE': 'XDCE', 'CZC': 'XZCE', 'INE': 'XINE', 'CSI': 'CSI'}
     list_jq = [temp.split('.')[0] + '.' + wind2jq_dict[temp.split('.')[1]] for temp in list_wind]
     return list_jq
 
 
 def list_jq2wind(list_jq):
-    jq2wind_dict = {'XSHG': 'SH', 'XSHE': 'SZ', 'CCFX': 'CFE', 'XSGE': 'SHF', 'XDCE': 'DCE', 'XZCE': 'CZC', 'XINE': 'INE'}
+    jq2wind_dict = {'XSHG': 'SH', 'XSHE': 'SZ', 'CCFX': 'CFE', 'XSGE': 'SHF', 'XDCE': 'DCE', 'XZCE': 'CZC', 'XINE': 'INE', 'CSI': 'CSI'}
     list_wind = [temp.split('.')[0] + '.' + jq2wind_dict[temp.split('.')[1]] for temp in list_jq]
     return list_wind
 
