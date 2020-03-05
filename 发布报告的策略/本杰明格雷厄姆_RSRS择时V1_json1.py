@@ -15,7 +15,7 @@ w.start()
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2018-10-10'  # 回测开始日期
-BACKTEST_END_DATE = '2020-03-02'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2020-03-05'  # 回测结束日期，测试结束日期不运用算法
 INDEX = ['000300.SH']  # 股票池代码，可以用掘金代码，也可以用Wind代码
 TRADING_DATES_LIST = ['10']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 
@@ -91,7 +91,7 @@ def on_backtest_finished(context, indicator):
 
 if __name__ == '__main__':
     run(strategy_id='4d2f6b1c-8f0a-11e8-af59-305a3a77b8c5',
-        filename='本杰明格雷厄姆_RSRS择时V1.py',
+        filename='本杰明格雷厄姆_RSRS择时V1_json1.py',
         mode=MODE_BACKTEST,
         token='d7b08e7e21dd0315a510926e5a53ade8c01f9aaa',
         backtest_initial_cash=10000000,
