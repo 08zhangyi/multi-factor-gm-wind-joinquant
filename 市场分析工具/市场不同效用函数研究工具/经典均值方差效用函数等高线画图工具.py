@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 
 # 效用函数的参数
 Er_1 = 0.08
-Er_2 = 0.035
-alpha = 1.5
+Er_2 = 0.09
+alpha = 3
 sigma_1 = 0.2
-sigma_2 = 0.03
-rho_1_2 = 0.08
+sigma_2 = 0.22
+rho_1_2 = 0.5
 
 
 # 效用函数，仅支持二元效用函数
@@ -29,6 +29,7 @@ X, Y = np.meshgrid(x, y)  # 画图网格
 plt.contourf(X, Y, U(X, Y), 8, cmap=plt.cm.hot)
 c = plt.contour(X, Y, U(X, Y), 8, colors='black')
 plt.clabel(c, inline=True, fontsize=10)  # 等高线标注
-plt.title('Er_1=%.2f, Er_2=%.2f, alpha=%.2f\nsigma_1=%.2f, sigma_2=%.2f, rho_1_2=%.2f' %
+plt.title('E$r_1$=%.2f, E$r_2$=%.2f, $\\alpha$=%.2f\n$\\sigma_1$=%.2f, $\\sigma_2$=%.2f, $\\rho_{12}$=%.2f' %
           (Er_1, Er_2, alpha, sigma_1, sigma_2, rho_1_2))
+plt.plot(x, -y+1, '--')
 plt.show()

@@ -12,7 +12,7 @@ from 持仓配置 import 风险预算组合_模块求解基本版_带约束
 w.start()
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2019-01-15'  # 回测开始日期
+BACKTEST_START_DATE = '2017-01-15'  # 回测开始日期
 BACKTEST_END_DATE = '2020-03-05'  # 回测结束日期，测试结束日期不运用算法
 # 国内债券部分配置方案
 stock_pool_bond = ['511010.SH']
@@ -59,9 +59,9 @@ def algo(context):
         # 根据指数获取股票候选池的代码
         if len(stock_pool) > 0:  # 有可选股票时选取合适的股票
             stock_now = 风险预算组合_模块求解基本版_带约束(stock_pool, date_previous, risk_budget=risk_budget, bounds=risk_bounds).get_weights()
-            stock_now['161716.XSHE'] = 0.09
-            stock_now['167501.XSHE'] = 0.06
-            stock_now['511010.XSHG'] = stock_now['511010.XSHG'] - 0.15
+            # stock_now['161716.XSHE'] = 0.09
+            # stock_now['167501.XSHE'] = 0.06
+            # stock_now['511010.XSHG'] = stock_now['511010.XSHG'] - 0.15
             print(stock_now)
             stock_dict[date_now] = stock_now
         else:
