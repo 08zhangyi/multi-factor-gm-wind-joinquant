@@ -13,11 +13,11 @@ w.start()
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2017-01-15'  # 回测开始日期
-BACKTEST_END_DATE = '2020-03-05'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2020-03-19'  # 回测结束日期，测试结束日期不运用算法
 # 国内债券部分配置方案
 stock_pool_bond = ['511010.SH']
 risk_budget_bond = [1.0]  # 候选目标[0.2, 0.8, 0.8]
-risk_bounds_bond = np.array([[0.5, 1.0]])
+risk_bounds_bond = np.array([[0.4, 1.0]])
 # 国内股票部分配置方案
 stock_pool_stock = ['159949.SZ', '159928.SZ', '510050.SH', '510500.SH']
 risk_budget_stock = [1.0, 1.0, 1.0, 1.0]  # 总权重固定为4个单位
@@ -25,7 +25,7 @@ risk_bounds_stock = np.array([[0.0, 1.0]] * len(stock_pool_stock))
 # 国际部分配置方案
 stock_pool_global = ['513100.SH', '513500.SH', '518880.SH']
 risk_budget_global = [0.75, 0.75, 0.8]  # 在区间[0.75, 0.75, 0.8]-[1.0, 1.0, 1.0]之间灵活调整
-risk_bounds_global = np.array([[0.0, 1.0]] * len(stock_pool_global))
+risk_bounds_global = np.array([[0.0, 0.2]] * len(stock_pool_global))
 # 合并为整体证券池
 stock_pool = stock_pool_bond + stock_pool_stock + stock_pool_global
 risk_budget = risk_budget_bond + risk_budget_stock + risk_budget_global
