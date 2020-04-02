@@ -13,7 +13,7 @@ w.start()
 
 # 回测的基本参数的设定
 BACKTEST_START_DATE = '2019-01-15'  # 回测开始日期
-BACKTEST_END_DATE = '2020-03-26'  # 回测结束日期，测试结束日期不运用算法
+BACKTEST_END_DATE = '2020-04-03'  # 回测结束日期，测试结束日期不运用算法
 # 国内债券部分配置方案
 stock_pool_bond = ['511010.SH']
 risk_budget_bond = [1.0]  # 候选目标[0.2, 0.8, 0.8]
