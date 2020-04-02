@@ -5,11 +5,15 @@ import numpy as np
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
 plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 
-plt.axis([0, 4, 0, 4])
+plt.axis([0, 4, 0, 4])  # 坐标轴范围确定
 
 
+# 散点与向量场画图工具
 def plot_point_vector(x, y, slope, length):
-    x1 = np.arange(x-length/(np.sqrt(slope**2 + 1)), x+length/(np.sqrt(slope**2 + 1)), 0.001)
+    # x, y是散点位置
+    # -slope是向量场斜率
+    # length是向量场长度
+    x1 = np.array([x-length/(np.sqrt(slope**2 + 1)), x+length/(np.sqrt(slope**2 + 1))])
     y1 = (y + slope * x) - slope * x1
     plt.plot(x1, y1, 'b')
     plt.plot([x], [y], 'ro')

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 x = np.arange(0.3, 3, 0.01)
 y = 1/x
 plt.plot(x, y)

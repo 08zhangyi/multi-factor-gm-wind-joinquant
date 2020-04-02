@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 START_DATE = '2017-01-02'
-END_DATE = '2020-03-25'
+END_DATE = '2020-03-30'
 FUND_CODE_LIST = ['513050.SH', '513100.SH', '513500.SH', '513030.SH', '513520.SH']
 
 
