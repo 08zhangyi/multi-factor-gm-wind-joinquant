@@ -4,7 +4,7 @@ import scipy.stats, scipy.optimize
 from WindPy import w
 # import cvxopt
 import pyrb
-from pypfopt.hierarchical_risk_parity import HRPOpt
+from pypfopt.hierarchical_portfolio import HRPOpt
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 from utils import list_wind2jq, list_jq2wind, SW1_INDEX
