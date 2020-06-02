@@ -12,7 +12,7 @@ DATE = '2020-05-22'
 BOND_CORRECTIONG = {'160618.XSHE': 0.06, '161713.XSHE': 0.03, '161716.XSHE': 0.09, '167501.XSHE': 0.02, '511260.XSHG': 0.02, '511010.XSHG': -0.22}
 
 # 自动读取风险预算数据
-FILE_PATH = 'C:\\Users\\pc\\Desktop\\策略计算表temp.xlsx'
+FILE_PATH = 'C:\\Users\\pc\\Desktop\\策略计算表temp.xlsx'  # 参考data\策略计算表example.xlsx
 file = xlrd.open_workbook(FILE_PATH)
 table = file.sheet_by_name('计算表')
 row_number = table.nrows
