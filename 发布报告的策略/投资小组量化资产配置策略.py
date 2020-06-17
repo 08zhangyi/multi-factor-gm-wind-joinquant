@@ -7,9 +7,9 @@ from utils import list_wind2jq
 from 持仓配置 import 风险预算组合_模块求解基本版_带约束
 
 # 统一设定调仓日，选股为前一天收盘后
-DATE = '2020-05-22'
+DATE = '2020-06-12'
 # 债券品种的比例调整
-BOND_CORRECTIONG = {'160618.XSHE': 0.06, '161713.XSHE': 0.03, '161716.XSHE': 0.09, '167501.XSHE': 0.02, '511260.XSHG': 0.02, '511010.XSHG': -0.22}
+BOND_CORRECTIONG = {'160618.XSHE': 0.07, '161713.XSHE': 0.02, '161716.XSHE': 0.09, '167501.XSHE': 0.0, '511260.XSHG': 0.05, '511010.XSHG': -0.23}
 
 # 自动读取风险预算数据
 FILE_PATH = 'C:\\Users\\pc\\Desktop\\策略计算表temp.xlsx'  # 参考data\策略计算表example.xlsx
