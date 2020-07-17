@@ -8,7 +8,7 @@ from learning_model import AdaboostRegressor
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 # 引入因子类
-from single_factor import PE, PB, ROE, RSI, MA10, AROON
+from single_factor import PE, PB, ROE, RSI, AROON
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, list_wind2jq, list_gm2wind, get_SW1_industry, get_trading_date_list_by_day_monthly
@@ -23,7 +23,7 @@ BACKTEST_START_DATE = '2016-07-01'  # 回测开始日期
 BACKTEST_END_DATE = '2018-11-22'  # 回测结束日期，测试结束日期不运用算法
 INCLUDED_INDEX = ['000016.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
-FACTOR_LIST = [PE, PB, ROE, RSI, MA10, AROON]  # 需要获取的因子列表，用单因子研究中得模块
+FACTOR_LIST = [PE, PB, ROE, RSI, AROON]  # 需要获取的因子列表，用单因子研究中得模块
 
 TRADING_DATES_LIST = ['10']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 6  # 取得的历史样本的周期数
@@ -49,7 +49,8 @@ trading_date_list = []  # 记录调仓日期的列表
 def init(context):
     # 调仓日期获取
     global trading_date_list
-    trading_date_list = get_trading_date_list_by_day_monthly(BACKTEST_START_DATE, BACKTEST_END_DATE, TRADING_DATES_LIST)
+    BACKTEST_START_DATE_temp = get_trading_date_from_now(BACKTEST_START_DATE, -HISTORY_LENGTH-1, ql.Months)
+    trading_date_list = get_trading_date_list_by_day_monthly(BACKTEST_START_DATE_temp, BACKTEST_END_DATE, TRADING_DATES_LIST)
     # 每天time_rule定时执行algo任务，time_rule处于09:00:00和15:00:00之间
     schedule(schedule_func=algo, date_rule='daily', time_rule='10:00:00')
 
