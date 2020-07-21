@@ -185,7 +185,7 @@ class AdaboostRegressor(BaseLearner):
             old_BestFactors_list.append(BestFactors[i])
             if len(old_BestFactors_list) > fcycle:  # fcycle为表示避免连续重复运用同一因子的参数，为0表示可以连续重复运用一个因子，为1表示至少需要隔一个其他因此才能重复利用此因子
                 old_BestFactors_list.pop(0)
-
+        print(BestFactors[:i], BestWs[:i])
         self.model = BestFactors[:i], BestWs[:i], WeakRegressorWeights[:i], Qs, eps
 
     def predict(self, factors_df):

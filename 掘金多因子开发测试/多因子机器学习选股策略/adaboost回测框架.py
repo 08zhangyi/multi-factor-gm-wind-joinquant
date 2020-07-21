@@ -8,7 +8,7 @@ from learning_model import AdaboostRegressor
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\单因子研究')
 # 引入因子类
-from single_factor import PE, PB, ROE, RSI, AROON
+from single_factor import PE, PB, ROE, RSI, AROON, NetProfitGrowRate, MA_10, MA_5, RevenueGrowthRate
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, get_factor_from_wind, get_return_from_wind, delete_data_cache, list_wind2jq, list_gm2wind, get_SW1_industry, get_trading_date_list_by_day_monthly
@@ -19,16 +19,16 @@ from 行业轮动SW1 import Without_industry_wheel_movement
 from 持仓配置 import 等权持仓
 
 # 回测的基本参数的设定
-BACKTEST_START_DATE = '2016-07-01'  # 回测开始日期
-BACKTEST_END_DATE = '2018-11-22'  # 回测结束日期，测试结束日期不运用算法
-INCLUDED_INDEX = ['000016.SH']  # 股票池代码，用Wind代码
+BACKTEST_START_DATE = '2020-01-01'  # 回测开始日期
+BACKTEST_END_DATE = '2020-07-16'  # 回测结束日期，测试结束日期不运用算法
+INCLUDED_INDEX = ['000300.SH']  # 股票池代码，用Wind代码
 EXCLUDED_INDEX = []  # 剔除的股票代码
-FACTOR_LIST = [PE, PB, ROE, RSI, AROON]  # 需要获取的因子列表，用单因子研究中得模块
+FACTOR_LIST = [PE, PB, ROE, RSI, AROON, NetProfitGrowRate, MA_10, MA_5, RevenueGrowthRate]  # 需要获取的因子列表，用单因子研究中得模块
 
-TRADING_DATES_LIST = ['10']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
+TRADING_DATES_LIST = ['15']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
 HISTORY_LENGTH = 6  # 取得的历史样本的周期数
 # 选股策略的参数
-SELECT_NUMBER = 10  # 选股数量
+SELECT_NUMBER = 20  # 选股数量
 # 择时模型的配置
 select_time_model = Without_select_time()
 # 行业轮动的配置
@@ -83,7 +83,7 @@ def algo(context):
             data_dfs.append(factors_df_and_return_df)
         factors_return_df = pd.concat(data_dfs, axis=0)  # 获取的最终训练数据拼接，return为目标
         # 根据data_df训练模型
-        model = AdaboostRegressor(select_number=SELECT_NUMBER)  # 模型名称可以修改在前面
+        model = AdaboostRegressor(select_number=SELECT_NUMBER+1)  # 模型名称可以修改在前面
         model.fit(factors_return_df)
         # 根据factor_date_previous选取股票，使用模型
         factor_date_previous_df = get_factor_from_wind(code_list, FACTOR_LIST, date_previous).dropna()  # 验证集    已经校验了日期问题，没有数据重合 和 时间函数问题

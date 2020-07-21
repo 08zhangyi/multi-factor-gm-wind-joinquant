@@ -31,6 +31,14 @@ def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
                 date_diff_date = datetime.date.fromisoformat(date_diff)
                 if date_diff_date < date_now_date:
                     date_diff = w.tdaysoffset(1, date_now, '').Data[0][0].strftime('%Y-%m-%d')
+        elif period==ql.Months:
+            w.start()
+            date_diff = w.tdaysoffset(diff_periods, date_now, 'Period=M').Data[0][0].strftime('%Y-%m-%d')
+            if diff_periods == 0:  # 非交易日顺延到下一个交易日
+                date_now_date = datetime.date.fromisoformat(date_now)
+                date_diff_date = datetime.date.fromisoformat(date_diff)
+                if date_diff_date < date_now_date:
+                    date_diff = w.tdaysoffset(1, date_now, '').Data[0][0].strftime('%Y-%m-%d')
     return date_diff
 
 
