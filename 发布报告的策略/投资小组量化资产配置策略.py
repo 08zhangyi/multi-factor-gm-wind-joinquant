@@ -6,8 +6,8 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 from utils import list_wind2jq
 from 持仓配置 import 风险预算组合_模块求解基本版_带约束
 
-# 统一设定调仓日，选股为前一天收盘后
-DATE = '2020-07-14'
+# 统一设定调仓日，选股为前一交易日收盘后
+DATE = '2020-07-24'
 # 债券品种的比例调整
 BOND_ADJUST = {'160618.XSHE': 0.06, '161713.XSHE': 0.02, '161716.XSHE': 0.08, '511260.XSHG': 0.07, '511010.XSHG': -0.23}
 # A股手动调整比例
@@ -39,7 +39,7 @@ for S in S_all:
     stock_pool = []
     risk_budget = []
     risk_bounds = []
-    for i in range(5, row_number):
+    for i in range(6, row_number):
         value_code = table.cell(i, S[0]).value
         value_ratio = table.cell(i, S[1]).value
         if value_code != '':
