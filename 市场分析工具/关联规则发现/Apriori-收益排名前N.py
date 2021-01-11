@@ -58,7 +58,7 @@ def print_results(rules):
 
 
 # 算法参数配置
-END_DATE = '2018-12-12'
+END_DATE = '2021-01-08'
 history = 240  # 提取数据的历史长短
 N = 8  # 排名前N的数据进入篮子
 min_support = 0.10  # 共同出现项的频率

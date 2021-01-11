@@ -56,7 +56,7 @@ def print_results(rules):
 
 
 # 算法参数配置
-END_DATE = '2018-12-03'
+END_DATE = '2021-01-08'
 history = 240  # 提取数据的历史长短
 min_support = 0.40  # 共同出现项的频率
 min_confidence = 0.95  # 挖掘出规则的置信度
