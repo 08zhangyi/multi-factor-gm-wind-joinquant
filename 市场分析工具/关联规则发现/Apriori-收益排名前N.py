@@ -5,11 +5,15 @@ from WindPy import w
 # 引入算法
 from efficient_apriori import apriori
 
-# 申万一级行业名常量
-columns_names = ['农林牧渔', '采掘', '化工', '钢铁', '有色金属', '电子', '家用电器', '食品饮料', '纺织服装',
-                 '轻工制造', '医药生物', '公用事业', '交通运输', '房地产', '商业贸易', '休闲服务', '综合', '建筑材料',
-                 '建筑装饰', '电气设备', '国防军工', '计算机', '传媒', '通信', '银行', '非银金融', '汽车', '机械设备']
-SW1 = "801010.SI,801020.SI,801030.SI,801040.SI,801050.SI,801080.SI,801110.SI,801120.SI,801130.SI,801140.SI,801150.SI,801160.SI,801170.SI,801180.SI,801200.SI,801210.SI,801230.SI,801710.SI,801720.SI,801730.SI,801740.SI,801750.SI,801760.SI,801770.SI,801780.SI,801790.SI,801880.SI,801890.SI"
+# 中信一级行业名常量
+columns_names = ['石油石化', '煤炭', '有色金属', '电力及公用事业', '钢铁', '基础化工', '建筑', '建材', '轻工制造',
+                 '机械', '电力设备及新能源', '国防军工', '汽车', '商贸零售', '消费者服务', '家电', '纺织服装', '医药',
+                 '食品饮料', '农林牧渔', '银行', '非银行金融', '房地产', '交通运输', '电子', '通信', '计算机',
+                 '传媒', '综合', '综合金融']
+ZX1 = "CI005001.WI,CI005002.WI,CI005003.WI,CI005004.WI,CI005005.WI,CI005006.WI,CI005007.WI,CI005008.WI,CI005009.WI," \
+      "CI005010.WI,CI005011.WI,CI005012.WI,CI005013.WI,CI005014.WI,CI005015.WI,CI005016.WI,CI005017.WI,CI005018.WI," \
+      "CI005019.WI,CI005020.WI,CI005021.WI,CI005022.WI,CI005023.WI,CI005024.WI,CI005025.WI,CI005026.WI,CI005027.WI," \
+      "CI005028.WI,CI005029.WI,CI005030.WI"
 # matplotlib设置中文显示
 from pylab import mpl
 mpl.rcParams['font.sans-serif'] = ['FangSong']
@@ -27,17 +31,17 @@ def get_data(end_date, history):
         index = df.index.values
         if index[0] != start_date or index[-1] != end_date:  # 时间日期不符
             os.remove(file_path)  # 删除数据文件
-            data = w.wsd(SW1, "pct_chg", start_date, end_date, "PriceAdj=T")
-            df = pd.DataFrame(data=np.array(data.Data).transpose(), index=data.Times, columns=SW1.split(','))
+            data = w.wsd(ZX1, "pct_chg", start_date, end_date, "PriceAdj=T")
+            df = pd.DataFrame(data=np.array(data.Data).transpose(), index=data.Times, columns=ZX1.split(','))
             df.to_csv(file_path)
     else:  # 不存在数据文件
-        data = w.wsd(SW1, "pct_chg", start_date, end_date, "PriceAdj=T")
-        df = pd.DataFrame(data=np.array(data.Data).transpose(), index=data.Times, columns=SW1.split(','))
+        data = w.wsd(ZX1, "pct_chg", start_date, end_date, "PriceAdj=T")
+        df = pd.DataFrame(data=np.array(data.Data).transpose(), index=data.Times, columns=ZX1.split(','))
         df.to_csv(file_path)
 
 
 def df_to_basket(df, N):
-    # N为进入购物篮的排名位次
+    # N为进入购物篮的排名位次，取收益率最高的N个板块
     basket = []
     for _, l in df.iterrows():
         l = l.values
@@ -59,10 +63,10 @@ def print_results(rules):
 
 # 算法参数配置
 END_DATE = '2021-01-08'
-history = 240  # 提取数据的历史长短
-N = 8  # 排名前N的数据进入篮子
+history = 120  # 提取数据的历史长短
+N = 10  # 排名前N的数据进入篮子
 min_support = 0.10  # 共同出现项的频率
-min_confidence = 0.75  # 挖掘出规则的置信度
+min_confidence = 0.80  # 挖掘出规则的置信度
 get_data(END_DATE, history)
 df = pd.read_csv('data\\data.csv', index_col=0)
 basket = df_to_basket(df, N)
