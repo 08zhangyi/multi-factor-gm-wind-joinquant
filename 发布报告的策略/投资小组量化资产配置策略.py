@@ -7,18 +7,18 @@ from utils import list_wind2jq
 from 持仓配置 import 风险预算组合_模块求解基本版_带约束
 
 # 统一设定调仓日，选股为前一交易日收盘后
-DATE = '2021-01-04'
+DATE = '2021-04-14'
 # 债券品种的比例调整
-BOND_ADJUST = {'161716.XSHE': 0.08, '511260.XSHG': 0.17, '511010.XSHG': -0.25}
+BOND_ADJUST = {'161716.XSHE': 0.08, '511260.XSHG': -0.04, '511010.XSHG': -0.04}
 # A股手动调整比例
 STOCK_ADJUST = 0.0
 
 
 # 调整函数
 def adjust_weights(stock_weights, bond_adjust, stock_adjust):
-    # A股部分的调整，同步等比例调整债券、外盘、黄金的比例
+    # A股部分的调整，同步等比例调整债券、外盘、商品的比例
     stock_weights['510300.XSHG'] = stock_weights.get('510300.XSHG', 0.0) + stock_adjust
-    adjusted_codes = ['511010.XSHG', '513050.XSHG', '513100.XSHG', '513500.XSHG', '518880.XSHG']
+    adjusted_codes = ['511010.XSHG', '513030.XSHG', '513050.XSHG', '513100.XSHG', '513500.XSHG', '518880.XSHG', '159980.XSHE', '159981.XSHE']
     adjusted_full_ratio = np.sum([stock_weights[code] for code in adjusted_codes])
     for code in adjusted_codes:
         stock_weights[code] = stock_weights[code] * ((adjusted_full_ratio - stock_adjust) / adjusted_full_ratio)
@@ -43,13 +43,13 @@ for S in S_all:
         value_code = table.cell(i, S[0]).value
         value_ratio = table.cell(i, S[1]).value
         if value_code != '':
-            if value_code in ['160618.SZ', '161713.SZ', '161716.SZ', '511260.SH']:  # 债券类不参与权重计算
+            if value_code in ['161716.SZ']:  # 债券类不参与权重计算
                 pass
-            elif value_code in ['511010.SH']:  # 债券类参与权重计算
+            elif value_code in ['511010.SH', '511260.SH']:  # 债券类参与权重计算
                 stock_pool.append(value_code)
                 risk_budget.append(value_ratio)
-                risk_bounds.append([0.4, 0.85])  # 权重约束设置
-            elif value_code in ['513050.SH', '513100.SH', '513500.SH', '518880.SH']:  # 外盘黄金类
+                risk_bounds.append([0.15, 0.85])  # 权重约束设置
+            elif value_code in ['513030.XSHG', '513050.SH', '513100.SH', '513500.SH', '518880.SH', '159980.XSHE', '159981.XSHE']:  # 外盘商品类
                 stock_pool.append(value_code)
                 risk_budget.append(value_ratio)
                 risk_bounds.append([0.0, 0.2])  # 权重约束设置

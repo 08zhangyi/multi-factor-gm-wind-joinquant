@@ -16,29 +16,22 @@ SW1_INDEX = [['801010.SI', '农林牧渔'], ['801020.SI', '采掘'], ['801030.SI
 
 # 计算不同交易日的函数
 def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
-    always_using_ql = False  # 是否全部使用quantlib处理日期，否则只在某些情形使用quantlib处理日期
-    if (int(date_now.split('-')[0]) <= 2019 and int(date_now.split('-')[1]) <= 9 and diff_periods <= 1) or (int(date_now.split('-')[0]) <= 2018 and diff_periods <= 1) or always_using_ql:
-        calculation_date = ql.Date(int(date_now.split('-')[2]), int(date_now.split('-')[1]),
-                                   int(date_now.split('-')[0]))
-        calendar = ql.China()
-        date_diff = calendar.advance(calculation_date, diff_periods, period).to_date().strftime('%Y-%m-%d')
-    else:  # 其余日子用wind处理
-        if period==ql.Days:
-            w.start()
-            date_diff = w.tdaysoffset(diff_periods, date_now, '').Data[0][0].strftime('%Y-%m-%d')
-            if diff_periods == 0:  # 非交易日顺延到下一个交易日
-                date_now_date = datetime.date.fromisoformat(date_now)
-                date_diff_date = datetime.date.fromisoformat(date_diff)
-                if date_diff_date < date_now_date:
-                    date_diff = w.tdaysoffset(1, date_now, '').Data[0][0].strftime('%Y-%m-%d')
-        elif period==ql.Months:
-            w.start()
-            date_diff = w.tdaysoffset(diff_periods, date_now, 'Period=M').Data[0][0].strftime('%Y-%m-%d')
-            if diff_periods == 0:  # 非交易日顺延到下一个交易日
-                date_now_date = datetime.date.fromisoformat(date_now)
-                date_diff_date = datetime.date.fromisoformat(date_diff)
-                if date_diff_date < date_now_date:
-                    date_diff = w.tdaysoffset(1, date_now, '').Data[0][0].strftime('%Y-%m-%d')
+    if period==ql.Months:
+        w.start()
+        date_diff = w.tdaysoffset(diff_periods, date_now, 'Period=M').Data[0][0].strftime('%Y-%m-%d')
+        if diff_periods == 0:  # 非交易日顺延到下一个交易日
+            date_now_date = datetime.date.fromisoformat(date_now)
+            date_diff_date = datetime.date.fromisoformat(date_diff)
+            if date_diff_date < date_now_date:
+                date_diff = w.tdaysoffset(1, date_now, '').Data[0][0].strftime('%Y-%m-%d')
+    else:  # 默认以日为单位进行调整
+        w.start()
+        date_diff = w.tdaysoffset(diff_periods, date_now, '').Data[0][0].strftime('%Y-%m-%d')
+        if diff_periods == 0:  # 非交易日顺延到下一个交易日
+            date_now_date = datetime.date.fromisoformat(date_now)
+            date_diff_date = datetime.date.fromisoformat(date_diff)
+            if date_diff_date < date_now_date:
+                date_diff = w.tdaysoffset(1, date_now, '').Data[0][0].strftime('%Y-%m-%d')
     return date_diff
 
 
@@ -168,4 +161,5 @@ def get_trading_date_list_by_month_by_day(BACKTEST_START_DATE, BACKTEST_END_DATE
 
 
 if __name__ == '__main__':
-    print(get_trading_date_from_now('2019-01-05', 0))
+    print(get_trading_date_from_now('2021-04-08', 0))
+    print(get_trading_date_from_now('2021-04-18', 0))
