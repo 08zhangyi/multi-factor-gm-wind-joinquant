@@ -76,7 +76,7 @@ def on_backtest_finished(context, indicator):
 
 if __name__ == '__main__':
     run(strategy_id='4d2f6b1c-8f0a-11e8-af59-305a3a77b8c5',
-        filename='单因子研究_等权_月调仓.py',
+        filename='单因子研究_月调仓.py',
         mode=MODE_BACKTEST,
         token='d7b08e7e21dd0315a510926e5a53ade8c01f9aaa',
         backtest_initial_cash=10000000,

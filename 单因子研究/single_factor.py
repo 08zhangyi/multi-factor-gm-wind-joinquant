@@ -1,4 +1,4 @@
-# 单因子提取器，不包含作图和行业分组
+# 单因子提取器，不包含作图
 from WindPy import w
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ from sklearn.linear_model import LinearRegression
 
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
-from utils import get_trading_date_from_now, SW1_INDEX
+from utils import get_trading_date_from_now, SW1_INDEX, ZX1_INDEX
 
 
 # 基类，需继承
@@ -23,7 +23,7 @@ class SingleFactorReasearch():
     def __init__(self, date, code_list, factor_name):
         # date为查询因子的日期，'yyyy-mm-dd'格式，date日收盘后查询
         # code_list为查询因子的股票代码列表
-        self.date = date.split('-')
+        self.date = date.split('-')  # 以list形式存储日期
         self.code_list = code_list
         self.factor_name = factor_name
         self.w = w
@@ -164,7 +164,7 @@ class SteadyProfitAcc(SingleFactorReasearch):
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
-        date_previous = get_trading_date_from_now("-".join(self.date), -3, ql.Months)
+        date_previous = get_trading_date_from_now("-".join(self.date), -3, ql.Months)  # 相对于一个季度前计算加速度
         current_data = SteadyProfitGrowth("-".join(self.date), self.code_list).get_factor()
         previous_data = SteadyProfitGrowth(date_previous, self.code_list).get_factor()
         data = current_data - previous_data
@@ -382,7 +382,7 @@ class RSI(RSI_N):
         super().__init__(date, code_list, 6)
 
 
-# BETA，需继承
+# BETA值，相对某一指数，需继承
 class BETA(SingleFactorReasearch):
     @abc.abstractmethod
     def __init__(self, date, code_list, refer_index='000300.SH', length=22):
@@ -399,12 +399,14 @@ class BETA(SingleFactorReasearch):
         return BETA
 
 
-class BETA_V1(BETA):
+# BETA值，相对沪深300指数
+class BETA_REF_HS300(BETA):
     def __init__(self, date, code_list):
         super().__init__(date, code_list, refer_index='000300.SH', length=22)
 
 
-class BETA_V2(BETA):
+# BETA值，相对上证50指数
+class BETA_REF_SZ50(BETA):
     def __init__(self, date, code_list):
         super().__init__(date, code_list, refer_index='000016.SH', length=50)
 
@@ -413,7 +415,7 @@ class BETA_V2(BETA):
 # 算法：Ri=a+b*Rb+e,Rb为参考指数沪深300，a为截距项，b即为beta，e为残差项，252日残差收益波动率为252日e的标准差
 class HSIGMA_252(SingleFactorReasearch):
     def __init__(self, date, code_list):
-        factor_name = 'HSIGMA'
+        factor_name = '252日残差收益波动率'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
@@ -426,7 +428,7 @@ class HSIGMA_252(SingleFactorReasearch):
 # SKEWNESS，过去20日股价的偏度
 class SKEWNESS_20(SingleFactorReasearch):
     def __init__(self, date, code_list):
-        factor_name = '股价偏度'
+        factor_name = '20日股价偏度'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
@@ -439,7 +441,7 @@ class SKEWNESS_20(SingleFactorReasearch):
 # TURN_VOLATILITY，过去20日换手率相对波动率
 class TURN_VOLATILITY_20(SingleFactorReasearch):
     def __init__(self, date, code_list):
-        factor_name = '换手率相对波动率'
+        factor_name = '20日换手率相对波动率'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
@@ -453,7 +455,7 @@ class TURN_VOLATILITY_20(SingleFactorReasearch):
 class RelativePriceN(SingleFactorReasearch):
     @abc.abstractmethod
     def __init__(self, date, code_list, N):
-        factor_name = 'FiftyTwoWeekHigh'
+        factor_name = '过去%d天股票相对位置' % N
         self.N = N  # 计算窗口期
         super().__init__(date, code_list, factor_name)
 
@@ -659,7 +661,7 @@ class NetAssetPerShare(SingleFactorReasearch):
 # ROA
 class ROA(SingleFactorReasearch):
     def __init__(self, date, code_list):
-        factor_name = 'ROA'
+        factor_name = '资产回报率ROA'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
@@ -809,7 +811,7 @@ class CFO2EV(SingleFactorReasearch):
 # 建议不使用此因子 数据不全+没有参考价值
 class ForecastEarningGrowth_FY1_3M(SingleFactorReasearch):
     def __init__(self, date, code_list):
-        factor_name = '三个月个月盈利变化率（一年）预测'
+        factor_name = '三个月盈利变化率（一年）预测'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
@@ -848,7 +850,7 @@ class OCFPS(SingleFactorReasearch):
 # 市值/企业自由现金流
 class MarketValueToFreeCashFlow(SingleFactorReasearch):
     def __init__(self, date, code_list):
-        factor_name = '市值/企业自由现金流'
+        factor_name = '市值比企业自由现金流'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
@@ -1215,15 +1217,48 @@ class SW1IndustryOneHot(SW1Industry):
         return sw1_industry
 
 
-# 月收益率
-class ReturnsOneMonth(SingleFactorReasearch):
+# 中信一级行业
+class ZX1Industry(SingleFactorReasearch):
     def __init__(self, date, code_list):
-        factor_name = '月收益率'
+        factor_name = '中信一级行业'
         super().__init__(date, code_list, factor_name)
 
     def _calculate_factor(self):
         date_list = self.date
-        returns = np.array(w.wss(self.code_list, "pct_chg", "tradeDate=" + ''.join(date_list) + ";cycle=M").Data[0])
+        zx1_industry = np.array(w.wss(self.code_list, "indexcode_citic", "tradeDate="+''.join(date_list)+";industryType=1").Data[0])
+        zx1_industry = pd.DataFrame(data=zx1_industry, index=self.code_list, columns=[self.factor_name])
+        return zx1_industry
+
+
+# 申中信一级行业one-hot编码
+class ZX1IndustryOneHot(ZX1Industry):
+    def _calculate_factor(self):
+        date_list = self.date
+        zx1_industry = w.wss(self.code_list, "indexcode_citic", "tradeDate="+''.join(date_list)+";industryType=1").Data[0]
+        ZX1_INDEX_CODES = [t[0] for t in ZX1_INDEX]
+        ZX1_INDEX_NAMES = [t[1] for t in ZX1_INDEX]
+        one_hot_matrix = np.zeros((len(zx1_industry), len(ZX1_INDEX)))
+        for i, industry_index in enumerate(zx1_industry):
+            if industry_index == None:
+                continue
+            else:
+                industry_loc = ZX1_INDEX_CODES.index(industry_index)
+                one_hot_matrix[i, industry_loc] = 1.0
+        zx1_industry = pd.DataFrame(data=one_hot_matrix, index=self.code_list, columns=ZX1_INDEX_NAMES)
+        return zx1_industry
+
+
+# 月收益率
+class ReturnsOneMonth(SingleFactorReasearch):
+    def __init__(self, date, code_list):
+        factor_name = '过去一个月的收益率'
+        super().__init__(date, code_list, factor_name)
+
+    def _calculate_factor(self):
+        date_list = self.date
+        date_now = '-'.join(date_list)
+        date_prev = get_trading_date_from_now(date_now, -1, ql.Months)
+        returns = np.array(w.wss(self.code_list, "pct_chg_per", "startDate="+date_prev+";endDate="+date_now).Data[0])
         df = pd.DataFrame(data=returns, index=self.code_list, columns=[self.factor_name])
         return df
 
@@ -1360,8 +1395,6 @@ class TotalAsset(SingleFactorReasearch):
         return df
 
 
-# 只支持报告期数据
-
 # 研发费用目前只支持报告期数据，19年1月开始对研发费用的会计政策变更，从管理费用中剥离出研发费用
 class RDExpense(SingleFactorReasearch):
     def __init__(self, date, code_list):
@@ -1471,6 +1504,7 @@ class ForeignCapitalHoldingRatioGrowth_LR(SingleFactorReasearch):
         return df
 
 
+# 过去10日外资持股比例增速，线性回归法
 class ForeignCapitalHoldingRatioGrowth_LR_10(ForeignCapitalHoldingRatioGrowth_LR):
     def __init__(self, date, code_list):
         super().__init__(date, code_list, N=10)
