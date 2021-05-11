@@ -45,6 +45,32 @@ def get_trading_date_from_now(date_now, diff_periods, period=ql.Days):
     return date_diff
 
 
+# 获取两个日期之间的所有交易日，包括头尾交易日
+def get_trading_days_from_start_to_end(start_day, end_day):
+    w.start()
+    days = w.tdays(start_day, end_day, "").Data[0]
+    days = [d.strftime('%Y-%m-%d') for d in days]
+    return days
+
+
+# 获取两个日期之间的所有调仓日，包括头尾交易日
+# fixing_days可以为月中的几个调仓日
+def get_fix_trading_days_from_start_to_end_monthly(start_day, end_day, fixing_days):
+    start_day = datetime.datetime.strptime(start_day, '%Y-%m-%d')
+    end_day = datetime.datetime.strptime(end_day, '%Y-%m-%d')
+    trading_days_all = []
+    for fixing_day in fixing_days:  # 按fixing_day选取调仓日
+        months = (end_day.year - start_day.year) * 12 + end_day.month - start_day.month
+        trading_days = ['%04d-%02d-%02d' % (start_day.year + mon // 12, mon % 12 + 1, int(fixing_day))
+                        for mon in range(start_day.month - 1, start_day.month + months)]
+        trading_days = [get_trading_date_from_now(d, 0) for d in trading_days]
+        trading_days_all += trading_days
+    trading_days_all = list(set(trading_days_all))  # 去重
+    trading_days_all = sorted([datetime.datetime.strptime(d, '%Y-%m-%d') for d in trading_days_all])  # 重新排序
+    trading_days_all = [d.strftime('%Y-%m-%d') for d in trading_days_all if d >= start_day and d <= end_day]
+    return trading_days_all
+
+
 def list_gm2wind(list_gm):
     gm2wind_dict = {'SHSE': 'SH', 'SZSE': 'SZ', 'CFFEX': 'CFE', 'SHFE': 'SHF', 'DCE': 'DCE', 'CZCE': 'CZC', 'INE': 'INE', 'CSI': 'CSI'}
     list_wind = [temp.split('.')[1]+'.'+gm2wind_dict[temp.split('.')[0]] for temp in list_gm]
@@ -171,5 +197,7 @@ def get_trading_date_list_by_month_by_day(BACKTEST_START_DATE, BACKTEST_END_DATE
 
 
 if __name__ == '__main__':
-    print(get_trading_date_from_now('2021-04-08', 0))
-    print(get_trading_date_from_now('2021-04-18', 0))
+    # print(get_trading_date_from_now('2021-04-08', 0))
+    # print(get_trading_date_from_now('2021-04-18', 0))
+    # print(get_trading_date_from_now('2021-02-30', 0))
+    print(get_fix_trading_days_from_start_to_end_monthly('2020-03-22', '2021-04-18', ['5', '10']))

@@ -2,16 +2,17 @@ import numpy as np
 import pandas as pd
 import scipy.stats, scipy.optimize
 from WindPy import w
-# import cvxopt
+import cvxopt
 import pyrb
 from pypfopt.hierarchical_portfolio import HRPOpt
 import sys
 sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测试\\工具')
-from utils import list_wind2jq, list_jq2wind, SW1_INDEX
+from utils import list_wind2jq, list_jq2wind, ZX1_INDEX
 
 
 class WeightsAllocation(object):
     def __init__(self, code_list, date):
+        w.start()
         self.code_list = code_list  # code_list用聚宽的格式
         self.date = date  # date日收盘后计算配置比例
 
@@ -165,16 +166,17 @@ class 最大分散化组合_基本版_OAS(最大分散化组合_基本版):
 class 方差极小化权重_行业版(方差极小化权重_基本版):
     def get_weights(self):
         code_list = list_jq2wind(self.code_list)
-        SW1_code_list = [t[0] for t in SW1_INDEX]
-        weight_value = self._calc_weights(SW1_code_list)  # 提取行业权重
-        industry_list = w.wss(code_list, "indexcode_sw", "tradeDate="+self.date+";industryType=1").Data[0]
+        stock_ZX1_industry_code_list = w.wss(code_list, "indexcode_citic", "industryType=1;tradeDate="+self.date).Data[0]
+        ZX1_industry_code_list = list(set(stock_ZX1_industry_code_list))
+        weight_value = self._calc_weights(list(set(ZX1_industry_code_list)))  # 计算股票涉及到的行业权重
+        # industry_list = w.wss(code_list, "indexcode_sw", "tradeDate="+self.date+";industryType=1").Data[0]
         weight_value_temp = []
         for i in range(len(code_list)):
-            industry_temp = industry_list[i]
+            industry_temp = stock_ZX1_industry_code_list[i]
             if industry_temp is None:  # 个股无行业分类数据的处理
                 weight_value_temp.append(0.0)
             else:
-                industry_index = SW1_code_list.index(industry_temp)
+                industry_index = ZX1_industry_code_list.index(industry_temp)
                 weight_value_temp.append(weight_value[industry_index])
         weight_value_temp = np.array(weight_value_temp)
         weight_value_temp = weight_value_temp / np.sum(weight_value_temp)  # 权重归一化
@@ -197,7 +199,7 @@ class 最大分散化组合_行业版(方差极小化权重_行业版):
         sol = cvxopt.solvers.qp(P, q, G, h)
         weights = np.array(sol['x']).squeeze()
         weights /= weights.sum()
-        for i in range(28):
+        for i in range(len(ZX1_INDEX)):
             print('第%d个行业的权重为%.2f%%' % (i + 1, weights[i] * 100.0))
         return weights
 
@@ -391,8 +393,11 @@ class 层次风险平价(方差极小化权重_基本版):
 
 
 if __name__ == '__main__':
-    model = 风险预算组合_模块求解基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06', risk_budget=[0.2, 0.3, 0.4, 0.5, 0.6])
-    print(model.get_weights())
+    # model = 风险预算组合_模块求解基本版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06', risk_budget=[0.2, 0.3, 0.4, 0.5, 0.6])
+    # print(model.get_weights())
+    #
+    # model = 层次风险平价(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06', N=60)
+    # print(model.get_weights())
 
-    model = 层次风险平价(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06', N=60)
+    model = 方差极小化权重_行业版(['000002.XSHE', '600000.XSHG', '002415.XSHE', '601012.XSHG', '601009.XSHG'], '2019-11-06')
     print(model.get_weights())
