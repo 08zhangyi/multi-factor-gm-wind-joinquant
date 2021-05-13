@@ -184,6 +184,20 @@ class 方差极小化权重_行业版(方差极小化权重_基本版):
         return code_weights
 
 
+# 按照行业自由流通市值进行权重配置，行业内股票等权配置
+class 自由流通市值权重_行业版(方差极小化权重_行业版):
+    # 按照date日的Wind定义自由流通市值权调仓
+    def _calc_weights(self, code_list):
+        code_weights = {}
+        w.start()
+        weight_data = np.array(w.wss(code_list, "mkt_cap_ard", "unit=1;tradeDate=" + self.date + ";currencyType=").Data[0])
+        weight_data = weight_data / np.sum(weight_data)
+        for i in range(len(code_list)):
+            code = code_list[i]
+            code_weights[list_wind2jq([code])[0]] = weight_data[i]
+        return code_weights
+
+
 # 按照行业进行权重配置，行业内股票等权配置
 class 最大分散化组合_行业版(方差极小化权重_行业版):
     def _calc_weights(self, code_list):
