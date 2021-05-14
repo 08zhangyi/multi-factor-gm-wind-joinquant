@@ -8,7 +8,7 @@ sys.path.append('D:\\programs\\多因子策略开发\\掘金多因子开发测�
 from single_factor import PE
 # 引入工具函数和学习器
 from utils import get_trading_date_from_now, get_fix_trading_days_from_start_to_end_monthly, list_wind2jq
-from 持仓配置 import 等权持仓
+from 持仓配置 import 等权持仓, 自由流通市值权重_行业版
 from 候选股票 import SelectedStockPoolFromListExcluded
 
 # 用于记录调仓信息的字典
@@ -27,7 +27,7 @@ def init(context):
     context.FACTOR = PE  # 需要获取的因子列表，用单因子研究中得模块
     context.QUANTILE = [0.8, 1.0]  # 因子分组的分位数
     context.TRADING_DATES = ['10']  # 每月的调仓日期，非交易日寻找下一个最近的交易日
-    context.WEIGHTS_FUNCTION = 等权持仓  # 仓位配置
+    context.WEIGHTS_FUNCTION = 自由流通市值权重_行业版  # 仓位配置
     # 根据回测阶段选取好调仓日期
     print('提取调仓日信息......')
     trading_date_list = get_fix_trading_days_from_start_to_end_monthly(BACKTEST_START_DATE,
