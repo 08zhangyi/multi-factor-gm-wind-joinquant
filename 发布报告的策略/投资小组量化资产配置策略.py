@@ -7,7 +7,7 @@ from utils import list_wind2jq
 from 持仓配置 import 风险预算组合_模块求解基本版_带约束
 
 # 统一设定调仓日，选股为前一交易日收盘后
-DATE = '2021-04-30'
+DATE = '2021-05-14'
 # 债券品种的比例调整
 BOND_ADJUST = {'161716.XSHE': 0.08, '511260.XSHG': -0.04, '511010.XSHG': -0.04}
 # A股手动调整比例
@@ -18,14 +18,19 @@ STOCK_ADJUST = 0.0
 def adjust_weights(stock_weights, bond_adjust, stock_adjust):
     # A股部分的调整，同步等比例调整债券、外盘、商品的比例
     stock_weights['510300.XSHG'] = stock_weights.get('510300.XSHG', 0.0) + stock_adjust
-    adjusted_codes = ['511010.XSHG', '513030.XSHG', '513050.XSHG', '513100.XSHG', '513500.XSHG', '518880.XSHG',
-                      '159980.XSHE', '159981.XSHE', '159985.XSHE']
+    adjusted_codes = ['511010.XSHG', '511260.XSHG',
+                      '513030.XSHG', '513050.XSHG', '513100.XSHG', '513500.XSHG',
+                      '159980.XSHE', '159981.XSHE', '159985.XSHE', '518880.XSHG',]
     adjusted_full_ratio = np.sum([stock_weights[code] for code in adjusted_codes])
     for code in adjusted_codes:
         stock_weights[code] = stock_weights[code] * ((adjusted_full_ratio - stock_adjust) / adjusted_full_ratio)
     # 债券部分的调整，加入信用债和长期国债，并调整比例
     for bond_code in bond_adjust:
         stock_weights[bond_code] = stock_weights.get(bond_code, 0.0) + bond_adjust[bond_code]
+    # 债券权重平均分配
+    bond_weights = (stock_weights['511010.XSHG'] + stock_weights['511260.XSHG'])
+    stock_weights['511010.XSHG'] = bond_weights * 0.5
+    stock_weights['511260.XSHG'] = bond_weights * 0.5
     return stock_weights
 
 
