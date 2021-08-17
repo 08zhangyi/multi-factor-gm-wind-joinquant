@@ -94,9 +94,10 @@ class RSRS_base(object):
         start_date_index = self.RSRS_times.index(self.backtest_start_date) - 1
         date_list = self.RSRS_times[start_date_index:]
         index_list = self.RSRS_data[start_date_index:]
-        signal_list = [self._get_signal(date) for date in date_list]
+        signal_list_ori = [self._get_signal(date) for date in date_list]
         # 对signal_list进行后续处理以形成持仓信号
-        for i, signal_value in enumerate(signal_list):
+        signal_list = [] * len(signal_list_ori)
+        for i, signal_value in enumerate(signal_list_ori):
             if i == 0:
                 if signal_value > self.S1:  # 大于S1开仓
                     signal_list[i] = 1
@@ -199,7 +200,7 @@ class RSRS_standardization_V1(object):
         self.M = M  # 标准化序列的历史周期长短
         self.S1 = S1
         self.S2 = S2
-        self.date_list, _, self.signal_list = self._get_data()
+        self.date_list, _, self.signal_list, self.RSRS_stand_data = self._get_data()
 
     def __getitem__(self, date_now):
         date_previous = get_trading_date_from_now(date_now, -1, ql.Days)
@@ -226,7 +227,7 @@ class RSRS_standardization_V1(object):
         signal_list = []
         for i in range(len(date_list)):  # 根据计算的结果得出择时信号
             signal = RSRS_stand_data[i]
-            print(signal, date_list[i])
+            # print(signal, date_list[i])
             if i == 0:
                 if signal > self.S1:
                     signal = 1
@@ -240,7 +241,7 @@ class RSRS_standardization_V1(object):
                 else:
                     signal = -1
             signal_list.append(signal)
-        return date_list, index_list, signal_list
+        return date_list, index_list, signal_list, RSRS_stand_data
 
     def _RSRS(self, high_price_list, low_price_list):
         high_price_list = np.nan_to_num(np.array(high_price_list))  # 去除nan并替换为0.0，可以使得交易日内也可计算当日的择时信号与持仓
@@ -253,6 +254,7 @@ class RSRS_standardization_V1(object):
 
 if __name__ == '__main__':
     N = 18
-    M = 5
+    M = 600
     model = RSRS_standardization_V1('2018-10-10', '2018-10-16', '801780.SI', N=N, M=M)
-    print(model['2018-10-08'])
+    print(model.RSRS_stand_data)
+    print(model['2018-10-16'])
