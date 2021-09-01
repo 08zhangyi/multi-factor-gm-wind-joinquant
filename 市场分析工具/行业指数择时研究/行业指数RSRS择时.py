@@ -7,7 +7,7 @@ from utils import get_trading_date_from_now
 
 # 需要查询的行业和查询日期，query为收盘日
 w.start()
-query_date = '2021-08-16'
+query_date = '2021-08-17'
 industry_index_1 = w.wset("sectorconstituent", "date=" + query_date + ";sectorid=1000017213000000").Data[1]
 industry_index_2 = w.wset("sectorconstituent", "date=" + query_date + ";sectorid=a39901012f000000").Data[1]
 
