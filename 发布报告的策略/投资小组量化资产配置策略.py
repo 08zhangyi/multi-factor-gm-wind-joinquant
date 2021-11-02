@@ -7,9 +7,9 @@ from utils import list_wind2jq
 from 持仓配置 import 风险预算组合_模块求解基本版_带约束
 
 # 统一设定调仓日，选股为前一交易日收盘后
-DATE = '2021-08-24'
+DATE = '2021-10-22'
 # 债券品种的比例调整
-BOND_ADJUST = {'161716.XSHE': 0.13, '511260.XSHG': -0.065, '511010.XSHG': -0.065}
+BOND_ADJUST = {'161716.XSHE': 0.15, '511260.XSHG': -0.075, '511010.XSHG': -0.075}
 # A股手动调整比例
 STOCK_ADJUST = 0.0
 
