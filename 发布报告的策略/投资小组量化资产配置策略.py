@@ -7,7 +7,7 @@ from utils import list_wind2jq
 from 持仓配置 import 风险预算组合_模块求解基本版_带约束
 
 # 统一设定调仓日，选股为前一交易日收盘后
-DATE = '2021-10-22'
+DATE = '2022-04-29'
 # 债券品种的比例调整
 BOND_ADJUST = {'161716.XSHE': 0.15, '511260.XSHG': -0.075, '511010.XSHG': -0.075}
 # A股手动调整比例
@@ -18,9 +18,10 @@ STOCK_ADJUST = 0.0
 def adjust_weights(stock_weights, bond_adjust, stock_adjust):
     # A股部分的调整，同步等比例调整债券、外盘、商品的比例
     stock_weights['510300.XSHG'] = stock_weights.get('510300.XSHG', 0.0) + stock_adjust
-    adjusted_codes = ['511010.XSHG', '511260.XSHG',
-                      '513030.XSHG', '513050.XSHG', '513100.XSHG', '513500.XSHG',
-                      '159980.XSHE', '159981.XSHE', '159985.XSHE', '518880.XSHG',]
+    # adjusted_codes = ['511010.XSHG', '511260.XSHG',
+    #                   '513050.XSHG', '513100.XSHG', '513500.XSHG',
+    #                   '518880.XSHG']
+    adjusted_codes = ['518880.XSHG']
     adjusted_full_ratio = np.sum([stock_weights[code] for code in adjusted_codes])
     for code in adjusted_codes:
         stock_weights[code] = stock_weights[code] * ((adjusted_full_ratio - stock_adjust) / adjusted_full_ratio)
@@ -37,7 +38,7 @@ def adjust_weights(stock_weights, bond_adjust, stock_adjust):
 # 自动读取风险预算数据
 FILE_PATH = 'C:\\Users\\pc\\Desktop\\策略计算表temp.xlsx'  # 参考data\策略计算表example.xlsx
 file = xlrd.open_workbook(FILE_PATH)
-table = file.sheet_by_name('计算表')
+table = file.sheet_by_name('ETF组合策略1602')
 row_number = table.nrows
 S_all = ((0, 2), (7, 9), (14, 16))  # 每个策略所在的列代码
 S_result = []  # 记录策略结果的代码
@@ -55,11 +56,14 @@ for S in S_all:
                 stock_pool.append(value_code)
                 risk_budget.append(value_ratio)
                 risk_bounds.append([0.15, 0.85])  # 权重约束设置
-            elif value_code in ['513030.SH', '513050.SH', '513100.SH', '513500.SH', '518880.SH',
-                                '159980.SZ', '159981.SZ', '159985.SZ']:  # 外盘商品类
+            elif value_code in ['513050.SH', '513100.SH', '513500.SH']:  # 外盘类
                 stock_pool.append(value_code)
                 risk_budget.append(value_ratio)
                 risk_bounds.append([0.0, 0.2])  # 权重约束设置
+            elif value_code in ['518880.SH']:  # 商品类
+                stock_pool.append(value_code)
+                risk_budget.append(value_ratio)
+                risk_bounds.append([0.0, 0.085])  # 权重约束设置
             else:  # 国内股票类
                 stock_pool.append(value_code)
                 risk_budget.append(value_ratio)
