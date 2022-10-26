@@ -7,7 +7,7 @@ from utils import list_wind2jq
 from 持仓配置 import 风险预算组合_模块求解基本版_带约束
 
 # 统一设定调仓日，选股为前一交易日收盘后
-DATE = '2022-04-29'
+DATE = '2022-10-24'
 # 债券品种的比例调整
 BOND_ADJUST = {'161716.XSHE': 0.15, '511260.XSHG': -0.075, '511010.XSHG': -0.075}
 # A股手动调整比例
@@ -36,7 +36,7 @@ def adjust_weights(stock_weights, bond_adjust, stock_adjust):
 
 
 # 自动读取风险预算数据
-FILE_PATH = 'C:\\Users\\pc\\Desktop\\策略计算表temp.xlsx'  # 参考data\策略计算表example.xlsx
+FILE_PATH = 'C:\\Users\\pc\\Desktop\\策略计算表temp.xls'  # 参考data\策略计算表example.xls
 file = xlrd.open_workbook(FILE_PATH)
 table = file.sheet_by_name('ETF组合策略1602')
 row_number = table.nrows
@@ -63,7 +63,7 @@ for S in S_all:
             elif value_code in ['518880.SH']:  # 商品类
                 stock_pool.append(value_code)
                 risk_budget.append(value_ratio)
-                risk_bounds.append([0.0, 0.085])  # 权重约束设置
+                risk_bounds.append([0.0, 0.1])  # 权重约束设置
             else:  # 国内股票类
                 stock_pool.append(value_code)
                 risk_budget.append(value_ratio)
